@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 
 function WeightGoal() {
   const { goal, isLoading, error, goalWeight, message, isSettingGoal, handleSubmit, handleInputChange } =
