@@ -31,7 +31,7 @@ export function useRegister(onSwitchToLogin: () => void) {
     onSuccess: (data) => {
       setMessage(data.message || 'Registration successful!');
       toast.success('Registration successful!', {
-        description: 'Your account has been created.', // Updated to match test expectation
+        description: 'Your account has been created.',
         action: {
           label: 'Log in now',
           onClick: () => onSwitchToLogin(),
@@ -39,7 +39,10 @@ export function useRegister(onSwitchToLogin: () => void) {
         id: 'register-message',
         className: 'register-toast',
       });
-      setTimeout(() => form.reset(), 1000);
+      setTimeout(() => {
+        form.reset();
+        onSwitchToLogin(); // Trigger redirect to login page
+      }, 5000); // 5 seconds
       queryClient.invalidateQueries({ queryKey: ['getUsers'] });
     },
     onError: (error) => {
