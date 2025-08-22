@@ -2,7 +2,7 @@
 import { initTRPC } from "@trpc/server";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 const t = initTRPC
   .context<{ prisma: PrismaClient; userId?: string }>()
