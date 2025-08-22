@@ -5,19 +5,21 @@ import {
   createRoute,
   redirect,
   Outlet,
-} from "@tanstack/react-router";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { httpBatchLink } from "@trpc/client";
-import { trpc } from "./trpc";
-import Home from "./components/Home";
-import Navigation from "./components/Navigation";
-import WeightForm from "./components/WeightForm";
-import WeightList from "./components/WeightList";
-import WeightChart from "./components/WeightChart";
-import WeightGoal from "./components/WeightGoal";
-import { useAuthStore } from "./store/authStore";
-import { ThemeProvider } from "./components/ThemeProvider";
-import { Toaster } from "@/components/ui/sonner";
+} from '@tanstack/react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { httpBatchLink } from '@trpc/client';
+import { trpc } from './trpc';
+import Home from './components/Home';
+import Navigation from './components/Navigation';
+import WeightForm from './components/WeightForm';
+import WeightList from './components/WeightList';
+import WeightChart from './components/WeightChart';
+import WeightGoal from './components/WeightGoal';
+import Register from './components/Register';
+import LoginForm from './components/LoginForm';
+import { useAuthStore } from './store/authStore';
+import { ThemeProvider } from './components/ThemeProvider';
+import { Toaster } from '@/components/ui/sonner';
 
 // Create tRPC client
 const queryClient = new QueryClient({
@@ -31,7 +33,7 @@ const trpcClient = trpc.createClient({
     httpBatchLink({
       url:
         import.meta.env.VITE_TRPC_URL ||
-        "http://localhost:8888/.netlify/functions/trpc",
+        'http://localhost:8888/.netlify/functions/trpc',
       fetch: async (url, options) => {
         const { userId } = useAuthStore.getState();
         const headers = {
@@ -67,17 +69,29 @@ const rootRoute = createRootRoute({
 // Define routes
 const homeRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/",
+  path: '/',
   component: Home,
+});
+
+const registerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/register',
+  component: () => <Register onSwitchToLogin={() => router.navigate({ to: '/login' })} />,
+});
+
+const loginRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/login',
+  component: () => <LoginForm onSwitchToRegister={() => router.navigate({ to: '/register' })} />,
 });
 
 const weightRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "weight",
+  path: '/weight',
   beforeLoad: () => {
     const { isLoggedIn } = useAuthStore.getState();
     if (!isLoggedIn) {
-      throw redirect({ to: "/" });
+      throw redirect({ to: '/' });
     }
   },
   component: WeightForm,
@@ -85,11 +99,11 @@ const weightRoute = createRoute({
 
 const weightsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "weights",
+  path: '/weights',
   beforeLoad: () => {
     const { isLoggedIn } = useAuthStore.getState();
     if (!isLoggedIn) {
-      throw redirect({ to: "/" });
+      throw redirect({ to: '/' });
     }
   },
   component: WeightList,
@@ -97,11 +111,11 @@ const weightsRoute = createRoute({
 
 const weightChartRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "weight-chart",
+  path: '/weight-chart',
   beforeLoad: () => {
     const { isLoggedIn } = useAuthStore.getState();
     if (!isLoggedIn) {
-      throw redirect({ to: "/" });
+      throw redirect({ to: '/' });
     }
   },
   component: WeightChart,
@@ -109,11 +123,11 @@ const weightChartRoute = createRoute({
 
 const weightGoalRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "weight-goal",
+  path: '/weight-goal',
   beforeLoad: () => {
     const { isLoggedIn } = useAuthStore.getState();
     if (!isLoggedIn) {
-      throw redirect({ to: "/" });
+      throw redirect({ to: '/' });
     }
   },
   component: WeightGoal,
@@ -122,6 +136,8 @@ const weightGoalRoute = createRoute({
 // Create route tree
 const routeTree = rootRoute.addChildren([
   homeRoute,
+  registerRoute,
+  loginRoute,
   weightRoute,
   weightsRoute,
   weightChartRoute,
@@ -132,7 +148,7 @@ const routeTree = rootRoute.addChildren([
 export const router = createRouter({ routeTree });
 
 // Register router for type safety
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router;
   }

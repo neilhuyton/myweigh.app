@@ -3,6 +3,7 @@ import { initTRPC } from "@trpc/server";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 const t = initTRPC
   .context<{ prisma: PrismaClient; userId?: string }>()
@@ -43,7 +44,11 @@ export const appRouter = t.router({
         },
       });
 
-      return { id: user.id, email: user.email };
+      return {
+        id: user.id,
+        email: user.email,
+        message: 'Registration successful! Please check your email to verify your account.',
+      };
     }),
   login: t.procedure
     .input(

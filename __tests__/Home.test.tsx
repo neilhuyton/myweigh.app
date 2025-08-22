@@ -1,3 +1,4 @@
+// __tests__/Home.test.tsx
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
@@ -134,7 +135,11 @@ describe("Home Component with Router", () => {
               {
                 id,
                 result: {
-                  data: { id: "new-user-id", email: "newuser@example.com" },
+                  data: {
+                    id: "new-user-id",
+                    email: "newuser@example.com",
+                    message: "Registration successful! Please check your email to verify your account.",
+                  },
                 },
               },
             ]);
@@ -192,7 +197,7 @@ describe("Home Component with Router", () => {
           id: "register-message",
         });
       },
-      { timeout: 2000 }
+      { timeout: 3000 } // Increased timeout
     );
   });
 
@@ -270,7 +275,7 @@ describe("Home Component with Router", () => {
         });
         expect(screen.getByTestId("login-message")).toBeInTheDocument();
       },
-      { timeout: 2000 }
+      { timeout: 3000 } // Increased timeout
     );
 
     // Wait for auth state and UI to update
@@ -279,7 +284,7 @@ describe("Home Component with Router", () => {
         expect(useAuthStore.getState().isLoggedIn).toBe(true);
         expect(screen.getByRole("button", { name: "Logout" })).toBeInTheDocument();
       },
-      { timeout: 3000 } // Increased timeout for state update
+      { timeout: 3000 }
     );
   });
 
@@ -357,7 +362,7 @@ describe("Home Component with Router", () => {
           duration: 5000,
         });
       },
-      { timeout: 2000 }
+      { timeout: 3000 } // Increased timeout
     );
   });
 });

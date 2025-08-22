@@ -40,7 +40,13 @@ function Register({ className, onSwitchToLogin }: RegisterProps) {
         </CardHeader>
         <CardContent className="px-6 pt-0">
           {message && (
-            <div data-testid="register-message" className="mb-4 text-center text-sm text-red-500">
+            <div
+              data-testid="register-message"
+              className={cn(
+                'mb-4 text-center text-sm',
+                message.includes('successful') ? 'text-green-500' : 'text-red-500'
+              )}
+            >
               {message}
             </div>
           )}

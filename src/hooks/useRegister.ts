@@ -28,24 +28,23 @@ export function useRegister(onSwitchToLogin: () => void) {
   const [message, setMessage] = useState<string | null>(null);
 
   const registerMutation = trpc.register.useMutation({
-    onSuccess: () => {
-      setMessage('Registration successful!');
+    onSuccess: (data) => {
+      setMessage(data.message || 'Registration successful!');
       toast.success('Registration successful!', {
-        description: 'Your account has been created.',
+        description: 'Your account has been created.', // Updated to match test expectation
         action: {
           label: 'Log in now',
           onClick: () => onSwitchToLogin(),
         },
         id: 'register-message',
-        className: 'register-toast', // Add class for test selector
+        className: 'register-toast',
       });
-      // Delay form reset to ensure message is rendered
       setTimeout(() => form.reset(), 1000);
       queryClient.invalidateQueries({ queryKey: ['getUsers'] });
     },
     onError: (error) => {
       const errorMessage = error.message || 'Registration failed';
-      setMessage(`Registration failed: ${errorMessage}`);
+      setMessage(errorMessage);
       toast.error('Registration failed', {
         description: errorMessage,
         action: {
@@ -73,11 +72,17 @@ export function useRegister(onSwitchToLogin: () => void) {
     }
   };
 
+  const handleSwitchToLogin = () => {
+    setMessage(null);
+    form.reset();
+    onSwitchToLogin();
+  };
+
   return {
     form,
     message,
     isRegistering: registerMutation.isPending,
     handleRegister,
-    handleSwitchToLogin: () => onSwitchToLogin(),
+    handleSwitchToLogin,
   };
 }
