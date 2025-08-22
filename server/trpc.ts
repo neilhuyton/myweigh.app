@@ -76,6 +76,10 @@ export const appRouter = t.router({
         throw new Error("Invalid email or password");
       }
 
+      if (!user.isEmailVerified) {
+        throw new Error("Please verify your email before logging in");
+      }
+
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
         throw new Error("Invalid email or password");
@@ -108,7 +112,7 @@ export const appRouter = t.router({
         where: { id: user.id },
         data: {
           isEmailVerified: true,
-          verificationToken: null, // Clear token after verification
+          verificationToken: null,
         },
       });
 
@@ -206,7 +210,7 @@ export const appRouter = t.router({
           create: {
             userId: ctx.userId,
             goalWeightKg: input.goalWeightKg,
-            startWeightKg: 0, // Default value to satisfy required field
+            startWeightKg: 0,
           },
         });
 
@@ -222,7 +226,7 @@ export const appRouter = t.router({
       });
 
       if (!goal) {
-        return null; // No goal set yet
+        return null;
       }
 
       return { goalWeightKg: goal.goalWeightKg };
