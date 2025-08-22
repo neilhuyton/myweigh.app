@@ -1,9 +1,9 @@
-// server/trpc.ts
 import { initTRPC } from "@trpc/server";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { sendVerificationEmail } from "./email";
 
 const t = initTRPC
   .context<{ prisma: PrismaClient; userId?: string }>()
@@ -34,20 +34,26 @@ export const appRouter = t.router({
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
+      const verificationToken = crypto.randomUUID();
 
       const user = await ctx.prisma.user.create({
         data: {
           email,
           password: hashedPassword,
-          verificationToken: crypto.randomUUID(),
+          verificationToken,
           isEmailVerified: false,
         },
       });
 
+      const emailResult = await sendVerificationEmail(email, verificationToken);
+      if (!emailResult.success) {
+        throw new Error("Failed to send verification email");
+      }
+
       return {
         id: user.id,
         email: user.email,
-        message: 'Registration successful! Please check your email to verify your account.',
+        message: "Registration successful! Please check your email to verify your account.",
       };
     }),
   login: t.procedure
@@ -76,6 +82,39 @@ export const appRouter = t.router({
       }
 
       return { id: user.id, email: user.email };
+    }),
+  verifyEmail: t.procedure
+    .input(
+      z.object({
+        token: z.string().uuid({ message: "Invalid verification token" }),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { token } = input;
+
+      const user = await ctx.prisma.user.findFirst({
+        where: { verificationToken: token },
+      });
+
+      if (!user) {
+        throw new Error("Invalid or expired verification token");
+      }
+
+      if (user.isEmailVerified) {
+        throw new Error("Email already verified");
+      }
+
+      await ctx.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          isEmailVerified: true,
+          verificationToken: null, // Clear token after verification
+        },
+      });
+
+      return {
+        message: "Email verified successfully!",
+      };
     }),
   weight: t.router({
     create: t.procedure
