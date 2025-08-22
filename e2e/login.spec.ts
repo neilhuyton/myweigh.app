@@ -1,4 +1,3 @@
-// e2e/login.spec.ts
 import { test, expect } from '@playwright/test';
 
 test.describe('Login Functionality', () => {
@@ -26,13 +25,6 @@ test.describe('Login Functionality', () => {
       }
     });
 
-    // Log responses for debugging
-    page.on('response', (resp) => {
-      if (resp.url().includes('trpc/login')) {
-        console.log('TRPC response:', resp.status(), resp.url());
-      }
-    });
-
     // Navigate to the home page
     await page.goto('/', { waitUntil: 'networkidle' });
 
@@ -54,25 +46,12 @@ test.describe('Login Functionality', () => {
       page.getByTestId('login-button').click(),
     ]);
 
-    // Take screenshot before checking message
-    await page.screenshot({ path: 'test-results/login-success-screenshot.png' });
+    // Verify success message
+    await expect(page.getByTestId('login-message')).toHaveText('Login successful!', { timeout: 5000 });
 
-    // Verify login success message
-    await expect(page.getByTestId('login-message')).toHaveText('Login successful!', { timeout: 5000 }).catch(async () => {
-      // If login-message is not found, log DOM and check for logged-in state
-      console.log('Login message not found. Current URL:', await page.url());
-      await page.screenshot({ path: 'test-results/login-fallback-screenshot.png' });
-      // Check for any logged-in state (e.g., user profile, logout button, or no form)
-      try {
-        await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible({ timeout: 5000 });
-      } catch {
-        // If no Logout button, check if login form is gone (indicating logged-in state)
-        await expect(page.getByTestId('login-form')).not.toBeVisible({ timeout: 5000 }).catch(async () => {
-          // If form is still present, check for user-specific content
-          await expect(page.getByText(/testuser@example.com/i)).toBeVisible({ timeout: 5000 });
-        });
-      }
-    });
+    // Verify logged-in state (Logout button or login form absence)
+    await expect(page.getByTestId('login-form')).not.toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible({ timeout: 10000 });
   });
 
   test('should display error message with invalid credentials', async ({ page }) => {
@@ -120,11 +99,11 @@ test.describe('Login Functionality', () => {
     ]);
 
     // Verify error message
-    await expect(page.getByTestId('login-message')).toHaveText('Login failed: Invalid email or password', { timeout: 10000 });
+    await expect(page.getByTestId('login-message')).toHaveText('Login failed: Invalid email or password', { timeout: 5000 });
 
     // Verify login did not succeed
-    await expect(page.getByRole('button', { name: 'Logout' })).not.toBeVisible({ timeout: 5000 });
-    await expect(page).not.toHaveURL(/dashboard/, { timeout: 5000 });
+    await expect(page.getByTestId('login-form')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('button', { name: 'Logout' })).not.toBeVisible({ timeout: 10000 });
   });
 
   test('should display validation errors for invalid inputs', async ({ page }) => {
@@ -147,7 +126,7 @@ test.describe('Login Functionality', () => {
     await expect(page.getByText('Please enter a valid email address')).toBeVisible({ timeout: 5000 });
     await expect(page.getByText('Password must be at least 8 characters long')).toBeVisible({ timeout: 5000 });
 
-    // Verify no TRPC request was made (client-side validation prevents submission)
+    // Verify no TRPC request was made
     const response = await page.waitForResponse(
       (resp) => resp.request().method() === 'POST' && resp.url().includes('trpc/login'),
       { timeout: 2000 }
@@ -155,7 +134,7 @@ test.describe('Login Functionality', () => {
     expect(response).toBeNull();
 
     // Verify login did not succeed
+    await expect(page.getByTestId('login-form')).toBeVisible({ timeout: 5000 });
     await expect(page.getByRole('button', { name: 'Logout' })).not.toBeVisible({ timeout: 5000 });
-    await expect(page).not.toHaveURL(/dashboard/, { timeout: 5000 });
   });
 });

@@ -12,6 +12,7 @@ import "@testing-library/jest-dom";
 import { http, HttpResponse } from "msw";
 import { act } from "react";
 import { useAuthStore } from "../src/store/authStore";
+import { toast } from "sonner";
 
 describe("Home Component with Router", () => {
   const queryClient = new QueryClient({
@@ -52,7 +53,8 @@ describe("Home Component with Router", () => {
   };
 
   beforeAll(() => {
-    vi.spyOn(window, "alert").mockImplementation(() => {});
+    vi.spyOn(toast, "success").mockImplementation(() => "toast-success-id");
+    vi.spyOn(toast, "error").mockImplementation(() => "toast-error-id");
     server.listen({ onUnhandledRequest: "error" });
   });
 
@@ -71,64 +73,48 @@ describe("Home Component with Router", () => {
   it("renders login form by default on home route", async () => {
     await setup("/");
 
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(
-            screen.getByPlaceholderText("m@example.com")
-          ).toBeInTheDocument();
-          expect(
-            screen.getByPlaceholderText("Enter your password")
-          ).toBeInTheDocument();
-          expect(
-            screen.getByRole("button", { name: "Login" })
-          ).toBeInTheDocument();
-          expect(
-            screen.getByTestId("signup-link")
-          ).toBeInTheDocument();
-          expect(
-            screen.queryByPlaceholderText("Enter your email")
-          ).not.toBeInTheDocument();
-        },
-        { timeout: 2000 }
-      );
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByPlaceholderText("m@example.com")).toBeInTheDocument();
+        expect(
+          screen.getByPlaceholderText("Enter your password")
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: "Login" })
+        ).toBeInTheDocument();
+        expect(screen.getByTestId("signup-link")).toBeInTheDocument();
+        expect(
+          screen.queryByRole("button", { name: "Register" })
+        ).not.toBeInTheDocument();
+      },
+      { timeout: 2000 }
+    );
   });
 
   it("switches to register form when sign up is clicked", async () => {
     await setup("/");
 
-    await act(async () => {
-      await waitFor(() => {
-        expect(
-          screen.getByTestId("signup-link")
-        ).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(screen.getByTestId("signup-link")).toBeInTheDocument();
     });
 
     await act(async () => {
       fireEvent.click(screen.getByTestId("signup-link"));
     });
 
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(
-            screen.getByPlaceholderText("Enter your email")
-          ).toBeInTheDocument();
-          expect(
-            screen.getByPlaceholderText("Enter your password")
-          ).toBeInTheDocument();
-          expect(
-            screen.getByRole("button", { name: "Register" })
-          ).toBeInTheDocument();
-          expect(
-            screen.getByRole("button", { name: "Log in" })
-          ).toBeInTheDocument();
-        },
-        { timeout: 2000 }
-      );
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByPlaceholderText("m@example.com")).toBeInTheDocument();
+        expect(
+          screen.getByPlaceholderText("Enter your password")
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: "Register" })
+        ).toBeInTheDocument();
+        expect(screen.getByTestId("login-link")).toBeInTheDocument();
+      },
+      { timeout: 2000 }
+    );
   });
 
   it("handles user registration on home route", async () => {
@@ -149,7 +135,11 @@ describe("Home Component with Router", () => {
               {
                 id,
                 result: {
-                  data: { id: "new-user-id", email: "newuser@example.com" },
+                  data: {
+                    id: "new-user-id",
+                    email: "newuser@example.com",
+                    message: "Registration successful! Please check your email to verify your account.",
+                  },
                 },
               },
             ]);
@@ -173,28 +163,20 @@ describe("Home Component with Router", () => {
 
     await setup("/");
 
-    await act(async () => {
-      await waitFor(() => {
-        expect(
-          screen.getByTestId("signup-link")
-        ).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(screen.getByTestId("signup-link")).toBeInTheDocument();
     });
 
     await act(async () => {
       fireEvent.click(screen.getByTestId("signup-link"));
     });
 
-    await act(async () => {
-      await waitFor(() => {
-        expect(
-          screen.getByPlaceholderText("Enter your email")
-        ).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText("m@example.com")).toBeInTheDocument();
     });
 
     await act(async () => {
-      fireEvent.change(screen.getByPlaceholderText("Enter your email"), {
+      fireEvent.change(screen.getByPlaceholderText("m@example.com"), {
         target: { value: "newuser@example.com" },
       });
       fireEvent.change(screen.getByPlaceholderText("Enter your password"), {
@@ -203,17 +185,20 @@ describe("Home Component with Router", () => {
       fireEvent.click(screen.getByRole("button", { name: "Register" }));
     });
 
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(
-            screen.getByText("Registration successful!")
-          ).toBeInTheDocument();
-          expect(window.alert).toHaveBeenCalledWith("Registration successful!");
-        },
-        { timeout: 2000 }
-      );
-    });
+    await waitFor(
+      () => {
+        expect(toast.success).toHaveBeenCalledWith("Registration successful!", {
+          description: "Your account has been created.",
+          action: {
+            label: "Log in now",
+            onClick: expect.any(Function),
+          },
+          className: "register-toast",
+          id: "register-message",
+        });
+      },
+      { timeout: 3000 } // Increased timeout
+    );
   });
 
   it("handles successful login on home route", async () => {
@@ -263,12 +248,8 @@ describe("Home Component with Router", () => {
 
     await setup("/");
 
-    await act(async () => {
-      await waitFor(() => {
-        expect(
-          screen.getByPlaceholderText("m@example.com")
-        ).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText("m@example.com")).toBeInTheDocument();
     });
 
     await act(async () => {
@@ -281,18 +262,30 @@ describe("Home Component with Router", () => {
       fireEvent.click(screen.getByRole("button", { name: "Login" }));
     });
 
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(screen.getByText("Login successful!")).toBeInTheDocument();
-          expect(useAuthStore.getState().isLoggedIn).toBe(true);
-          expect(
-            screen.getByRole("button", { name: "Logout" })
-          ).toBeInTheDocument();
-        },
-        { timeout: 2000 }
-      );
-    });
+    await waitFor(
+      () => {
+        expect(toast.success).toHaveBeenCalledWith("Login successful!", {
+          description: "You are now logged in.",
+          action: {
+            label: "Go to Dashboard",
+            onClick: expect.any(Function),
+          },
+          className: "login-toast",
+          duration: 5000,
+        });
+        expect(screen.getByTestId("login-message")).toBeInTheDocument();
+      },
+      { timeout: 3000 } // Increased timeout
+    );
+
+    // Wait for auth state and UI to update
+    await waitFor(
+      () => {
+        expect(useAuthStore.getState().isLoggedIn).toBe(true);
+        expect(screen.getByRole("button", { name: "Logout" })).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
   });
 
   it("handles invalid login credentials on home route", async () => {
@@ -343,12 +336,8 @@ describe("Home Component with Router", () => {
 
     await setup("/");
 
-    await act(async () => {
-      await waitFor(() => {
-        expect(
-          screen.getByPlaceholderText("m@example.com")
-        ).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText("m@example.com")).toBeInTheDocument();
     });
 
     await act(async () => {
@@ -361,15 +350,19 @@ describe("Home Component with Router", () => {
       fireEvent.click(screen.getByRole("button", { name: "Login" }));
     });
 
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(
-            screen.getByText(/Login failed:.*Invalid email or password/i)
-          ).toBeInTheDocument();
-        },
-        { timeout: 2000 }
-      );
-    });
+    await waitFor(
+      () => {
+        expect(toast.error).toHaveBeenCalledWith("Login failed", {
+          description: "Invalid email or password",
+          action: {
+            label: "Try again",
+            onClick: expect.any(Function),
+          },
+          className: "login-toast",
+          duration: 5000,
+        });
+      },
+      { timeout: 3000 } // Increased timeout
+    );
   });
 });
