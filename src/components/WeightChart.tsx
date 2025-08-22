@@ -61,11 +61,17 @@ function WeightChart() {
 
   if (!weights.length) {
     return (
-      <div data-slot="card" className="text-card-foreground flex flex-col gap-6 rounded-xl border py-6 w-full max-w-4xl bg-white shadow-lg mx-auto">
+      // <div data-slot="card" className="text-card-foreground flex flex-col gap-6 rounded-xl border py-6 w-full max-w-4xl bg-white shadow-lg mx-auto">
+        <>
         <div data-slot="card-header" className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6">
+          
+          
           <h1 data-slot="card-title" className="text-2xl font-bold text-center text-gray-900">
             Weight Chart
           </h1>
+
+
+
           <div className="flex justify-end">
             <Select onValueChange={handleTrendPeriodChange} value={trendPeriod}>
               <SelectTrigger data-testid="unit-select" aria-label="Select trend period" className="w-[100px]">
@@ -78,11 +84,20 @@ function WeightChart() {
               </SelectContent>
             </Select>
           </div>
+
+
+
         </div>
+
+
         <div data-slot="card-content" className="px-6 space-y-6">
           <p data-testid="no-data">No weight measurements found</p>
         </div>
-      </div>
+
+        </>
+
+
+      // </div>
     );
   }
 
