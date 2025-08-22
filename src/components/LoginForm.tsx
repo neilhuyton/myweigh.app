@@ -45,6 +45,17 @@ function LoginForm({ className, onSwitchToRegister }: LoginFormProps) {
               data-testid="login-form"
             >
               <div className="flex flex-col gap-6">
+                {message && (
+                  <p
+                    data-testid="login-message"
+                    className={cn(
+                      'text-sm',
+                      message.includes('failed') ? 'text-red-500' : 'text-green-500'
+                    )}
+                  >
+                    {message}
+                  </p>
+                )}
                 <div className="grid gap-3">
                   <FormField
                     control={form.control}
@@ -76,13 +87,13 @@ function LoginForm({ className, onSwitchToRegister }: LoginFormProps) {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between leading-none mb-0">
                           <Label htmlFor="password" data-testid="password-label">
                             Password
                           </Label>
                           <a
                             href="#"
-                            className="inline-block text-sm underline-offset-4 hover:underline"
+                            className="inline-block text-sm underline-offset-0 hover:underline"
                             data-testid="forgot-password-link"
                           >
                             Forgot your password?
@@ -116,20 +127,7 @@ function LoginForm({ className, onSwitchToRegister }: LoginFormProps) {
                   </Button>
                 </div>
               </div>
-              {message && (
-                <p
-                  className={cn(
-                    'mt-4 text-center text-sm',
-                    message.includes('successful')
-                      ? 'text-green-600'
-                      : 'text-red-600'
-                  )}
-                  data-testid="login-message"
-                >
-                  {message}
-                </p>
-              )}
-              <div className="mt-4 text-center text-sm">
+              <div className="mt-8 text-center text-sm">
                 Don&apos;t have an account?{' '}
                 <a
                   href="#"

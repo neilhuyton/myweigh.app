@@ -71,7 +71,6 @@ describe('WeightChart Component', () => {
 
   beforeAll(() => {
     server.listen({ onUnhandledRequest: 'error' });
-    vi.spyOn(console, 'log').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -89,7 +88,6 @@ describe('WeightChart Component', () => {
 
   afterAll(() => {
     server.close();
-    vi.spyOn(console, 'log').mockRestore();
   });
 
   it('displays loading message while fetching weights', async () => {

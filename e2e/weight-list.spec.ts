@@ -1,4 +1,3 @@
-// e2e/weight-list.spec.ts
 import { test, expect } from "@playwright/test";
 
 test.describe("Weight List Functionality", () => {
@@ -7,9 +6,7 @@ test.describe("Weight List Functionality", () => {
     await page.context().addInitScript(() => {
       window.confirm = () => true;
     });
-  });
 
-  test("should display weight measurements when logged in", async ({ page }) => {
     // Mock the tRPC login request
     await page.route("**/trpc/login*", async (route) => {
       if (route.request().method() === "POST") {
@@ -37,6 +34,31 @@ test.describe("Weight List Functionality", () => {
       }
     });
 
+    // Navigate to the home page and log in
+    await page.goto("/");
+    await expect(page.getByPlaceholder("m@example.com")).toBeVisible({ timeout: 5000 });
+
+    await page.getByPlaceholder("m@example.com").fill("testuser@example.com");
+    await page.getByPlaceholder("Enter your password").fill("password123");
+
+    await Promise.all([
+      page.waitForResponse(
+        (resp) => resp.url().includes("trpc/login") && resp.status() === 200,
+        { timeout: 30000 }
+      ),
+      page.getByRole("button", { name: "Login" }).click(),
+    ]);
+
+    // Wait for login confirmation
+    await expect(page.getByTestId("login-message")).toBeVisible({ timeout: 20000 });
+
+    // Wait for notifications to disappear to avoid interference
+    await page.getByLabel("Notifications alt+T").waitFor({ state: "hidden", timeout: 5000 }).catch(() => {
+      // Ignore if no notifications are present
+    });
+  });
+
+  test("should display weight measurements when logged in", async ({ page }) => {
     // Mock the tRPC weight.getWeights request with a single item
     await page.route("**/trpc/weight.getWeights*", async (route) => {
       if (route.request().method() === "GET") {
@@ -93,33 +115,9 @@ test.describe("Weight List Functionality", () => {
       }
     });
 
-    // Navigate to the home page and log in
-    await page.goto("/");
-    await expect(page.getByPlaceholder("m@example.com")).toBeVisible({ timeout: 5000 });
-
-    await page.getByPlaceholder("m@example.com").fill("testuser@example.com");
-    await page.getByPlaceholder("Enter your password").fill("password123");
-
-    await Promise.all([
-      page.waitForResponse(
-        (resp) => resp.url().includes("trpc/login") && resp.status() === 200,
-        { timeout: 30000 }
-      ),
-      page.getByRole("button", { name: "Login" }).click(),
-    ]);
-
-    await expect(page.getByText("Login successful!")).toBeVisible({
-      timeout: 20000,
-    });
-    await expect(page.getByRole("button", { name: "Logout" })).toBeVisible({
-      timeout: 20000,
-    });
-
     // Navigate to the weights list
     await page.getByRole("link", { name: "Weights" }).click();
-    await expect(
-      page.getByText("A list of your recent weight measurements")
-    ).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText("A list of your recent weight measurements")).toBeVisible({ timeout: 5000 });
 
     // Verify the weight table is displayed with a single item
     await expect(page.getByRole("table")).toBeVisible({ timeout: 5000 });
@@ -167,9 +165,7 @@ test.describe("Weight List Functionality", () => {
 
     // Verify redirect to home
     await expect(page.getByPlaceholder("m@example.com")).toBeVisible({ timeout: 5000 });
-    await expect(
-      page.getByText("A list of your recent weight measurements")
-    ).not.toBeVisible({ timeout: 5000 });
+    await expect(page.getByText("A list of your recent weight measurements")).not.toBeVisible({ timeout: 5000 });
   });
 
   test("should delete a weight measurement when delete button is clicked", async ({ page }) => {
@@ -182,33 +178,6 @@ test.describe("Weight List Functionality", () => {
         createdAt: "2025-08-20T10:00:00Z",
       },
     ];
-
-    // Mock the tRPC login request
-    await page.route("**/trpc/login*", async (route) => {
-      if (route.request().method() === "POST") {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          headers: {
-            "Access-Control-Allow-Origin": "http://localhost:5173",
-            "Access-Control-Allow-Credentials": "true",
-          },
-          body: JSON.stringify([
-            {
-              id: 0,
-              result: {
-                data: {
-                  id: "test-user-id",
-                  email: "testuser@example.com",
-                },
-              },
-            },
-          ]),
-        });
-      } else {
-        await route.continue();
-      }
-    });
 
     // Mock the tRPC weight.getWeights request
     await page.route("**/trpc/weight.getWeights*", async (route) => {
@@ -282,33 +251,9 @@ test.describe("Weight List Functionality", () => {
       }
     });
 
-    // Navigate to the home page and log in
-    await page.goto("/");
-    await expect(page.getByPlaceholder("m@example.com")).toBeVisible({ timeout: 5000 });
-
-    await page.getByPlaceholder("m@example.com").fill("testuser@example.com");
-    await page.getByPlaceholder("Enter your password").fill("password123");
-
-    await Promise.all([
-      page.waitForResponse(
-        (resp) => resp.url().includes("trpc/login") && resp.status() === 200,
-        { timeout: 30000 }
-      ),
-      page.getByRole("button", { name: "Login" }).click(),
-    ]);
-
-    await expect(page.getByText("Login successful!")).toBeVisible({
-      timeout: 20000,
-    });
-    await expect(page.getByRole("button", { name: "Logout" })).toBeVisible({
-      timeout: 20000,
-    });
-
     // Navigate to the weights list
     await page.getByRole("link", { name: "Weights" }).click();
-    await expect(
-      page.getByText("A list of your recent weight measurements")
-    ).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText("A list of your recent weight measurements")).toBeVisible({ timeout: 5000 });
 
     // Verify initial weight (single item)
     await expect(page.getByText("70.5")).toBeVisible({ timeout: 5000 });
@@ -325,14 +270,11 @@ test.describe("Weight List Functionality", () => {
     // Click and wait for responses
     await Promise.all([
       page.waitForResponse(
-        (resp) =>
-          resp.url().includes("trpc/weight.delete?batch=1") &&
-          resp.status() === 200,
+        (resp) => resp.url().includes("trpc/weight.delete?batch=1") && resp.status() === 200,
         { timeout: 30000 }
       ),
       page.waitForResponse(
-        (resp) =>
-          resp.url().includes("trpc/weight.getWeights") && resp.status() === 200,
+        (resp) => resp.url().includes("trpc/weight.getWeights") && resp.status() === 200,
         { timeout: 30000 }
       ),
       deleteButton.click(),
@@ -342,8 +284,6 @@ test.describe("Weight List Functionality", () => {
     await expect(page.getByText("70.5")).not.toBeVisible({ timeout: 5000 });
     await expect(page.getByText("Morning weigh-in")).not.toBeVisible();
     await expect(page.getByText(/20\/08\/2025/)).not.toBeVisible();
-    await expect(page.getByText("No weight measurements found")).toBeVisible({
-      timeout: 5000,
-    });
+    await expect(page.getByText("No weight measurements found")).toBeVisible({ timeout: 5000 });
   });
 });

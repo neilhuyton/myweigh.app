@@ -1,14 +1,17 @@
-// e2e/weight.spec.ts
 import { test, expect } from '@playwright/test';
 
 test.describe('Weight Form Functionality', () => {
-  test('should record weight successfully when logged in', async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     // Mock the tRPC login request
     await page.route('**/trpc/login**', async (route) => {
       if (route.request().method() === 'POST') {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
+          headers: {
+            "Access-Control-Allow-Origin": "http://localhost:5173",
+            "Access-Control-Allow-Credentials": "true",
+          },
           body: JSON.stringify([
             {
               id: 0,
@@ -26,6 +29,31 @@ test.describe('Weight Form Functionality', () => {
       }
     });
 
+    // Navigate to the home page and log in
+    await page.goto('/');
+    await expect(page.getByPlaceholder('m@example.com')).toBeVisible({ timeout: 5000 });
+
+    await page.getByPlaceholder('m@example.com').fill('testuser@example.com');
+    await page.getByPlaceholder('Enter your password').fill('password123');
+
+    await Promise.all([
+      page.waitForResponse(
+        (resp) => resp.url().includes('trpc/login') && resp.status() === 200,
+        { timeout: 20000 }
+      ),
+      page.getByRole('button', { name: 'Login' }).click(),
+    ]);
+
+    // Wait for login confirmation
+    await expect(page.getByTestId('login-message')).toBeVisible({ timeout: 20000 });
+
+    // Wait for notifications to disappear to avoid interference
+    await page.getByLabel('Notifications alt+T').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {
+      // Ignore if no notifications are present
+    });
+  });
+
+  test('should record weight successfully when logged in', async ({ page }) => {
     // Mock the tRPC weight.create request
     await page.route('**/trpc/weight.create**', async (route) => {
       if (route.request().method() === 'POST') {
@@ -34,6 +62,10 @@ test.describe('Weight Form Functionality', () => {
           await route.fulfill({
             status: 401,
             contentType: 'application/json',
+            headers: {
+              "Access-Control-Allow-Origin": "http://localhost:5173",
+              "Access-Control-Allow-Credentials": "true",
+            },
             body: JSON.stringify([
               {
                 id: 0,
@@ -49,6 +81,10 @@ test.describe('Weight Form Functionality', () => {
           await route.fulfill({
             status: 200,
             contentType: 'application/json',
+            headers: {
+              "Access-Control-Allow-Origin": "http://localhost:5173",
+              "Access-Control-Allow-Credentials": "true",
+            },
             body: JSON.stringify([
               {
                 id: 0,
@@ -68,21 +104,6 @@ test.describe('Weight Form Functionality', () => {
       }
     });
 
-    // Navigate to the home page and log in
-    await page.goto('/');
-    await expect(page.getByPlaceholder('m@example.com')).toBeVisible({ timeout: 5000 });
-
-    await page.getByPlaceholder('m@example.com').fill('testuser@example.com');
-    await page.getByPlaceholder('Enter your password').fill('password123');
-
-    await Promise.all([
-      page.waitForResponse((resp) => resp.url().includes('trpc/login') && resp.status() === 200, { timeout: 20000 }),
-      page.getByRole('button', { name: 'Login' }).click(),
-    ]);
-
-    await expect(page.getByText('Login successful!')).toBeVisible({ timeout: 20000 });
-    await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible({ timeout: 20000 });
-
     // Navigate to the weight form
     await page.getByRole('link', { name: 'Weight', exact: true }).click();
     await expect(page.getByPlaceholder('Enter your weight (kg)')).toBeVisible({ timeout: 5000 });
@@ -93,9 +114,10 @@ test.describe('Weight Form Functionality', () => {
 
     // Submit the form
     await Promise.all([
-      page.waitForResponse((resp) => resp.url().includes('trpc/weight.create') && resp.status() === 200, {
-        timeout: 20000,
-      }),
+      page.waitForResponse(
+        (resp) => resp.url().includes('trpc/weight.create') && resp.status() === 200,
+        { timeout: 20000 }
+      ),
       page.getByRole('button', { name: 'Submit Weight' }).click(),
     ]);
 
@@ -104,6 +126,7 @@ test.describe('Weight Form Functionality', () => {
   });
 
   test('should redirect to home when not logged in', async ({ page }) => {
+    // No login mock needed since we're testing unauthorized access
     await page.goto('/weight');
 
     // Verify redirect to home

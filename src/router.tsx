@@ -10,13 +10,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
 import { trpc } from "./trpc";
 import Home from "./components/Home";
-import Navigation from "./components/Navigation"; // Added Navigation import
+import Navigation from "./components/Navigation";
 import WeightForm from "./components/WeightForm";
 import WeightList from "./components/WeightList";
 import WeightChart from "./components/WeightChart";
 import WeightGoal from "./components/WeightGoal";
 import { useAuthStore } from "./store/authStore";
 import { ThemeProvider } from "./components/ThemeProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 // Create tRPC client
 const queryClient = new QueryClient({
@@ -48,7 +49,7 @@ const trpcClient = trpc.createClient({
   ],
 });
 
-// Define root route with Navigation
+// Define root route with Navigation and Toaster
 const rootRoute = createRootRoute({
   component: () => (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
@@ -56,6 +57,7 @@ const rootRoute = createRootRoute({
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
           <Navigation />
           <Outlet />
+          <Toaster richColors position="top-right" />
         </ThemeProvider>
       </QueryClientProvider>
     </trpc.Provider>
