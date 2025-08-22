@@ -1,4 +1,3 @@
-// src/router.tsx
 import {
   createRouter,
   createRootRoute,
@@ -8,6 +7,7 @@ import {
 } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { httpBatchLink } from '@trpc/client';
+import { z } from 'zod';
 import { trpc } from './trpc';
 import Home from './components/Home';
 import Navigation from './components/Navigation';
@@ -17,6 +17,7 @@ import WeightChart from './components/WeightChart';
 import WeightGoal from './components/WeightGoal';
 import Register from './components/Register';
 import LoginForm from './components/LoginForm';
+import VerifyEmail from './components/VerifyEmail';
 import { useAuthStore } from './store/authStore';
 import { ThemeProvider } from './components/ThemeProvider';
 import { Toaster } from '@/components/ui/sonner';
@@ -64,6 +65,11 @@ const rootRoute = createRootRoute({
       </QueryClientProvider>
     </trpc.Provider>
   ),
+});
+
+// Define search schema for verify-email route
+const verifyEmailSearchSchema = z.object({
+  token: z.string().uuid().optional(),
 });
 
 // Define routes
@@ -133,6 +139,13 @@ const weightGoalRoute = createRoute({
   component: WeightGoal,
 });
 
+const verifyEmailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/verify-email',
+  validateSearch: verifyEmailSearchSchema,
+  component: VerifyEmail,
+});
+
 // Create route tree
 const routeTree = rootRoute.addChildren([
   homeRoute,
@@ -142,6 +155,7 @@ const routeTree = rootRoute.addChildren([
   weightsRoute,
   weightChartRoute,
   weightGoalRoute,
+  verifyEmailRoute,
 ]);
 
 // Create router
