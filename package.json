@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "npx prisma generate && tsc -b tsconfig.json netlify/functions/tsconfig.json && vite build",
+    "netlify": "netlify dev",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
