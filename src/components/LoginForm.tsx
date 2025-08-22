@@ -6,17 +6,17 @@ import {
   FormField,
   FormItem,
   FormMessage,
-} from './ui/form';
-import { Input } from './ui/input';
-import { Button } from './ui/button';
-import { Label } from './ui/label';
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from './ui/card';
+} from '@/components/ui/card';
 import { useLogin } from '../hooks/useLogin';
 
 interface LoginFormProps {
@@ -113,13 +113,6 @@ function LoginForm({ className, onSwitchToRegister }: LoginFormProps) {
                     disabled={isPending}
                   >
                     {isPending ? 'Logging in...' : 'Login'}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    data-testid="google-login-button"
-                  >
-                    Login with Google
                   </Button>
                 </div>
               </div>

@@ -70,10 +70,10 @@ test.describe('Weight Form Functionality', () => {
 
     // Navigate to the home page and log in
     await page.goto('/');
-    await expect(page.getByPlaceholder('Enter your email for login')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByPlaceholder('m@example.com')).toBeVisible({ timeout: 5000 });
 
-    await page.getByPlaceholder('Enter your email for login').fill('testuser@example.com');
-    await page.getByPlaceholder('Enter your password for login').fill('password123');
+    await page.getByPlaceholder('m@example.com').fill('testuser@example.com');
+    await page.getByPlaceholder('Enter your password').fill('password123');
 
     await Promise.all([
       page.waitForResponse((resp) => resp.url().includes('trpc/login') && resp.status() === 200, { timeout: 20000 }),
@@ -107,7 +107,7 @@ test.describe('Weight Form Functionality', () => {
     await page.goto('/weight');
 
     // Verify redirect to home
-    await expect(page.getByPlaceholder('Enter your email for login')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByPlaceholder('m@example.com')).toBeVisible({ timeout: 5000 });
     await expect(page.getByPlaceholder('Enter your weight (kg)')).not.toBeVisible({ timeout: 5000 });
   });
 });

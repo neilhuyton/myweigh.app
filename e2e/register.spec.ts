@@ -27,8 +27,8 @@ test.describe('Register Functionality', () => {
 
     await page.goto('/');
 
-    await expect(page.getByRole('button', { name: 'Sign up' })).toBeVisible({ timeout: 5000 });
-    await page.getByRole('button', { name: 'Sign up' }).click();
+    await expect(page.getByRole('link', { name: 'Sign up' })).toBeVisible({ timeout: 5000 });
+    await page.getByRole('link', { name: 'Sign up' }).click();
 
     await expect(page.getByPlaceholder('Enter your email')).toBeVisible({ timeout: 5000 });
 
@@ -83,8 +83,8 @@ test.describe('Register Functionality', () => {
 
     await page.goto('/');
 
-    await expect(page.getByRole('button', { name: 'Sign up' })).toBeVisible({ timeout: 5000 });
-    await page.getByRole('button', { name: 'Sign up' }).click();
+    await expect(page.getByRole('link', { name: 'Sign up' })).toBeVisible({ timeout: 5000 });
+    await page.getByRole('link', { name: 'Sign up' }).click();
 
     await expect(page.getByPlaceholder('Enter your email')).toBeVisible({ timeout: 5000 });
 
@@ -102,14 +102,13 @@ test.describe('Register Functionality', () => {
     const registerButton = page.getByRole('button', { name: 'Register' });
     await expect(registerButton).toBeEnabled({ timeout: 5000 });
 
-    // Temporarily disable HTML5 validation and trigger form submission
     await page.evaluate(() => {
       const form = document.querySelector('.form-container form');
-      const emailInput = form?.querySelector('input[type="email"]') as HTMLInputElement;
-      const passwordInput = form?.querySelector('input[type="password"]') as HTMLInputElement;
+      const emailInput = form?.querySelector('input[type="email"]');
+      const passwordInput = form?.querySelector('input[type="password"]');
       if (form && emailInput && passwordInput) {
         emailInput.removeAttribute('required');
-        emailInput.setAttribute('type', 'text'); // Change to text to avoid email validation
+        emailInput.setAttribute('type', 'text');
         passwordInput.removeAttribute('required');
       }
     });
@@ -152,8 +151,8 @@ test.describe('Register Functionality', () => {
 
     await page.goto('/');
 
-    await expect(page.getByRole('button', { name: 'Sign up' })).toBeVisible({ timeout: 5000 });
-    await page.getByRole('button', { name: 'Sign up' }).click();
+    await expect(page.getByRole('link', { name: 'Sign up' })).toBeVisible({ timeout: 5000 });
+    await page.getByRole('link', { name: 'Sign up' }).click();
 
     await expect(page.getByPlaceholder('Enter your email')).toBeVisible({ timeout: 5000 });
 
@@ -190,14 +189,14 @@ test.describe('Register Functionality', () => {
   test('should switch to login form when log in button is clicked', async ({ page }) => {
     await page.goto('/');
 
-    await expect(page.getByRole('button', { name: 'Sign up' })).toBeVisible({ timeout: 5000 });
-    await page.getByRole('button', { name: 'Sign up' }).click();
+    await expect(page.getByRole('link', { name: 'Sign up' })).toBeVisible({ timeout: 5000 });
+    await page.getByRole('link', { name: 'Sign up' }).click();
 
     await expect(page.getByPlaceholder('Enter your email')).toBeVisible({ timeout: 5000 });
 
     await page.getByRole('button', { name: 'Log in' }).click();
 
-    await expect(page.getByPlaceholder('Enter your email for login')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByPlaceholder('m@example.com')).toBeVisible({ timeout: 5000 });
     await expect(page.getByPlaceholder('Enter your email', { exact: true })).not.toBeVisible({ timeout: 5000 });
   });
 });

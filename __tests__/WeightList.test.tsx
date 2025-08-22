@@ -104,7 +104,7 @@ describe('WeightList Component', () => {
     await waitFor(
       () => {
         expect(history.location.pathname).toBe('/');
-        expect(screen.getByPlaceholderText('Enter your email for login')).toBeInTheDocument();
+                expect(screen.getByPlaceholderText('m@example.com')).toBeInTheDocument();
       },
       { timeout: 2000 }
     );

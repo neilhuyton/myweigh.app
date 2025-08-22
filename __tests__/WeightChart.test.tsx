@@ -1,5 +1,4 @@
 // __tests__/WeightChart.test.tsx
-
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
 import { render, screen, waitFor, cleanup } from '@testing-library/react';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
@@ -93,7 +92,7 @@ describe('WeightChart Component', () => {
     vi.spyOn(console, 'log').mockRestore();
   });
 
-    it('displays loading message while fetching weights', async () => {
+  it('displays loading message while fetching weights', async () => {
     useAuthStore.setState({
       isLoggedIn: true,
       userId: 'test-user-id',
@@ -135,7 +134,6 @@ describe('WeightChart Component', () => {
       queryClient.removeQueries();
     });
   });
-
 
   it('displays weight chart with measurements sorted by date when logged in', async () => {
     useAuthStore.setState({
@@ -215,9 +213,8 @@ describe('WeightChart Component', () => {
     await act(async () => {
       await waitFor(
         () => {
-          expect(
-            screen.getByPlaceholderText('Enter your email for login')
-          ).toBeInTheDocument();
+          expect(screen.getByTestId('email-input')).toBeInTheDocument();
+          expect(screen.getByPlaceholderText('m@example.com')).toBeInTheDocument();
         },
         { timeout: 5000 }
       );

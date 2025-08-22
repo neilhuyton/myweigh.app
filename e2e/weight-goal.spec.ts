@@ -2,9 +2,7 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Weight Goal Functionality", () => {
-  test("should set and display weight goal when logged in", async ({
-    page,
-  }) => {
+  test("should set and display weight goal when logged in", async ({ page }) => {
     // Mock the tRPC login request
     await page.route("**/trpc/login**", async (route) => {
       if (route.request().method() === "POST") {
@@ -182,16 +180,10 @@ test.describe("Weight Goal Functionality", () => {
 
     // Navigate to the home page and log in
     await page.goto("/");
-    await expect(
-      page.getByPlaceholder("Enter your email for login")
-    ).toBeVisible({ timeout: 5000 });
+    await expect(page.getByPlaceholder("m@example.com")).toBeVisible({ timeout: 5000 });
 
-    await page
-      .getByPlaceholder("Enter your email for login")
-      .fill("testuser@example.com");
-    await page
-      .getByPlaceholder("Enter your password for login")
-      .fill("password123");
+    await page.getByPlaceholder("m@example.com").fill("testuser@example.com");
+    await page.getByPlaceholder("Enter your password").fill("password123");
 
     await Promise.all([
       page.waitForResponse(
@@ -279,17 +271,13 @@ test.describe("Weight Goal Functionality", () => {
     await page.goto("/weight-goal");
 
     // Verify redirect to home
-    await expect(
-      page.getByPlaceholder("Enter your email for login")
-    ).toBeVisible({ timeout: 5000 });
+    await expect(page.getByPlaceholder("m@example.com")).toBeVisible({ timeout: 5000 });
     await expect(
       page.getByRole("heading", { name: "Set Weight Goal" })
     ).not.toBeVisible({ timeout: 5000 });
   });
 
-  test("should display error message for invalid goal weight", async ({
-    page,
-  }) => {
+  test("should display error message for invalid goal weight", async ({ page }) => {
     // Mock the tRPC login request
     await page.route("**/trpc/login**", async (route) => {
       if (route.request().method() === "POST") {
@@ -342,16 +330,10 @@ test.describe("Weight Goal Functionality", () => {
 
     // Navigate to the home page and log in
     await page.goto("/");
-    await expect(
-      page.getByPlaceholder("Enter your email for login")
-    ).toBeVisible({ timeout: 5000 });
+    await expect(page.getByPlaceholder("m@example.com")).toBeVisible({ timeout: 5000 });
 
-    await page
-      .getByPlaceholder("Enter your email for login")
-      .fill("testuser@example.com");
-    await page
-      .getByPlaceholder("Enter your password for login")
-      .fill("password123");
+    await page.getByPlaceholder("m@example.com").fill("testuser@example.com");
+    await page.getByPlaceholder("Enter your password").fill("password123");
 
     await Promise.all([
       page.waitForResponse(

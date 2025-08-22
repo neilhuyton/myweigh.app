@@ -3,20 +3,18 @@ import {
   createRouter,
   createRootRoute,
   createRoute,
-    redirect,
+  redirect,
   Outlet,
 } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
 import { trpc } from "./trpc";
 import Home from "./components/Home";
-
+import Navigation from "./components/Navigation"; // Added Navigation import
 import WeightForm from "./components/WeightForm";
 import WeightList from "./components/WeightList";
 import WeightChart from "./components/WeightChart";
 import WeightGoal from "./components/WeightGoal";
-
-// import Navigation from "./components/Navigation"; // Import Navigation
 import { useAuthStore } from "./store/authStore";
 import { ThemeProvider } from "./components/ThemeProvider";
 
@@ -56,6 +54,7 @@ const rootRoute = createRootRoute({
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+          <Navigation />
           <Outlet />
         </ThemeProvider>
       </QueryClientProvider>
@@ -121,10 +120,10 @@ const weightGoalRoute = createRoute({
 // Create route tree
 const routeTree = rootRoute.addChildren([
   homeRoute,
-    weightRoute,
-    weightsRoute,
-    weightChartRoute,
-    weightGoalRoute,
+  weightRoute,
+  weightsRoute,
+  weightChartRoute,
+  weightGoalRoute,
 ]);
 
 // Create router

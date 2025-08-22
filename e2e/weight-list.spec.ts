@@ -95,16 +95,10 @@ test.describe("Weight List Functionality", () => {
 
     // Navigate to the home page and log in
     await page.goto("/");
-    await expect(
-      page.getByPlaceholder("Enter your email for login")
-    ).toBeVisible({ timeout: 5000 });
+    await expect(page.getByPlaceholder("m@example.com")).toBeVisible({ timeout: 5000 });
 
-    await page
-      .getByPlaceholder("Enter your email for login")
-      .fill("testuser@example.com");
-    await page
-      .getByPlaceholder("Enter your password for login")
-      .fill("password123");
+    await page.getByPlaceholder("m@example.com").fill("testuser@example.com");
+    await page.getByPlaceholder("Enter your password").fill("password123");
 
     await Promise.all([
       page.waitForResponse(
@@ -124,7 +118,7 @@ test.describe("Weight List Functionality", () => {
     // Navigate to the weights list
     await page.getByRole("link", { name: "Weights" }).click();
     await expect(
-      page.getByRole("heading", { name: "Weight Measurements" })
+      page.getByText("A list of your recent weight measurements")
     ).toBeVisible({ timeout: 5000 });
 
     // Verify the weight table is displayed with a single item
@@ -172,11 +166,9 @@ test.describe("Weight List Functionality", () => {
     await page.goto("/weights");
 
     // Verify redirect to home
+    await expect(page.getByPlaceholder("m@example.com")).toBeVisible({ timeout: 5000 });
     await expect(
-      page.getByPlaceholder("Enter your email for login")
-    ).toBeVisible({ timeout: 5000 });
-    await expect(
-      page.getByRole("heading", { name: "Weight Measurements" })
+      page.getByText("A list of your recent weight measurements")
     ).not.toBeVisible({ timeout: 5000 });
   });
 
@@ -292,16 +284,10 @@ test.describe("Weight List Functionality", () => {
 
     // Navigate to the home page and log in
     await page.goto("/");
-    await expect(
-      page.getByPlaceholder("Enter your email for login")
-    ).toBeVisible({ timeout: 5000 });
+    await expect(page.getByPlaceholder("m@example.com")).toBeVisible({ timeout: 5000 });
 
-    await page
-      .getByPlaceholder("Enter your email for login")
-      .fill("testuser@example.com");
-    await page
-      .getByPlaceholder("Enter your password for login")
-      .fill("password123");
+    await page.getByPlaceholder("m@example.com").fill("testuser@example.com");
+    await page.getByPlaceholder("Enter your password").fill("password123");
 
     await Promise.all([
       page.waitForResponse(
@@ -321,7 +307,7 @@ test.describe("Weight List Functionality", () => {
     // Navigate to the weights list
     await page.getByRole("link", { name: "Weights" }).click();
     await expect(
-      page.getByRole("heading", { name: "Weight Measurements" })
+      page.getByText("A list of your recent weight measurements")
     ).toBeVisible({ timeout: 5000 });
 
     // Verify initial weight (single item)
@@ -329,22 +315,12 @@ test.describe("Weight List Functionality", () => {
     await expect(page.getByText("Morning weigh-in")).toBeVisible();
     await expect(page.getByText(/20\/08\/2025/)).toBeVisible();
 
-    // Debug: Log DOM state and button attributes removed
-    await page.evaluate(() => {
-      // Removed console logs
-    });
-
     // Select the delete button for the single weight
     const deleteButton = page.getByRole("button", {
       name: "Delete weight measurement from 20/08/2025",
     });
     await expect(deleteButton).toBeVisible({ timeout: 5000 });
     await expect(deleteButton).toBeEnabled({ timeout: 5000 });
-
-    // Debug: Verify window.confirm mock before click removed
-    await page.evaluate(() => {
-      // Removed console log
-    });
 
     // Click and wait for responses
     await Promise.all([
@@ -361,11 +337,6 @@ test.describe("Weight List Functionality", () => {
       ),
       deleteButton.click(),
     ]);
-
-    // Debug: Log DOM state after clicking removed
-    await page.evaluate(() => {
-      // Removed console log
-    });
 
     // Verify the weight is removed and empty state is shown
     await expect(page.getByText("70.5")).not.toBeVisible({ timeout: 5000 });
