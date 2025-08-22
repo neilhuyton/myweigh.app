@@ -23,5 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 
+/src/generated/prisma
+
 # Local Netlify folder
 .netlify
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
