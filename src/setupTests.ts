@@ -1,3 +1,4 @@
+// src/setupTests.ts
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
@@ -33,10 +34,25 @@ Object.defineProperty(window, 'matchMedia', {
 // Polyfill PointerEvent for jsdom to support @radix-ui/react-select
 if (typeof window !== 'undefined') {
   window.PointerEvent = class PointerEvent extends Event {
-    constructor(type: string, init?: EventInit) {
+    public pointerId: number;
+    public clientX: number;
+    public clientY: number;
+    public isPrimary: boolean;
+    public pointerType: string;
+    public button: number;
+    public buttons: number;
+
+    constructor(type: string, init?: PointerEventInit) {
       super(type, init);
+      this.pointerId = init?.pointerId ?? 0;
+      this.clientX = init?.clientX ?? 0;
+      this.clientY = init?.clientY ?? 0;
+      this.isPrimary = init?.isPrimary ?? true;
+      this.pointerType = init?.pointerType ?? 'mouse';
+      this.button = init?.button ?? 0;
+      this.buttons = init?.buttons ?? 0;
     }
-  } as any;
+  } as unknown as typeof PointerEvent;
 
   if (!Element.prototype.hasPointerCapture) {
     Element.prototype.hasPointerCapture = () => false;

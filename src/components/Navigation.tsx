@@ -8,7 +8,6 @@ import {
   SheetTrigger,
   SheetClose,
 } from "./ui/sheet";
-import { cn } from "@/lib/utils";
 import { Menu } from "lucide-react";
 
 function Navigation() {

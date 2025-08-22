@@ -1,6 +1,14 @@
-// src/useWeightChart.ts
+// src/hooks/useWeightChart.ts
 import { useMemo } from 'react';
 import { trpc } from '../trpc';
+import type { TooltipItem } from 'chart.js';
+
+// Define the data point structure for the chart
+interface WeightDataPoint {
+  x: string | null;
+  y: number;
+  note: string | null;
+}
 
 export const useWeightChart = (trendPeriod: 'daily' | 'weekly' | 'monthly' = 'daily') => {
   const { data, isLoading, isError, error } = trpc.weight.getWeights.useQuery();
@@ -32,48 +40,50 @@ export const useWeightChart = (trendPeriod: 'daily' | 'weekly' | 'monthly' = 'da
     ],
   }), [weights]);
 
-  const timeUnitMap: Record<'daily' | 'weekly' | 'monthly', 'day' | 'week' | 'month'> = {
-    daily: 'day',
-    weekly: 'week',
-    monthly: 'month',
-  };
+  const chartOptions = useMemo(() => {
+    const timeUnitMap: Record<'daily' | 'weekly' | 'monthly', 'day' | 'week' | 'month'> = {
+      daily: 'day',
+      weekly: 'week',
+      monthly: 'month',
+    };
 
-  const chartOptions = useMemo(() => ({
-    responsive: true,
-    scales: {
-      x: {
-        type: 'time' as const,
-        time: {
-          unit: timeUnitMap[trendPeriod],
+    return {
+      responsive: true,
+      scales: {
+        x: {
+          type: 'time' as const,
+          time: {
+            unit: timeUnitMap[trendPeriod],
+          },
+          title: {
+            display: true,
+            text: 'Date',
+          },
         },
-        title: {
+        y: {
+          title: {
+            display: true,
+            text: 'Weight (kg)',
+          },
+          beginAtZero: false,
+        },
+      },
+      plugins: {
+        legend: {
           display: true,
-          text: 'Date',
         },
-      },
-      y: {
-        title: {
-          display: true,
-          text: 'Weight (kg)',
-        },
-        beginAtZero: false,
-      },
-    },
-    plugins: {
-      legend: {
-        display: true,
-      },
-      tooltip: {
-        callbacks: {
-          label: (context: any) => {
-            const weight = context.raw.y;
-            const note = context.raw.note ? ` (${context.raw.note})` : '';
-            return `${weight} kg${note}`;
+        tooltip: {
+          callbacks: {
+            label: (context: TooltipItem<'line'> & { raw: WeightDataPoint }) => {
+              const weight = context.raw.y;
+              const note = context.raw.note ? ` (${context.raw.note})` : '';
+              return `${weight} kg${note}`;
+            },
           },
         },
       },
-    },
-  }), [trendPeriod]);
+    };
+  }, [trendPeriod]);
 
   return { weights, isLoading, isError, error, chartData, chartOptions };
 };

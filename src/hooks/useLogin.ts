@@ -61,7 +61,7 @@ export const useLogin = (): UseLoginReturn => {
 
     try {
       await loginMutation.mutateAsync(data);
-    } catch (error) {
+    } catch {
       // Error handled in onError
     }
   };

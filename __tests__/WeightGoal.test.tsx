@@ -1,3 +1,4 @@
+// __tests__/WeightGoal.test.tsx
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
@@ -11,6 +12,15 @@ import '@testing-library/jest-dom';
 import { http, HttpResponse } from 'msw';
 import { useAuthStore } from '../src/store/authStore';
 import { act } from 'react';
+
+// Define the expected shape of the TRPC request body
+interface TRPCRequestBody {
+  [key: string]: {
+    id?: number;
+    path: string;
+    input?: { goalWeightKg: number } | undefined;
+  };
+}
 
 describe('WeightGoal Component', () => {
   const queryClient = new QueryClient({
@@ -53,7 +63,7 @@ describe('WeightGoal Component', () => {
   };
 
   beforeAll(() => {
-    server.listen({ onUnhandledRequest: 'warn' }); // Changed from 'error' to 'warn' to avoid test failure on unhandled requests
+    server.listen({ onUnhandledRequest: 'warn' });
   });
 
   afterEach(() => {
@@ -72,7 +82,7 @@ describe('WeightGoal Component', () => {
     server.use(
       http.post('http://localhost:8888/.netlify/functions/trpc', async ({ request }) => {
         const headers = Object.fromEntries(request.headers.entries());
-        const body = (await request.json()) as { [key: string]: { path: string; input?: any } };
+        const body = (await request.json()) as TRPCRequestBody;
         const query = body['0'];
 
         if (query.path === 'weight.getGoal') {
@@ -105,7 +115,7 @@ describe('WeightGoal Component', () => {
             return HttpResponse.json(
               [
                 {
-                  id: input?.id ?? 0,
+                  id: query.id ?? 0,
                   error: {
                     message: 'Unauthorized: User must be logged in',
                     code: -32001,
@@ -116,11 +126,11 @@ describe('WeightGoal Component', () => {
               { status: 401 }
             );
           }
-          if (input?.goalWeightKg <= 0) {
+          if (!input || input.goalWeightKg <= 0) {
             return HttpResponse.json(
               [
                 {
-                  id: input?.id ?? 0,
+                  id: query.id ?? 0,
                   error: {
                     message: 'Goal weight must be a positive number',
                     code: -32001,
@@ -133,7 +143,7 @@ describe('WeightGoal Component', () => {
           }
           return HttpResponse.json([
             {
-              id: input?.id ?? 0,
+              id: query.id ?? 0,
               result: {
                 data: { goalWeightKg: input.goalWeightKg },
               },
