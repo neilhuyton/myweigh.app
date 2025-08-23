@@ -7,7 +7,6 @@ export const loginHandler = http.post(
     let body;
     try {
       body = await request.json();
-      console.log('Handling login request:', body);
     } catch (error) {
       console.error('Error reading login request body:', error);
       return HttpResponse.json(

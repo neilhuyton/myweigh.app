@@ -7,7 +7,6 @@ export const weightDeleteHandler = http.post(
     let body;
     try {
       body = await request.json();
-      console.log('Handling weight.delete request:', body);
     } catch (error) {
       console.error('Error reading weight.delete request body:', error);
       return HttpResponse.json(

@@ -1,23 +1,23 @@
 // src/components/LoginForm.tsx
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { useLogin } from '../hooks/useLogin';
+} from "@/components/ui/card";
+import { useLogin } from "../hooks/useLogin";
 
 interface LoginFormProps {
   className?: string;
@@ -25,11 +25,15 @@ interface LoginFormProps {
   onSwitchToReset: () => void;
 }
 
-function LoginForm({ className, onSwitchToRegister, onSwitchToReset }: LoginFormProps) {
+function LoginForm({
+  className,
+  onSwitchToRegister,
+  onSwitchToReset,
+}: LoginFormProps) {
   const { form, message, isPending, handleSubmit } = useLogin();
 
   return (
-    <div className={cn('flex flex-col gap-6', className)}>
+    <div className={cn("flex flex-col gap-6", className)}>
       <Card>
         <CardHeader className="px-6">
           <CardTitle role="heading" aria-level={1}>
@@ -50,8 +54,10 @@ function LoginForm({ className, onSwitchToRegister, onSwitchToReset }: LoginForm
                   <p
                     data-testid="login-message"
                     className={cn(
-                      'text-sm',
-                      message.includes('failed') ? 'text-red-500' : 'text-green-500'
+                      "text-sm",
+                      message.includes("failed")
+                        ? "text-red-500"
+                        : "text-green-500"
                     )}
                   >
                     {message}
@@ -89,7 +95,10 @@ function LoginForm({ className, onSwitchToRegister, onSwitchToReset }: LoginForm
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center justify-between leading-none mb-0">
-                          <Label htmlFor="password" data-testid="password-label">
+                          <Label
+                            htmlFor="password"
+                            data-testid="password-label"
+                          >
                             Password
                           </Label>
                           <a
@@ -128,12 +137,12 @@ function LoginForm({ className, onSwitchToRegister, onSwitchToReset }: LoginForm
                     data-testid="login-button"
                     disabled={isPending}
                   >
-                    {isPending ? 'Logging in...' : 'Login'}
+                    {isPending ? "Logging in..." : "Login"}
                   </Button>
                 </div>
               </div>
               <div className="mt-8 text-center text-sm">
-                Don&apos;t have an account?{' '}
+                Don&apos;t have an account?{" "}
                 <a
                   href="#"
                   role="link"

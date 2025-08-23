@@ -8,7 +8,6 @@ export const catchAllHandler = http.post(
     let body;
     try {
       body = await request.json();
-      console.log('Handling catch-all TRPC request:', procedure, body);
     } catch (error) {
       console.error('Error reading catch-all request body:', error);
       return HttpResponse.json(

@@ -29,7 +29,6 @@ export const useResetPassword = (): UseResetPasswordReturn => {
 
   const resetMutation = trpc.resetPassword.request.useMutation({
     onSuccess: (data) => {
-      console.log('Mutation success:', data);
       setMessage(data.message);
       form.reset();
     },
@@ -42,11 +41,9 @@ export const useResetPassword = (): UseResetPasswordReturn => {
   const handleSubmit = async (data: FormValues) => {
     const isValid = await form.trigger();
     if (!isValid) {
-      console.log('Form validation failed:', form.formState.errors);
       return;
     }
 
-    console.log('Submitting mutation with:', data);
     resetMutation.mutate(data);
   };
 

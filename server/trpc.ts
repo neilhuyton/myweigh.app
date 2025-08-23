@@ -1,3 +1,4 @@
+// server/trpc.ts
 import { t } from "./trpc-base";
 import { userRouter } from "./routers/user";
 import { registerRouter } from "./routers/register";

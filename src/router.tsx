@@ -18,6 +18,8 @@ import WeightChart from './components/WeightChart';
 import WeightGoal from './components/WeightGoal';
 import Register from './components/Register';
 import LoginForm from './components/LoginForm';
+import ResetPasswordForm from './components/ResetPasswordForm'; // Add import
+import ConfirmResetPasswordForm from './components/ConfirmResetPasswordForm'; // Add import
 import VerifyEmail from './components/VerifyEmail';
 import { useAuthStore } from './store/authStore';
 import { ThemeProvider } from './components/ThemeProvider';
@@ -68,8 +70,12 @@ const rootRoute = createRootRoute({
   ),
 });
 
-// Define search schema for verify-email route
+// Define search schema for verify-email and confirm-reset-password routes
 const verifyEmailSearchSchema = z.object({
+  token: z.string().uuid().optional(),
+});
+
+const confirmResetPasswordSearchSchema = z.object({
   token: z.string().uuid().optional(),
 });
 
@@ -89,7 +95,27 @@ const registerRoute = createRoute({
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
-  component: () => <LoginForm onSwitchToRegister={() => router.navigate({ to: '/register' })} />,
+  component: () => (
+    <LoginForm
+      onSwitchToRegister={() => router.navigate({ to: '/register' })}
+      onSwitchToReset={() => router.navigate({ to: '/reset-password' })}
+    />
+  ),
+});
+
+const resetPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/reset-password',
+  component: () => <ResetPasswordForm onSwitchToLogin={() => router.navigate({ to: '/login' })} />,
+});
+
+const confirmResetPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/confirm-reset-password',
+  validateSearch: confirmResetPasswordSearchSchema,
+  component: () => (
+    <ConfirmResetPasswordForm onSwitchToLogin={() => router.navigate({ to: '/login' })} />
+  ),
 });
 
 const weightRoute = createRoute({
@@ -98,7 +124,7 @@ const weightRoute = createRoute({
   beforeLoad: () => {
     const { isLoggedIn } = useAuthStore.getState();
     if (!isLoggedIn) {
-      throw redirect({ to: '/' });
+      throw redirect({ to: '/login' });
     }
   },
   component: WeightForm,
@@ -110,7 +136,7 @@ const weightsRoute = createRoute({
   beforeLoad: () => {
     const { isLoggedIn } = useAuthStore.getState();
     if (!isLoggedIn) {
-      throw redirect({ to: '/' });
+      throw redirect({ to: '/login' });
     }
   },
   component: WeightList,
@@ -122,7 +148,7 @@ const weightChartRoute = createRoute({
   beforeLoad: () => {
     const { isLoggedIn } = useAuthStore.getState();
     if (!isLoggedIn) {
-      throw redirect({ to: '/' });
+      throw redirect({ to: '/login' });
     }
   },
   component: WeightChart,
@@ -134,7 +160,7 @@ const weightGoalRoute = createRoute({
   beforeLoad: () => {
     const { isLoggedIn } = useAuthStore.getState();
     if (!isLoggedIn) {
-      throw redirect({ to: '/' });
+      throw redirect({ to: '/login' });
     }
   },
   component: WeightGoal,
@@ -152,6 +178,8 @@ const routeTree = rootRoute.addChildren([
   homeRoute,
   registerRoute,
   loginRoute,
+  resetPasswordRoute,
+  confirmResetPasswordRoute,
   weightRoute,
   weightsRoute,
   weightChartRoute,

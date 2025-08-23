@@ -7,7 +7,6 @@ export const registerHandler = http.post(
     let body;
     try {
       body = await request.json();
-      console.log('Handling register request:', body);
     } catch (error) {
       console.error('Error reading register request body:', error);
       return HttpResponse.json(

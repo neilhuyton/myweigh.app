@@ -4,7 +4,6 @@ import { http, HttpResponse } from 'msw';
 export const weightGetWeightsHandler = http.get(
   'http://localhost:8888/.netlify/functions/trpc/weight.getWeights',
   async ({ request }) => {
-    console.log('Handling weight.getWeights request:', request.url, request.headers.get('authorization'));
     const headers = Object.fromEntries(request.headers.entries());
     const userId = headers['authorization']?.split('Bearer ')[1];
     if (!userId) {
