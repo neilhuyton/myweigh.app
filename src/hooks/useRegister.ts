@@ -4,7 +4,6 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { trpc } from '../trpc';
 import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { useEffect, useState } from 'react';
 
 const registerSchema = z.object({
@@ -30,33 +29,15 @@ export function useRegister(onSwitchToLogin: () => void) {
   const registerMutation = trpc.register.useMutation({
     onSuccess: (data) => {
       setMessage(data.message || 'Registration successful!');
-      toast.success('Registration successful!', {
-        description: 'Your account has been created.',
-        action: {
-          label: 'Log in now',
-          onClick: () => onSwitchToLogin(),
-        },
-        id: 'register-message',
-        className: 'register-toast',
-      });
       setTimeout(() => {
         form.reset();
-        onSwitchToLogin(); // Trigger redirect to login page
-      }, 5000); // 5 seconds
+        onSwitchToLogin();
+      }, 5000);
       queryClient.invalidateQueries({ queryKey: ['getUsers'] });
     },
     onError: (error) => {
       const errorMessage = error.message || 'Registration failed';
       setMessage(errorMessage);
-      toast.error('Registration failed', {
-        description: errorMessage,
-        action: {
-          label: 'Try again',
-          onClick: () => form.reset(),
-        },
-        id: 'register-message',
-        className: 'register-toast',
-      });
     },
   });
 

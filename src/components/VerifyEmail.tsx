@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from '@tanstack/react-router';
 import { trpc } from '../trpc';
-import { toast } from 'sonner';
 
 function VerifyEmail() {
   const { token } = useSearch({ from: '/verify-email' });
@@ -15,28 +14,10 @@ function VerifyEmail() {
     onSuccess: (data) => {
       setMessage(data.message);
       setIsVerifying(false);
-      toast.success('Email Verification', {
-        description: data.message,
-        action: {
-          label: 'Go to Login',
-          onClick: () => (window.location.href = '/'),
-        },
-        duration: 5000,
-        className: 'verify-email-toast',
-      });
     },
     onError: (error) => {
       setMessage(`Verification failed: ${error.message}`);
       setIsVerifying(false);
-      toast.error('Verification Failed', {
-        description: error.message,
-        action: {
-          label: 'Try Again',
-          onClick: () => setMessage(null),
-        },
-        duration: 5000,
-        className: 'verify-email-toast',
-      });
     },
   });
 
@@ -65,6 +46,7 @@ function VerifyEmail() {
                 className={`text-center text-sm font-medium ${
                   message.includes('successfully') ? 'text-green-500' : 'text-red-500'
                 }`}
+                data-testid="verify-message"
               >
                 {message}
               </p>

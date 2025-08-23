@@ -12,44 +12,8 @@ import { createMemoryHistory } from '@tanstack/history';
 import { router } from '../src/router';
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
-import { toast } from 'sonner';
 import { act } from 'react';
-
-// Simplified VerifyEmail component for testing
-const VerifyEmailComponent = ({ token }: { token: string }) => {
-  const verifyMutation = trpc.verifyEmail.useMutation();
-
-  const handleVerify = async () => {
-    try {
-      await verifyMutation.mutateAsync({ token });
-    } catch (error) {
-      // Error handling via toast
-    }
-  };
-
-  return (
-    <div>
-      <h1>Verify Your Email</h1>
-      <button
-        onClick={handleVerify}
-        data-testid="verify-button"
-        disabled={verifyMutation.isPending}
-      >
-        {verifyMutation.isPending ? 'Verifying...' : 'Verify Email'}
-      </button>
-      {verifyMutation.isSuccess && (
-        <p data-testid="verify-message" className="text-green-500">
-          {verifyMutation.data?.message}
-        </p>
-      )}
-      {verifyMutation.isError && (
-        <p data-testid="verify-message" className="text-red-500">
-          {verifyMutation.error?.message}
-        </p>
-      )}
-    </div>
-  );
-};
+import VerifyEmail from '../src/components/VerifyEmail';
 
 describe('Email Verification', () => {
   const queryClient = new QueryClient({
@@ -89,7 +53,6 @@ describe('Email Verification', () => {
         <trpc.Provider client={trpcClient} queryClient={queryClient}>
           <QueryClientProvider client={queryClient}>
             <RouterProvider router={testRouter} />
-            <VerifyEmailComponent token={token} />
           </QueryClientProvider>
         </trpc.Provider>
       );
@@ -99,8 +62,6 @@ describe('Email Verification', () => {
   };
 
   beforeAll(() => {
-    vi.spyOn(toast, 'success').mockImplementation(() => 'toast-success-id');
-    vi.spyOn(toast, 'error').mockImplementation(() => 'toast-error-id');
     server.listen({ onUnhandledRequest: 'error' });
   });
 
@@ -134,27 +95,12 @@ describe('Email Verification', () => {
 
     await setup('/verify-email', validToken);
 
-    await waitFor(() => {
-      expect(screen.getByText('Verify Your Email')).toBeInTheDocument();
-      expect(screen.getByTestId('verify-button')).toBeInTheDocument();
-    });
-
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('verify-button'));
-      await new Promise((resolve) => setTimeout(resolve, 100)); // Wait for mutation
-    });
-
     await waitFor(
       () => {
+        expect(screen.getByText('Email Verification')).toBeInTheDocument();
         expect(screen.getByTestId('verify-message')).toBeInTheDocument();
         expect(screen.getByTestId('verify-message')).toHaveTextContent('Email verified successfully!');
         expect(screen.getByTestId('verify-message')).toHaveClass('text-green-500');
-        expect(toast.success).toHaveBeenCalledWith('Email Verification', {
-          description: 'Email verified successfully!',
-          action: { label: 'Go to Login', onClick: expect.any(Function) },
-          className: 'verify-email-toast',
-          duration: 5000,
-        });
       },
       { timeout: 2000 }
     );
@@ -181,26 +127,11 @@ describe('Email Verification', () => {
 
     await setup('/verify-email', invalidToken);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('verify-button')).toBeInTheDocument();
-    });
-
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('verify-button'));
-      await new Promise((resolve) => setTimeout(resolve, 100)); // Wait for mutation
-    });
-
     await waitFor(
       () => {
         expect(screen.getByTestId('verify-message')).toBeInTheDocument();
         expect(screen.getByTestId('verify-message')).toHaveTextContent('Invalid or expired verification token');
         expect(screen.getByTestId('verify-message')).toHaveClass('text-red-500');
-        expect(toast.error).toHaveBeenCalledWith('Verification Failed', {
-          description: 'Invalid or expired verification token',
-          action: { label: 'Try Again', onClick: expect.any(Function) },
-          className: 'verify-email-toast',
-          duration: 5000,
-        });
       },
       { timeout: 2000 }
     );
@@ -227,32 +158,17 @@ describe('Email Verification', () => {
 
     await setup('/verify-email', token);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('verify-button')).toBeInTheDocument();
-    });
-
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('verify-button'));
-      await new Promise((resolve) => setTimeout(resolve, 100)); // Wait for mutation
-    });
-
     await waitFor(
       () => {
         expect(screen.getByTestId('verify-message')).toBeInTheDocument();
         expect(screen.getByTestId('verify-message')).toHaveTextContent('Email already verified');
         expect(screen.getByTestId('verify-message')).toHaveClass('text-red-500');
-        expect(toast.error).toHaveBeenCalledWith('Verification Failed', {
-          description: 'Email already verified',
-          action: { label: 'Try Again', onClick: expect.any(Function) },
-          className: 'verify-email-toast',
-          duration: 5000,
-        });
       },
       { timeout: 2000 }
     );
   });
 
-  it('disables verify button during verification process', async () => {
+  it('displays verifying message during verification process', async () => {
     const token = '123e4567-e89b-12d3-a456-426614174000';
     server.use(
       http.post('http://localhost:8888/.netlify/functions/trpc/verifyEmail', async () => {
@@ -272,23 +188,13 @@ describe('Email Verification', () => {
     await setup('/verify-email', token);
 
     await waitFor(() => {
-      expect(screen.getByTestId('verify-button')).toBeInTheDocument();
-    });
-
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('verify-button'));
-    });
-
-    await waitFor(() => {
-      expect(screen.getByTestId('verify-button')).toBeDisabled();
-      expect(screen.getByTestId('verify-button')).toHaveTextContent('Verifying...');
+      expect(screen.getByText('Verifying your email...')).toBeInTheDocument();
     });
 
     await waitFor(
       () => {
         expect(screen.getByTestId('verify-message')).toBeInTheDocument();
-        expect(screen.getByTestId('verify-button')).not.toBeDisabled();
-        expect(screen.getByTestId('verify-button')).toHaveTextContent('Verify Email');
+        expect(screen.getByTestId('verify-message')).toHaveTextContent('Email verified successfully!');
       },
       { timeout: 3000 }
     );

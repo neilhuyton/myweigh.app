@@ -3,19 +3,16 @@ import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest
 import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { server } from '../__mocks__/server';
-import { toast } from 'sonner';
 import { useVerifyEmail } from '@/hooks/useVerifyEmail';
 import { useSearch } from '@tanstack/react-router';
 import { trpc } from '../src/trpc';
 import { httpBatchLink } from '@trpc/client';
 import { useAuthStore } from '@/store/authStore';
 
-// Mock useSearch
 vi.mock('@tanstack/react-router', () => ({
   useSearch: vi.fn(),
 }));
 
-// Mock useAuthStore
 vi.mock('@/store/authStore', () => ({
   useAuthStore: {
     getState: vi.fn(() => ({
@@ -27,7 +24,6 @@ vi.mock('@/store/authStore', () => ({
   },
 }));
 
-// Wrapper component to test the hook
 function TestComponent() {
   const { message, isVerifying } = useVerifyEmail();
   return (
@@ -53,7 +49,6 @@ describe('useVerifyEmail Hook', () => {
           httpBatchLink({
             url: 'http://localhost:8888/.netlify/functions/trpc',
             fetch: async (url, options) => {
-              console.log('Test fetch called with:', { url, options });
               const { userId } = useAuthStore.getState();
               const headers = {
                 ...options?.headers,
@@ -76,8 +71,6 @@ describe('useVerifyEmail Hook', () => {
   );
 
   beforeAll(() => {
-    vi.spyOn(toast, 'success').mockImplementation(() => 'toast-success-id');
-    vi.spyOn(toast, 'error').mockImplementation(() => 'toast-error-id');
     server.listen({ onUnhandledRequest: 'warn' });
   });
 
@@ -104,13 +97,6 @@ describe('useVerifyEmail Hook', () => {
       },
       { timeout: 5000 }
     );
-
-    expect(toast.success).toHaveBeenCalledWith('Email Verification', {
-      description: 'Email verified successfully',
-      action: { label: 'Go to Login', onClick: expect.any(Function) },
-      duration: 5000,
-      className: 'verify-email-toast',
-    });
   });
 
   it('handles invalid token with error message', async () => {
@@ -125,13 +111,6 @@ describe('useVerifyEmail Hook', () => {
       },
       { timeout: 5000 }
     );
-
-    expect(toast.error).toHaveBeenCalledWith('Verification Failed', {
-      description: 'Invalid or expired token',
-      action: { label: 'Try Again', onClick: expect.any(Function) },
-      duration: 5000,
-      className: 'verify-email-toast',
-    });
   });
 
   it('handles missing token', async () => {
@@ -146,8 +125,5 @@ describe('useVerifyEmail Hook', () => {
       },
       { timeout: 5000 }
     );
-
-    expect(toast.success).not.toHaveBeenCalled();
-    expect(toast.error).not.toHaveBeenCalled();
   });
 });

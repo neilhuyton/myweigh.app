@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react';
 import { useSearch } from '@tanstack/react-router';
 import { trpc } from '../trpc';
-import { toast } from 'sonner';
 
 interface VerifyEmailResult {
   message: string | null;
@@ -17,29 +16,10 @@ export function useVerifyEmail() {
   const verifyEmailMutation = trpc.verifyEmail.useMutation({
     onSuccess: (data) => {
       setMessage(data.message);
-      toast.success('Email Verification', {
-        description: data.message,
-        action: {
-          label: 'Go to Login',
-          onClick: () => (window.location.href = '/'),
-        },
-        duration: 5000,
-        className: 'verify-email-toast',
-      });
+      setIsVerifying(false);
     },
     onError: (error) => {
       setMessage(`Verification failed: ${error.message}`);
-      toast.error('Verification Failed', {
-        description: error.message,
-        action: {
-          label: 'Try Again',
-          onClick: () => setMessage(null),
-        },
-        duration: 5000,
-        className: 'verify-email-toast',
-      });
-    },
-    onSettled: () => {
       setIsVerifying(false);
     },
   });
