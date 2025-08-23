@@ -37,7 +37,6 @@ const trpcClient = trpc.createClient({
         import.meta.env.VITE_TRPC_URL ||
         'http://localhost:8888/.netlify/functions/trpc',
       fetch: async (url, options) => {
-        console.log('Production fetch called with:', { url, options }); // Debug log
         const { userId } = useAuthStore.getState();
         const headers = {
           ...options?.headers,

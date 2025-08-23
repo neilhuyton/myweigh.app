@@ -42,13 +42,12 @@ function VerifyEmail() {
 
   useEffect(() => {
     if (token && !isVerifying && !verifyEmailMutation.isPending) {
-      console.log('token', token);
       setIsVerifying(true);
       verifyEmailMutation.mutate({ token });
     } else if (!token) {
       setMessage('No verification token provided');
     }
-  }, [token]); // Remove verifyEmailMutation from dependencies
+  }, [token]);
 
   return (
     <div className="min-h-[100dvh] flex flex-col">
