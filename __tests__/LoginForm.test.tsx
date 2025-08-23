@@ -72,15 +72,18 @@ describe('LoginForm Component', () => {
     ],
   });
 
-  const setup = (onSwitchToRegister = vi.fn()) => {
+  const setup = (onSwitchToRegister = vi.fn(), onSwitchToReset = vi.fn()) => {
     render(
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
-          <LoginForm onSwitchToRegister={onSwitchToRegister} />
+          <LoginForm
+            onSwitchToRegister={onSwitchToRegister}
+            onSwitchToReset={onSwitchToReset}
+          />
         </QueryClientProvider>
       </trpc.Provider>
     );
-    return { onSwitchToRegister };
+    return { onSwitchToRegister, onSwitchToReset };
   };
 
   beforeAll(() => {
@@ -228,6 +231,13 @@ describe('LoginForm Component', () => {
 
     fireEvent.click(forgotPasswordLink);
     expect(screen.queryByTestId('login-message')).not.toBeInTheDocument();
+  });
+
+  it('calls onSwitchToReset when forgot password link is clicked', () => {
+    const { onSwitchToRegister, onSwitchToReset } = setup();
+    const forgotPasswordLink = screen.getByTestId('forgot-password-link');
+    fireEvent.click(forgotPasswordLink);
+    expect(onSwitchToReset).toHaveBeenCalled();
   });
 
   it.todo('handles forgot password link when implemented', async () => {

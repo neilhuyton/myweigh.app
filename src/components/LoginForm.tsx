@@ -22,9 +22,10 @@ import { useLogin } from '../hooks/useLogin';
 interface LoginFormProps {
   className?: string;
   onSwitchToRegister: () => void;
+  onSwitchToReset: () => void;
 }
 
-function LoginForm({ className, onSwitchToRegister }: LoginFormProps) {
+function LoginForm({ className, onSwitchToRegister, onSwitchToReset }: LoginFormProps) {
   const { form, message, isPending, handleSubmit } = useLogin();
 
   return (
@@ -95,6 +96,10 @@ function LoginForm({ className, onSwitchToRegister }: LoginFormProps) {
                             href="#"
                             className="inline-block text-sm underline-offset-0 hover:underline"
                             data-testid="forgot-password-link"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              onSwitchToReset();
+                            }}
                           >
                             Forgot your password?
                           </a>
