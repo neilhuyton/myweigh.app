@@ -1,11 +1,11 @@
 // __tests__/ResetPasswordForm.test.tsx
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ResetPasswordForm from '../src/components/ResetPasswordForm';
 import '@testing-library/jest-dom';
 
 describe('ResetPasswordForm Component', () => {
-  const setup = (onSwitchToLogin = vi.fn()) => {
+  const setup = (onSwitchToLogin: () => void = vi.fn()) => {
     render(<ResetPasswordForm onSwitchToLogin={onSwitchToLogin} />);
     return { onSwitchToLogin };
   };
@@ -22,5 +22,19 @@ describe('ResetPasswordForm Component', () => {
 
     fireEvent.click(screen.getByRole('link', { name: 'Back to login' }));
     expect(onSwitchToLogin).toHaveBeenCalled();
+  });
+
+  it('submits email and displays success message', async () => {
+    const { onSwitchToLogin } = setup();
+
+    const emailInput = screen.getByLabelText('Email');
+    const submitButton = screen.getByRole('button', { name: 'Send Reset Link' });
+
+    fireEvent.change(emailInput, { target: { value: 'testuser@example.com' } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Reset link sent to your email');
+    }, { timeout: 5000 });
   });
 });
