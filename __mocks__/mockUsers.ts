@@ -1,3 +1,4 @@
+// __mocks__/mockUsers.ts
 export const mockUsers = [
   {
     id: "27e72eb9-a0ad-4714-bd7a-c148ac1b903e",
@@ -5,8 +6,8 @@ export const mockUsers = [
     password: "$2b$10$3T7JTgXV0uQsQD4jIwE9H.4A8S7L5/sPEbU/x/IaI21ey9rintyZO",
     verificationToken: "42c6b154-c097-4a71-9b34-5b28669ea467",
     isEmailVerified: false,
-    resetPasswordToken: null,
-    resetPasswordTokenExpiresAt: null,
+    resetPasswordToken: "123e4567-e89b-12d3-a456-426614174000",
+    resetPasswordTokenExpiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour from now
     createdAt: "2025-08-16T10:40:39.214Z",
     updatedAt: "2025-08-16T10:40:39.214Z",
   },
