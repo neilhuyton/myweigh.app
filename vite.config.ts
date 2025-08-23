@@ -17,7 +17,7 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
-    setupFiles: ["./src/setupTests.ts"],
+    setupFiles: ["./__tests__/setupTests.ts"],
     env: {
       VITE_TRPC_URL: "http://localhost:8888/.netlify/functions/trpc",
     },
