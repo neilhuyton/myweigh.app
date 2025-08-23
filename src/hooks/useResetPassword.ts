@@ -2,6 +2,7 @@
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { trpc } from '../trpc';
 import { useState } from 'react';
 
 const formSchema = z.object({
@@ -26,21 +27,33 @@ export const useResetPassword = (): UseResetPasswordReturn => {
 
   const [message, setMessage] = useState<string | null>(null);
 
+  const resetMutation = trpc.resetPassword.request.useMutation({
+    onSuccess: (data) => {
+      console.log('Mutation success:', data);
+      setMessage(data.message);
+      form.reset();
+    },
+    onError: (error) => {
+      console.error('Mutation error:', error);
+      setMessage(`Failed to send reset link: ${error.message}`);
+    },
+  });
+
   const handleSubmit = async (data: FormValues) => {
     const isValid = await form.trigger();
     if (!isValid) {
+      console.log('Form validation failed:', form.formState.errors);
       return;
     }
 
-    // Placeholder: Simulate successful mutation
-    setMessage('Reset link sent to your email');
-    form.reset();
+    console.log('Submitting mutation with:', data);
+    resetMutation.mutate(data);
   };
 
   return {
     form,
     message,
-    isPending: false, // Will be updated with actual mutation state
+    isPending: resetMutation.isPending,
     handleSubmit,
   };
 };
