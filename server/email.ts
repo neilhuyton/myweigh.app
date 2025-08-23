@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
@@ -9,13 +9,18 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export async function sendVerificationEmail(to: string, verificationToken: string) {
-  const verificationUrl = `http://localhost:5173/verify-email?token=${verificationToken}`; // Update with your frontend URL
+export async function sendVerificationEmail(
+  to: string,
+  verificationToken: string
+) {
+  const verificationUrl = `${
+    process.env.VITE_APP_URL || "http://localhost:5173"
+  }/verify-email?token=${verificationToken}`;
 
   const mailOptions = {
     from: process.env.EMAIL_FROM,
     to,
-    subject: 'Verify Your Email Address',
+    subject: "Verify Your Email Address",
     html: `
       <h1>Welcome!</h1>
       <p>Please verify your email address by clicking the link below:</p>
@@ -28,7 +33,7 @@ export async function sendVerificationEmail(to: string, verificationToken: strin
     await transporter.sendMail(mailOptions);
     return { success: true };
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error("Error sending email:", error);
     return { success: false, error: (error as Error).message };
   }
 }

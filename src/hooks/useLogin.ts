@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { trpc } from '../trpc';
 import { useAuthStore } from '../store/authStore';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 
 interface LoginResponse {
   id: string;
@@ -40,34 +39,18 @@ export const useLogin = (): UseLoginReturn => {
 
   const loginMutation = trpc.login.useMutation({
     onSuccess: (data: LoginResponse) => {
+      console.log('Mutation onSuccess, data:', data); // Debug
       setMessage('Login successful!');
-      toast.success('Login successful!', {
-        description: 'You are now logged in.',
-        action: {
-          label: 'Go to Dashboard',
-          onClick: () => console.log('Navigate to dashboard'),
-        },
-        duration: 5000,
-        className: 'login-toast',
-      });
       setTimeout(() => {
-        console.log('Resetting form and logging in, current URL:', window.location.href); // Debug
+        console.log('Resetting form and logging in, userId:', data.id); // Debug
         form.reset();
         login(data.id);
-      }, 3000); // Increased to 3s
+      }, 3000);
     },
     onError: (error) => {
+      console.log('Mutation onError:', error); // Debug
       const errorMessage = error.message || 'Invalid email or password';
       setMessage(`Login failed: ${errorMessage}`);
-      toast.error('Login failed', {
-        description: errorMessage,
-        action: {
-          label: 'Try again',
-          onClick: () => form.reset(),
-        },
-        duration: 5000,
-        className: 'login-toast',
-      });
     },
   });
 
@@ -77,13 +60,18 @@ export const useLogin = (): UseLoginReturn => {
   }, [form]);
 
   const handleSubmit = async (data: FormValues) => {
+    console.log('handleSubmit called with:', data); // Debug
     const isValid = await form.trigger();
-    if (!isValid) return;
+    if (!isValid) {
+      console.log('Form validation failed:', form.formState.errors); // Debug
+      return;
+    }
 
     try {
+      console.log('Triggering login mutation...'); // Debug
       await loginMutation.mutateAsync(data);
-    } catch {
-      // Error handled in onError
+    } catch (error) {
+      console.log('Mutation error caught:', error); // Debug
     }
   };
 
