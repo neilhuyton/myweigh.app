@@ -1,20 +1,19 @@
-// __tests__/Home.test.tsx
-import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
-import { createMemoryHistory } from "@tanstack/history";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { httpBatchLink } from "@trpc/client";
-import { trpc } from "../src/trpc";
-import { router } from "../src/router";
-import { server } from "../__mocks__/server";
-import "@testing-library/jest-dom";
-import { http, HttpResponse } from "msw";
-import { act } from "react";
-import { useAuthStore } from "../src/store/authStore";
-import { toast } from "sonner";
+import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { RouterProvider, createRouter } from '@tanstack/react-router';
+import { createMemoryHistory } from '@tanstack/history';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { httpBatchLink } from '@trpc/client';
+import { trpc } from '../src/trpc';
+import { router } from '../src/router';
+import { server } from '../__mocks__/server';
+import '@testing-library/jest-dom';
+import { http, HttpResponse } from 'msw';
+import { act } from 'react';
+import { useAuthStore } from '../src/store/authStore';
+import { vi } from 'vitest';
 
-describe("Home Component with Router", () => {
+describe('Home Component with Router', () => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -25,7 +24,7 @@ describe("Home Component with Router", () => {
   const trpcClient = trpc.createClient({
     links: [
       httpBatchLink({
-        url: "http://localhost:8888/.netlify/functions/trpc",
+        url: 'http://localhost:8888/.netlify/functions/trpc',
         fetch: async (input: RequestInfo | URL, options?: RequestInit) => {
           return fetch(input, { ...options, signal: options?.signal ?? null });
         },
@@ -53,9 +52,7 @@ describe("Home Component with Router", () => {
   };
 
   beforeAll(() => {
-    vi.spyOn(toast, "success").mockImplementation(() => "toast-success-id");
-    vi.spyOn(toast, "error").mockImplementation(() => "toast-error-id");
-    server.listen({ onUnhandledRequest: "error" });
+    server.listen({ onUnhandledRequest: 'error' });
   });
 
   afterEach(() => {
@@ -70,75 +67,62 @@ describe("Home Component with Router", () => {
     server.close();
   });
 
-  it("renders login form by default on home route", async () => {
-    await setup("/");
+  it('renders login form by default on home route', async () => {
+    await setup('/');
 
     await waitFor(
       () => {
-        expect(screen.getByPlaceholderText("m@example.com")).toBeInTheDocument();
-        expect(
-          screen.getByPlaceholderText("Enter your password")
-        ).toBeInTheDocument();
-        expect(
-          screen.getByRole("button", { name: "Login" })
-        ).toBeInTheDocument();
-        expect(screen.getByTestId("signup-link")).toBeInTheDocument();
-        expect(
-          screen.queryByRole("button", { name: "Register" })
-        ).not.toBeInTheDocument();
+        expect(screen.getByPlaceholderText('m@example.com')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Enter your password')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument();
+        expect(screen.getByTestId('signup-link')).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Register' })).not.toBeInTheDocument();
       },
       { timeout: 2000 }
     );
   });
 
-  it("switches to register form when sign up is clicked", async () => {
-    await setup("/");
+  it('switches to register form when sign up is clicked', async () => {
+    await setup('/');
 
     await waitFor(() => {
-      expect(screen.getByTestId("signup-link")).toBeInTheDocument();
+      expect(screen.getByTestId('signup-link')).toBeInTheDocument();
     });
 
     await act(async () => {
-      fireEvent.click(screen.getByTestId("signup-link"));
+      fireEvent.click(screen.getByTestId('signup-link'));
     });
 
     await waitFor(
       () => {
-        expect(screen.getByPlaceholderText("m@example.com")).toBeInTheDocument();
-        expect(
-          screen.getByPlaceholderText("Enter your password")
-        ).toBeInTheDocument();
-        expect(
-          screen.getByRole("button", { name: "Register" })
-        ).toBeInTheDocument();
-        expect(screen.getByTestId("login-link")).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('m@example.com')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Enter your password')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Register' })).toBeInTheDocument();
+        expect(screen.getByTestId('login-link')).toBeInTheDocument();
       },
       { timeout: 2000 }
     );
   });
 
-  it("handles user registration on home route", async () => {
+  it('handles user registration on home route', async () => {
     server.use(
       http.post(
-        "http://localhost:8888/.netlify/functions/trpc/*",
+        'http://localhost:8888/.netlify/functions/trpc/*',
         async ({ request, params }) => {
           const body = (await request.json()) as {
             [key: string]: { id?: number; email: string; password: string };
           };
-          const input = body["0"];
+          const input = body['0'];
           const id = input?.id ?? 0;
-          if (
-            params[0] === "register" &&
-            input?.email === "newuser@example.com"
-          ) {
+          if (params[0] === 'register' && input?.email === 'newuser@example.com') {
             return HttpResponse.json([
               {
                 id,
                 result: {
                   data: {
-                    id: "new-user-id",
-                    email: "newuser@example.com",
-                    message: "Registration successful! Please check your email to verify your account.",
+                    id: 'new-user-id',
+                    email: 'newuser@example.com',
+                    message: 'Registration successful! Please check your email to verify your account.',
                   },
                 },
               },
@@ -149,9 +133,9 @@ describe("Home Component with Router", () => {
               {
                 id,
                 error: {
-                  message: "Procedure not found",
+                  message: 'Procedure not found',
                   code: -32601,
-                  data: { code: "NOT_FOUND", httpStatus: 404, path: params[0] },
+                  data: { code: 'NOT_FOUND', httpStatus: 404, path: params[0] },
                 },
               },
             ],
@@ -161,66 +145,75 @@ describe("Home Component with Router", () => {
       )
     );
 
-    await setup("/");
+    await setup('/');
 
     await waitFor(() => {
-      expect(screen.getByTestId("signup-link")).toBeInTheDocument();
+      expect(screen.getByTestId('signup-link')).toBeInTheDocument();
     });
 
     await act(async () => {
-      fireEvent.click(screen.getByTestId("signup-link"));
+      fireEvent.click(screen.getByTestId('signup-link'));
     });
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText("m@example.com")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('m@example.com')).toBeInTheDocument();
     });
 
     await act(async () => {
-      fireEvent.change(screen.getByPlaceholderText("m@example.com"), {
-        target: { value: "newuser@example.com" },
+      fireEvent.change(screen.getByPlaceholderText('m@example.com'), {
+        target: { value: 'newuser@example.com' },
       });
-      fireEvent.change(screen.getByPlaceholderText("Enter your password"), {
-        target: { value: "password123" },
+      fireEvent.change(screen.getByPlaceholderText('Enter your password'), {
+        target: { value: 'password123' },
       });
-      fireEvent.click(screen.getByRole("button", { name: "Register" }));
+      fireEvent.click(screen.getByRole('button', { name: 'Register' }));
     });
 
     await waitFor(
       () => {
-        expect(toast.success).toHaveBeenCalledWith("Registration successful!", {
-          description: "Your account has been created.",
-          action: {
-            label: "Log in now",
-            onClick: expect.any(Function),
-          },
-          className: "register-toast",
-          id: "register-message",
-        });
+        expect(screen.getByTestId('register-message')).toBeInTheDocument();
+        expect(screen.getByTestId('register-message')).toHaveTextContent(
+          'Registration successful! Please check your email to verify your account.'
+        );
+        expect(screen.getByTestId('login-link')).toBeInTheDocument();
       },
-      { timeout: 3000 } // Increased timeout
+      { timeout: 3000 }
+    );
+
+    // Simulate clicking the "Log in" link to switch to the login form
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('login-link'));
+    });
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId('login-form')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument();
+      },
+      { timeout: 2000 }
     );
   });
 
-  it("handles successful login on home route", async () => {
+  it('handles successful login on home route', async () => {
     server.use(
       http.post(
-        "http://localhost:8888/.netlify/functions/trpc/*",
+        'http://localhost:8888/.netlify/functions/trpc/*',
         async ({ request, params }) => {
           const body = (await request.json()) as {
             [key: string]: { id?: number; email: string; password: string };
           };
-          const input = body["0"];
+          const input = body['0'];
           const id = input?.id ?? 0;
           if (
-            params[0] === "login" &&
-            input?.email === "testuser@example.com" &&
-            input?.password === "password123"
+            params[0] === 'login' &&
+            input?.email === 'testuser@example.com' &&
+            input?.password === 'password123'
           ) {
             return HttpResponse.json([
               {
                 id,
                 result: {
-                  data: { id: "test-user-id", email: "testuser@example.com" },
+                  data: { id: 'test-user-id', email: 'testuser@example.com' },
                 },
               },
             ]);
@@ -230,13 +223,9 @@ describe("Home Component with Router", () => {
               {
                 id,
                 error: {
-                  message: "Invalid email or password",
+                  message: 'Invalid email or password',
                   code: -32001,
-                  data: {
-                    code: "UNAUTHORIZED",
-                    httpStatus: 401,
-                    path: "login",
-                  },
+                  data: { code: 'UNAUTHORIZED', httpStatus: 401, path: 'login' },
                 },
               },
             ],
@@ -246,71 +235,58 @@ describe("Home Component with Router", () => {
       )
     );
 
-    await setup("/");
+    await setup('/');
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText("m@example.com")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('m@example.com')).toBeInTheDocument();
     });
 
     await act(async () => {
-      fireEvent.change(screen.getByPlaceholderText("m@example.com"), {
-        target: { value: "testuser@example.com" },
+      fireEvent.change(screen.getByPlaceholderText('m@example.com'), {
+        target: { value: 'testuser@example.com' },
       });
-      fireEvent.change(screen.getByPlaceholderText("Enter your password"), {
-        target: { value: "password123" },
+      fireEvent.change(screen.getByPlaceholderText('Enter your password'), {
+        target: { value: 'password123' },
       });
-      fireEvent.click(screen.getByRole("button", { name: "Login" }));
+      fireEvent.click(screen.getByRole('button', { name: 'Login' }));
     });
 
     await waitFor(
       () => {
-        // expect(toast.success).toHaveBeenCalledWith("Login successful!", {
-        //   description: "You are now logged in.",
-        //   action: {
-        //     label: "Go to Dashboard",
-        //     onClick: expect.any(Function),
-        //   },
-        //   className: "login-toast",
-        //   duration: 5000,
-        // });
-        expect(screen.getByTestId("login-message")).toBeInTheDocument();
+        expect(screen.getByTestId('login-message')).toBeInTheDocument();
+        expect(screen.getByTestId('login-message')).toHaveTextContent('Login successful!');
       },
-      { timeout: 3000 } // Increased timeout
+      { timeout: 3000 }
     );
 
-    // Wait for auth state and UI to update
     await waitFor(
       () => {
         expect(useAuthStore.getState().isLoggedIn).toBe(true);
-        expect(screen.getByRole("button", { name: "Logout" })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Logout' })).toBeInTheDocument();
       },
       { timeout: 3000 }
     );
   });
 
-  it("handles invalid login credentials on home route", async () => {
+  it('handles invalid login credentials on home route', async () => {
     server.use(
       http.post(
-        "http://localhost:8888/.netlify/functions/trpc/*",
+        'http://localhost:8888/.netlify/functions/trpc/*',
         async ({ request, params }) => {
           const body = (await request.json()) as {
             [key: string]: { id?: number; email: string; password: string };
           };
-          const input = body["0"];
+          const input = body['0'];
           const id = input?.id ?? 0;
-          if (params[0] === "login") {
+          if (params[0] === 'login') {
             return HttpResponse.json(
               [
                 {
                   id,
                   error: {
-                    message: "Invalid email or password",
+                    message: 'Invalid email or password',
                     code: -32001,
-                    data: {
-                      code: "UNAUTHORIZED",
-                      httpStatus: 401,
-                      path: "login",
-                    },
+                    data: { code: 'UNAUTHORIZED', httpStatus: 401, path: 'login' },
                   },
                 },
               ],
@@ -322,9 +298,9 @@ describe("Home Component with Router", () => {
               {
                 id,
                 error: {
-                  message: "Procedure not found",
+                  message: 'Procedure not found',
                   code: -32601,
-                  data: { code: "NOT_FOUND", httpStatus: 404, path: params[0] },
+                  data: { code: 'NOT_FOUND', httpStatus: 404, path: params[0] },
                 },
               },
             ],
@@ -334,35 +310,28 @@ describe("Home Component with Router", () => {
       )
     );
 
-    await setup("/");
+    await setup('/');
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText("m@example.com")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('m@example.com')).toBeInTheDocument();
     });
 
     await act(async () => {
-      fireEvent.change(screen.getByPlaceholderText("m@example.com"), {
-        target: { value: "wronguser@example.com" },
+      fireEvent.change(screen.getByPlaceholderText('m@example.com'), {
+        target: { value: 'wronguser@example.com' },
       });
-      fireEvent.change(screen.getByPlaceholderText("Enter your password"), {
-        target: { value: "wrongpassword" },
+      fireEvent.change(screen.getByPlaceholderText('Enter your password'), {
+        target: { value: 'wrongpassword' },
       });
-      fireEvent.click(screen.getByRole("button", { name: "Login" }));
+      fireEvent.click(screen.getByRole('button', { name: 'Login' }));
     });
 
-    // await waitFor(
-    //   () => {
-    //     expect(toast.error).toHaveBeenCalledWith("Login failed", {
-    //       description: "Invalid email or password",
-    //       action: {
-    //         label: "Try again",
-    //         onClick: expect.any(Function),
-    //       },
-    //       className: "login-toast",
-    //       duration: 5000,
-    //     });
-    //   },
-    //   { timeout: 3000 } // Increased timeout
-    // );
+    await waitFor(
+      () => {
+        expect(screen.getByTestId('login-message')).toBeInTheDocument();
+        expect(screen.getByTestId('login-message')).toHaveTextContent('Invalid email or password');
+      },
+      { timeout: 3000 }
+    );
   });
 });

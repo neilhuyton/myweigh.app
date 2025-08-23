@@ -14,6 +14,7 @@ test.describe('Register Functionality', () => {
                 data: {
                   id: 'new-user-id',
                   email: 'newuser@example.com',
+                  message: 'Registration successful! Please check your email to verify your account.',
                 },
               },
             },
@@ -52,12 +53,13 @@ test.describe('Register Functionality', () => {
       registerButton.click(),
     ]);
 
-    await expect(page.getByTestId('register-message')).toHaveText('Registration successful!', { timeout: 10000 });
+    await expect(page.getByTestId('register-message')).toHaveText(
+      'Registration successful! Please check your email to verify your account.',
+      { timeout: 10000 }
+    );
 
-    // Simulate clicking the "Log in now" button in the toast
-    await page.locator('.register-toast').filter({ hasText: 'Registration successful!' }).getByRole('button', { name: 'Log in now' }).click();
+    await page.getByTestId('login-link').click();
 
-    // Verify the login form is visible after clicking the toast action
     await expect(page.getByTestId('login-form')).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole('button', { name: 'Login' })).toBeVisible({ timeout: 10000 });
   });
@@ -85,10 +87,12 @@ test.describe('Register Functionality', () => {
     await expect(page.getByText('Invalid email address')).toBeVisible({ timeout: 5000 });
     await expect(page.getByTestId('register-form')).toBeVisible({ timeout: 5000 });
 
-    const response = await page.waitForResponse(
-      (resp) => resp.request().method() === 'POST' && resp.url().includes('trpc/register'),
-      { timeout: 2000 }
-    ).catch(() => null);
+    const response = await page
+      .waitForResponse(
+        (resp) => resp.request().method() === 'POST' && resp.url().includes('trpc/register'),
+        { timeout: 2000 }
+      )
+      .catch(() => null);
     expect(response).toBeNull();
   });
 
@@ -115,10 +119,12 @@ test.describe('Register Functionality', () => {
     await expect(page.getByText('Password must be at least 8 characters')).toBeVisible({ timeout: 5000 });
     await expect(page.getByTestId('register-form')).toBeVisible({ timeout: 5000 });
 
-    const response = await page.waitForResponse(
-      (resp) => resp.request().method() === 'POST' && resp.url().includes('trpc/register'),
-      { timeout: 2000 }
-    ).catch(() => null);
+    const response = await page
+      .waitForResponse(
+        (resp) => resp.request().method() === 'POST' && resp.url().includes('trpc/register'),
+        { timeout: 2000 }
+      )
+      .catch(() => null);
     expect(response).toBeNull();
   });
 

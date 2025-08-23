@@ -39,16 +39,13 @@ export const useLogin = (): UseLoginReturn => {
 
   const loginMutation = trpc.login.useMutation({
     onSuccess: (data: LoginResponse) => {
-      console.log('Mutation onSuccess, data:', data); // Debug
       setMessage('Login successful!');
       setTimeout(() => {
-        console.log('Resetting form and logging in, userId:', data.id); // Debug
         form.reset();
         login(data.id);
       }, 3000);
     },
     onError: (error) => {
-      console.log('Mutation onError:', error); // Debug
       const errorMessage = error.message || 'Invalid email or password';
       setMessage(`Login failed: ${errorMessage}`);
     },
@@ -60,18 +57,15 @@ export const useLogin = (): UseLoginReturn => {
   }, [form]);
 
   const handleSubmit = async (data: FormValues) => {
-    console.log('handleSubmit called with:', data); // Debug
     const isValid = await form.trigger();
     if (!isValid) {
-      console.log('Form validation failed:', form.formState.errors); // Debug
       return;
     }
 
     try {
-      console.log('Triggering login mutation...'); // Debug
       await loginMutation.mutateAsync(data);
     } catch (error) {
-      console.log('Mutation error caught:', error); // Debug
+
     }
   };
 

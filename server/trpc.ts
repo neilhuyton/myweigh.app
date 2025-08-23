@@ -36,8 +36,6 @@ export const appRouter = t.router({
       const hashedPassword = await bcrypt.hash(password, 10);
       const verificationToken = crypto.randomUUID();
 
-      console.log("verificationToken", verificationToken);
-
       const user = await ctx.prisma.user.create({
         data: {
           email,
@@ -99,13 +97,9 @@ export const appRouter = t.router({
   .mutation(async ({ input, ctx }) => {
     const { token } = input;
 
-    console.log('token', token);
-
     const user = await ctx.prisma.user.findFirst({
       where: { verificationToken: token },
     });
-
-    console.log('user', user);
 
     if (!user) {
       // Check if the user exists and is already verified
