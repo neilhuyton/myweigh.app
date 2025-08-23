@@ -14,11 +14,12 @@ function VerifyEmail() {
   const verifyEmailMutation = trpc.verifyEmail.useMutation({
     onSuccess: (data) => {
       setMessage(data.message);
+      setIsVerifying(false);
       toast.success('Email Verification', {
         description: data.message,
         action: {
           label: 'Go to Login',
-          onClick: () => window.location.href = '/',
+          onClick: () => (window.location.href = '/'),
         },
         duration: 5000,
         className: 'verify-email-toast',
@@ -26,6 +27,7 @@ function VerifyEmail() {
     },
     onError: (error) => {
       setMessage(`Verification failed: ${error.message}`);
+      setIsVerifying(false);
       toast.error('Verification Failed', {
         description: error.message,
         action: {
@@ -36,19 +38,17 @@ function VerifyEmail() {
         className: 'verify-email-toast',
       });
     },
-    onSettled: () => {
-      setIsVerifying(false);
-    },
   });
 
   useEffect(() => {
-    if (token) {
+    if (token && !isVerifying && !verifyEmailMutation.isPending) {
+      console.log('token', token);
       setIsVerifying(true);
       verifyEmailMutation.mutate({ token });
-    } else {
+    } else if (!token) {
       setMessage('No verification token provided');
     }
-  }, [token]);
+  }, [token]); // Remove verifyEmailMutation from dependencies
 
   return (
     <div className="min-h-[100dvh] flex flex-col">

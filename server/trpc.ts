@@ -36,6 +36,8 @@ export const appRouter = t.router({
       const hashedPassword = await bcrypt.hash(password, 10);
       const verificationToken = crypto.randomUUID();
 
+      console.log("verificationToken", verificationToken);
+
       const user = await ctx.prisma.user.create({
         data: {
           email,
@@ -53,7 +55,8 @@ export const appRouter = t.router({
       return {
         id: user.id,
         email: user.email,
-        message: "Registration successful! Please check your email to verify your account.",
+        message:
+          "Registration successful! Please check your email to verify your account.",
       };
     }),
   login: t.procedure
@@ -88,38 +91,50 @@ export const appRouter = t.router({
       return { id: user.id, email: user.email };
     }),
   verifyEmail: t.procedure
-    .input(
-      z.object({
-        token: z.string().uuid({ message: "Invalid verification token" }),
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      const { token } = input;
+  .input(
+    z.object({
+      token: z.string().uuid({ message: "Invalid verification token" }),
+    })
+  )
+  .mutation(async ({ input, ctx }) => {
+    const { token } = input;
 
-      const user = await ctx.prisma.user.findFirst({
-        where: { verificationToken: token },
+    console.log('token', token);
+
+    const user = await ctx.prisma.user.findFirst({
+      where: { verificationToken: token },
+    });
+
+    console.log('user', user);
+
+    if (!user) {
+      // Check if the user exists and is already verified
+      const existingUser = await ctx.prisma.user.findFirst({
+        where: { verificationToken: null, isEmailVerified: true },
+        select: { email: true },
       });
-
-      if (!user) {
-        throw new Error("Invalid or expired verification token");
-      }
-
-      if (user.isEmailVerified) {
+      if (existingUser) {
         throw new Error("Email already verified");
       }
+      throw new Error("Invalid verification token");
+    }
 
-      await ctx.prisma.user.update({
-        where: { id: user.id },
-        data: {
-          isEmailVerified: true,
-          verificationToken: null,
-        },
-      });
+    if (user.isEmailVerified) {
+      throw new Error("Email already verified");
+    }
 
-      return {
-        message: "Email verified successfully!",
-      };
-    }),
+    await ctx.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        isEmailVerified: true,
+        verificationToken: null,
+      },
+    });
+
+    return {
+      message: "Email verified successfully!",
+    };
+  }),
   weight: t.router({
     create: t.procedure
       .input(

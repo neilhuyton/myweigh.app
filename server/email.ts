@@ -14,7 +14,7 @@ export async function sendVerificationEmail(
   verificationToken: string
 ) {
   const verificationUrl = `${
-    import.meta.env.VITE_APP_URL || "http://localhost:5173"
+    process.env.VITE_APP_URL || "http://localhost:5173"
   }/verify-email?token=${verificationToken}`;
 
   const mailOptions = {

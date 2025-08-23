@@ -31,7 +31,7 @@ export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => 
 
   // Determine the allowed origin dynamically
   const isLocalhost = headers['origin']?.includes('localhost');
-  const allowedOrigin = isLocalhost ? headers['origin'] : (process.env.APP_URL || 'http://localhost:5173');
+  const allowedOrigin = isLocalhost ? headers['origin'] : (process.env.VITE_APP_URL || 'http://localhost:5173');
 
   const corsHeaders = {
     'Access-Control-Allow-Origin': allowedOrigin,
