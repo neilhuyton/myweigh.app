@@ -13,7 +13,6 @@ import { router } from '../src/router';
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 import { act } from 'react';
-import VerifyEmail from '../src/components/VerifyEmail';
 
 describe('Email Verification', () => {
   const queryClient = new QueryClient({
