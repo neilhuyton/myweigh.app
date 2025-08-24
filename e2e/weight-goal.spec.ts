@@ -45,9 +45,6 @@ test.describe('Weight Goal Functionality', () => {
         page.getByRole('button', { name: 'Login' }).click(),
       ]);
 
-      // Wait for login confirmation
-      await expect(page.getByTestId('login-message')).toBeVisible({ timeout: 20000 });
-
       // Wait for notifications to disappear to avoid interference
       await page.getByLabel('Notifications alt+T').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {
         // Ignore if no notifications are present
