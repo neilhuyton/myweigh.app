@@ -1,28 +1,30 @@
+// src/router.tsx
 import {
   createRouter,
   createRootRoute,
   createRoute,
   redirect,
   Outlet,
-} from '@tanstack/react-router';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { httpBatchLink } from '@trpc/client';
-import { z } from 'zod';
-import { trpc } from './trpc';
-import Home from './components/Home';
-import Navigation from './components/Navigation';
-import WeightForm from './components/WeightForm';
-import WeightList from './components/WeightList';
-import WeightChart from './components/WeightChart';
-import WeightGoal from './components/WeightGoal';
-import Register from './components/Register';
-import LoginForm from './components/LoginForm';
-import ResetPasswordForm from './components/ResetPasswordForm';
-import ConfirmResetPasswordForm from './components/ConfirmResetPasswordForm';
-import VerifyEmail from './components/VerifyEmail';
-import { useAuthStore } from './store/authStore';
-import { ThemeProvider } from './components/ThemeProvider';
-import { Toaster } from '@/components/ui/sonner';
+  useLocation,
+} from "@tanstack/react-router"; // Added useLocation
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { httpBatchLink } from "@trpc/client";
+import { z } from "zod";
+import { trpc } from "./trpc";
+import Home from "./components/Home";
+import Navigation from "./components/Navigation";
+import WeightForm from "./components/WeightForm";
+import WeightList from "./components/WeightList";
+import WeightChart from "./components/WeightChart";
+import WeightGoal from "./components/WeightGoal";
+import Register from "./components/Register";
+import LoginForm from "./components/LoginForm";
+import ResetPasswordForm from "./components/ResetPasswordForm";
+import ConfirmResetPasswordForm from "./components/ConfirmResetPasswordForm";
+import VerifyEmail from "./components/VerifyEmail";
+import { useAuthStore } from "./store/authStore";
+import { ThemeProvider } from "./components/ThemeProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 // Create tRPC client
 const queryClient = new QueryClient({
@@ -36,7 +38,7 @@ const trpcClient = trpc.createClient({
     httpBatchLink({
       url:
         import.meta.env.VITE_TRPC_URL ||
-        'http://localhost:8888/.netlify/functions/trpc',
+        "http://localhost:8888/.netlify/functions/trpc",
       fetch: async (url, options) => {
         const { userId } = useAuthStore.getState();
         const headers = {
@@ -54,15 +56,27 @@ const trpcClient = trpc.createClient({
   ],
 });
 
+// Define public routes where Navigation should not be shown
+const publicRoutes = [
+  "/login",
+  "/register",
+  "/reset-password",
+  "/confirm-reset-password",
+  "/verify-email",
+];
+
 // Define root route with conditional Navigation rendering
 const rootRoute = createRootRoute({
   component: () => {
-    const { isLoggedIn } = useAuthStore(); // Use hook to get auth state
+    const { isLoggedIn } = useAuthStore();
+    const location = useLocation(); // Get current route path
+    const isPublicRoute = publicRoutes.includes(location.pathname);
+
     return (
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-            {isLoggedIn && <Navigation />}
+            {isLoggedIn && !isPublicRoute && <Navigation />}
             <Outlet />
             <Toaster richColors position="top-right" />
           </ThemeProvider>
@@ -83,11 +97,11 @@ const confirmResetPasswordSearchSchema = z.object({
 // Define routes
 const homeRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/',
+  path: "/",
   beforeLoad: () => {
     const { isLoggedIn } = useAuthStore.getState();
     if (!isLoggedIn) {
-      throw redirect({ to: '/login' });
+      throw redirect({ to: "/login" });
     }
   },
   component: Home,
@@ -95,38 +109,36 @@ const homeRoute = createRoute({
 
 const registerRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/register',
+  path: "/register",
   component: Register,
 });
 
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/login',
+  path: "/login",
   component: LoginForm,
 });
 
 const resetPasswordRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/reset-password',
+  path: "/reset-password",
   component: ResetPasswordForm,
 });
 
 const confirmResetPasswordRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/confirm-reset-password',
+  path: "/confirm-reset-password",
   validateSearch: confirmResetPasswordSearchSchema,
-  component: () => {
-    return <ConfirmResetPasswordForm />;
-  },
+  component: ConfirmResetPasswordForm, // Simplified, as component was already correct
 });
 
 const weightRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/weight',
+  path: "/weight",
   beforeLoad: () => {
     const { isLoggedIn } = useAuthStore.getState();
     if (!isLoggedIn) {
-      throw redirect({ to: '/login' });
+      throw redirect({ to: "/login" });
     }
   },
   component: WeightForm,
@@ -134,11 +146,11 @@ const weightRoute = createRoute({
 
 const weightsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/weights',
+  path: "/weights",
   beforeLoad: () => {
     const { isLoggedIn } = useAuthStore.getState();
     if (!isLoggedIn) {
-      throw redirect({ to: '/login' });
+      throw redirect({ to: "/login" });
     }
   },
   component: WeightList,
@@ -146,11 +158,11 @@ const weightsRoute = createRoute({
 
 const weightChartRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/weight-chart',
+  path: "/weight-chart",
   beforeLoad: () => {
     const { isLoggedIn } = useAuthStore.getState();
     if (!isLoggedIn) {
-      throw redirect({ to: '/login' });
+      throw redirect({ to: "/login" });
     }
   },
   component: WeightChart,
@@ -158,11 +170,11 @@ const weightChartRoute = createRoute({
 
 const weightGoalRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/weight-goal',
+  path: "/weight-goal",
   beforeLoad: () => {
     const { isLoggedIn } = useAuthStore.getState();
     if (!isLoggedIn) {
-      throw redirect({ to: '/login' });
+      throw redirect({ to: "/login" });
     }
   },
   component: WeightGoal,
@@ -170,7 +182,7 @@ const weightGoalRoute = createRoute({
 
 const verifyEmailRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/verify-email',
+  path: "/verify-email",
   validateSearch: verifyEmailSearchSchema,
   component: VerifyEmail,
 });
@@ -193,7 +205,7 @@ const routeTree = rootRoute.addChildren([
 export const router = createRouter({ routeTree });
 
 // Register router for type safety
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router;
   }
