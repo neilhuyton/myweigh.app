@@ -1,24 +1,12 @@
 // src/components/ResetPasswordForm.tsx
-import { cn } from "@/lib/utils";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { useResetPassword } from "../hooks/useResetPassword";
-import { router } from "../router";
+import { cn } from '@/lib/utils';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { useResetPassword } from '../hooks/useResetPassword';
+import { router } from '../router';
+import { Logo } from './Logo'; // Adjust the import path based on your project structure
 
 interface ResetPasswordFormProps {
   className?: string;
@@ -28,45 +16,42 @@ function ResetPasswordForm({ className }: ResetPasswordFormProps) {
   const { form, message, isPending, handleSubmit } = useResetPassword();
 
   return (
-    <div className={cn("flex flex-col gap-6", className)}>
-      <Card>
-        <CardHeader className="px-6">
-          <CardTitle role="heading" aria-level={1}>
+    <div className={cn('min-h-[100dvh] flex flex-col items-center p-1 sm:p-2 lg:p-3', className)}>
+      {/* Logo with spacing above */}
+      <div className="pt-14">
+        <Logo />
+      </div>
+      {/* Form centered in the middle */}
+      <div className="flex-grow flex items-center justify-center w-full">
+        <div className="w-full max-w-md bg-background rounded-lg p-4 flex flex-col items-center">
+          <h1
+            className="text-2xl font-bold text-center mb-4"
+            role="heading"
+            aria-level={1}
+          >
             Reset your password
-          </CardTitle>
-          <CardDescription>
+          </h1>
+          <p className="text-muted-foreground text-center mb-6">
             Enter your email to receive a password reset link
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="px-6 pt-0">
+          </p>
           <Form {...form}>
             <form
               onSubmit={(e) => {
                 form.handleSubmit(handleSubmit)(e);
               }}
               role="form"
+              data-testid="reset-password-form"
             >
               <div className="flex flex-col gap-6">
-                {message && (
-                  <p
-                    role="alert"
-                    className={cn(
-                      "text-sm",
-                      message.includes("failed")
-                        ? "text-red-500"
-                        : "text-green-500"
-                    )}
-                  >
-                    {message}
-                  </p>
-                )}
                 <div className="grid gap-3">
                   <FormField
                     control={form.control}
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <Label htmlFor="email">Email</Label>
+                        <Label htmlFor="email" data-testid="email-label">
+                          Email
+                        </Label>
                         <FormControl>
                           <Input
                             id="email"
@@ -74,7 +59,7 @@ function ResetPasswordForm({ className }: ResetPasswordFormProps) {
                             placeholder="m@example.com"
                             required
                             disabled={isPending}
-                            data-testid="email-input" // Add this line
+                            data-testid="email-input"
                             {...field}
                           />
                         </FormControl>
@@ -83,26 +68,28 @@ function ResetPasswordForm({ className }: ResetPasswordFormProps) {
                     )}
                   />
                 </div>
-                <div className="flex flex-col gap-3">
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={isPending}
-                    data-testid="submit-button" // Optional: Add for consistency
+                {message && (
+                  <p
+                    role="alert"
+                    className={cn(
+                      'text-sm text-center',
+                      message.includes('failed') ? 'text-red-500' : 'text-green-500'
+                    )}
+                    data-testid="reset-password-message"
                   >
-                    {isPending ? "Sending..." : "Send Reset Link"}
-                  </Button>
-                </div>
-                <div className="mt-4 text-center text-sm">
+                    {message}
+                  </p>
+                )}
+                <div className="mt-8 text-center text-sm">
                   <a
                     href="#"
                     role="link"
                     onClick={(e) => {
                       e.preventDefault();
-                      router.navigate({ to: "/login" });
+                      router.navigate({ to: '/login' });
                     }}
                     className="underline underline-offset-4"
-                    data-testid="back-to-login-link" // Optional: Add for consistency
+                    data-testid="back-to-login-link"
                   >
                     Back to login
                   </a>
@@ -110,8 +97,20 @@ function ResetPasswordForm({ className }: ResetPasswordFormProps) {
               </div>
             </form>
           </Form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+      {/* Submit button at the bottom */}
+      <div className="w-full max-w-md px-4 pb-4 mt-12">
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isPending}
+          data-testid="submit-button"
+          onClick={form.handleSubmit(handleSubmit)}
+        >
+          {isPending ? 'Sending...' : 'Send Reset Link'}
+        </Button>
+      </div>
     </div>
   );
 }
