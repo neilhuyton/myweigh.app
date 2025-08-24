@@ -3,11 +3,6 @@ import { useEffect, useState } from 'react';
 import { useSearch } from '@tanstack/react-router';
 import { trpc } from '../trpc';
 
-interface VerifyEmailResult {
-  message: string | null;
-  isVerifying: boolean;
-}
-
 export function useVerifyEmail() {
   const { token } = useSearch({ from: '/verify-email' });
   const [message, setMessage] = useState<string | null>(null);

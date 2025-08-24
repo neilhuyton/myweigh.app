@@ -7,7 +7,6 @@ export const weightSetGoalHandler = http.post(
     let body;
     try {
       body = await request.json();
-      console.log('Handling weight.setGoal request:', body);
     } catch (error) {
       console.error('Error reading weight.setGoal request body:', error);
       return HttpResponse.json(

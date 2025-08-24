@@ -1,27 +1,19 @@
 // src/components/Home.tsx
-import LoginForm from "./LoginForm";
-import Register from "./Register";
-import { useAuthView } from "../hooks/useAuthView";
+import { useAuthStore } from '../store/authStore';
 
 function Home() {
-  const { isLoggedIn, showLogin, switchToRegister, switchToLogin } =
-    useAuthView();
+  const { isLoggedIn } = useAuthStore();
 
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        {isLoggedIn ? (
-          <p className="text-center text-lg text-gray-700">Login successful!</p>
-        ) : (
-          <div>
-            {showLogin ? (
-              <LoginForm onSwitchToRegister={switchToRegister} />
-            ) : (
-              <Register onSwitchToLogin={switchToLogin} />
-            )}
-          </div>
-        )}
-      </div>
+    <div>
+      <h1>Welcome to Weight Tracker</h1>
+      {isLoggedIn ? (
+        <>
+          <p data-testid="login-message">Login successful!</p>
+        </>
+      ) : (
+        <p>Please log in to continue.</p>
+      )}
     </div>
   );
 }

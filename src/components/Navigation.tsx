@@ -62,6 +62,7 @@ function Navigation() {
               Weight Goal
             </Link>
             <Button
+              data-testid="logout-button"
               variant="outline"
               onClick={logout}
               className="hover:underline"
@@ -139,13 +140,14 @@ function Navigation() {
                   </Link>
                 </SheetClose>
                 <SheetClose asChild>
-                  <Button
-                    variant="outline"
+                  <button
+                    data-testid="logout-button"
+                    // variant="outline"
                     onClick={logout}
                     className="w-full hover:underline"
                   >
                     Logout
-                  </Button>
+                  </button>
                 </SheetClose>
               </>
             ) : (

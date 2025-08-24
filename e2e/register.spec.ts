@@ -1,3 +1,4 @@
+// e2e/register.spec.ts
 import { test, expect } from '@playwright/test';
 
 test.describe('Register Functionality', () => {
@@ -14,7 +15,8 @@ test.describe('Register Functionality', () => {
                 data: {
                   id: 'new-user-id',
                   email: 'newuser@example.com',
-                  message: 'Registration successful! Please check your email to verify your account.',
+                  message:
+                    'Registration successful! Please check your email to verify your account.!',
                 },
               },
             },
@@ -27,8 +29,8 @@ test.describe('Register Functionality', () => {
 
     await page.goto('/', { waitUntil: 'networkidle' });
 
-    await expect(page.getByRole('link', { name: 'Sign up' })).toBeVisible({ timeout: 5000 });
-    await page.getByRole('link', { name: 'Sign up' }).click();
+    await expect(page.getByTestId('signup-link')).toBeVisible({ timeout: 5000 });
+    await page.getByTestId('signup-link').click();
 
     await expect(page.getByTestId('register-form')).toBeVisible({ timeout: 5000 });
     await expect(page.getByPlaceholder('m@example.com')).toBeVisible({ timeout: 5000 });
@@ -53,12 +55,14 @@ test.describe('Register Functionality', () => {
       registerButton.click(),
     ]);
 
+    // Check message within 2 seconds to avoid navigation
     await expect(page.getByTestId('register-message')).toHaveText(
-      'Registration successful! Please check your email to verify your account.',
-      { timeout: 10000 }
+      'Registration successful! Please check your email to verify your account.!',
+      { timeout: 2000 } // Reduced to ensure check before navigation
     );
 
-    await page.getByTestId('login-link').click();
+    // Wait for navigation to /login triggered by setTimeout
+    await page.waitForURL('**/login', { timeout: 5000 });
 
     await expect(page.getByTestId('login-form')).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole('button', { name: 'Login' })).toBeVisible({ timeout: 10000 });
@@ -67,8 +71,8 @@ test.describe('Register Functionality', () => {
   test('should display error message with invalid email', async ({ page }) => {
     await page.goto('/', { waitUntil: 'networkidle' });
 
-    await expect(page.getByRole('link', { name: 'Sign up' })).toBeVisible({ timeout: 5000 });
-    await page.getByRole('link', { name: 'Sign up' }).click();
+    await expect(page.getByTestId('signup-link')).toBeVisible({ timeout: 5000 });
+    await page.getByTestId('signup-link').click();
 
     await expect(page.getByTestId('register-form')).toBeVisible({ timeout: 5000 });
     await expect(page.getByPlaceholder('m@example.com')).toBeVisible({ timeout: 5000 });
@@ -84,7 +88,7 @@ test.describe('Register Functionality', () => {
 
     await page.getByRole('button', { name: 'Register' }).click();
 
-    await expect(page.getByText('Invalid email address')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('Please enter a valid email address')).toBeVisible({ timeout: 5000 });
     await expect(page.getByTestId('register-form')).toBeVisible({ timeout: 5000 });
 
     const response = await page
@@ -99,8 +103,8 @@ test.describe('Register Functionality', () => {
   test('should display error message with short password', async ({ page }) => {
     await page.goto('/', { waitUntil: 'networkidle' });
 
-    await expect(page.getByRole('link', { name: 'Sign up' })).toBeVisible({ timeout: 5000 });
-    await page.getByRole('link', { name: 'Sign up' }).click();
+    await expect(page.getByTestId('signup-link')).toBeVisible({ timeout: 5000 });
+    await page.getByTestId('signup-link').click();
 
     await expect(page.getByTestId('register-form')).toBeVisible({ timeout: 5000 });
     await expect(page.getByPlaceholder('m@example.com')).toBeVisible({ timeout: 5000 });
@@ -116,7 +120,9 @@ test.describe('Register Functionality', () => {
 
     await page.getByRole('button', { name: 'Register' }).click();
 
-    await expect(page.getByText('Password must be at least 8 characters')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('Password must be at least 8 characters')).toBeVisible({
+      timeout: 5000,
+    });
     await expect(page.getByTestId('register-form')).toBeVisible({ timeout: 5000 });
 
     const response = await page
@@ -131,12 +137,14 @@ test.describe('Register Functionality', () => {
   test('should switch to login form when log in button is clicked', async ({ page }) => {
     await page.goto('/', { waitUntil: 'networkidle' });
 
-    await expect(page.getByRole('link', { name: 'Sign up' })).toBeVisible({ timeout: 5000 });
-    await page.getByRole('link', { name: 'Sign up' }).click();
+    await expect(page.getByTestId('signup-link')).toBeVisible({ timeout: 5000 });
+    await page.getByTestId('signup-link').click();
 
+    await expect(page.getByTestId('register-form')).toBeVisible({ timeout: 5000 });
     await expect(page.getByPlaceholder('m@example.com')).toBeVisible({ timeout: 5000 });
 
-    await page.getByRole('link', { name: 'Log in' }).click();
+    await expect(page.getByTestId('login-link')).toBeVisible({ timeout: 5000 });
+    await page.getByTestId('login-link').click();
 
     await expect(page.getByTestId('login-form')).toBeVisible({ timeout: 5000 });
     await expect(page.getByRole('button', { name: 'Login' })).toBeVisible({ timeout: 5000 });

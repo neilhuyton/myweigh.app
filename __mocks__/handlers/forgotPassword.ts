@@ -5,7 +5,6 @@ import { mockUsers } from '../mockUsers';
 export const forgotPasswordHandler = http.post(
   'http://localhost:8888/.netlify/functions/trpc/forgotPassword',
   async ({ request }) => {
-    console.log('Handling forgotPassword request:', await request.json());
     const body = (await request.json()) as {
       [key: string]: { id?: number; email?: string };
     };

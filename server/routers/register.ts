@@ -1,3 +1,4 @@
+// server/routers/register.ts
 import { t } from '../trpc-base';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';

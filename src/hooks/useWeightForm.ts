@@ -11,10 +11,10 @@ export function useWeightForm() {
   const [note, setNote] = useState("");
   const [message, setMessage] = useState<string | null>(null);
 
-  // Redirect to home if not logged in
+  // Redirect to login if not logged in
   useEffect(() => {
     if (!isLoggedIn) {
-      navigate({ to: "/" });
+      navigate({ to: "/login" });
     }
   }, [isLoggedIn, navigate]);
 
@@ -25,7 +25,12 @@ export function useWeightForm() {
       setNote("");
     },
     onError: (error) => {
-      setMessage(`Failed to record weight: ${error.message}`);
+      if (error.data?.code === "UNAUTHORIZED") {
+        setMessage("Please log in to record a weight.");
+        navigate({ to: "/login" });
+      } else {
+        setMessage(`Failed to record weight: ${error.message}`);
+      }
     },
   });
 
@@ -33,10 +38,11 @@ export function useWeightForm() {
     e.preventDefault();
     if (!userId) {
       setMessage("User ID not found. Please log in again.");
+      navigate({ to: "/login" });
       return;
     }
     const weightKg = parseFloat(weight);
-    if (isNaN(weightKg)) {
+    if (isNaN(weightKg) || weightKg <= 0) {
       setMessage("Please enter a valid weight.");
       return;
     }

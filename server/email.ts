@@ -1,4 +1,5 @@
-import nodemailer from "nodemailer";
+// server/email.ts
+import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
@@ -9,18 +10,15 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export async function sendVerificationEmail(
-  to: string,
-  verificationToken: string
-) {
+export async function sendVerificationEmail(to: string, verificationToken: string) {
   const verificationUrl = `${
-    process.env.VITE_APP_URL || "http://localhost:5173"
+    process.env.VITE_APP_URL || 'http://localhost:5173'
   }/verify-email?token=${verificationToken}`;
 
   const mailOptions = {
     from: process.env.EMAIL_FROM,
     to,
-    subject: "Verify Your Email Address",
+    subject: 'Verify Your Email Address',
     html: `
       <h1>Welcome!</h1>
       <p>Please verify your email address by clicking the link below:</p>
@@ -33,7 +31,33 @@ export async function sendVerificationEmail(
     await transporter.sendMail(mailOptions);
     return { success: true };
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error('Error sending email:', error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+export async function sendResetPasswordEmail(to: string, resetToken: string) {
+  const resetUrl = `${
+    process.env.VITE_APP_URL || 'http://localhost:5173'
+  }/confirm-reset-password?token=${resetToken}`; // Changed to /confirm-reset-password
+
+  const mailOptions = {
+    from: process.env.EMAIL_FROM,
+    to,
+    subject: 'Reset Your Password',
+    html: `
+      <h1>Password Reset Request</h1>
+      <p>You requested to reset your password. Click the link below to set a new password:</p>
+      <a href="${resetUrl}">Reset Password</a>
+      <p>This link will expire in 1 hour. If you didn’t request a password reset, please ignore this email.</p>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending reset email:', error);
     return { success: false, error: (error as Error).message };
   }
 }

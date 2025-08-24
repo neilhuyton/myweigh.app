@@ -75,7 +75,6 @@ describe('WeightChart Component', () => {
 
   afterEach(() => {
     server.resetHandlers();
-    server.restoreHandlers();
     useAuthStore.setState({
       isLoggedIn: false,
       userId: null,

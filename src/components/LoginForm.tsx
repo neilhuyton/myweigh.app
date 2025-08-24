@@ -1,31 +1,20 @@
 // src/components/LoginForm.tsx
 import { cn } from '@/lib/utils';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLogin } from '../hooks/useLogin';
+import { useRouter } from '@tanstack/react-router';
 
 interface LoginFormProps {
   className?: string;
-  onSwitchToRegister: () => void;
 }
 
-function LoginForm({ className, onSwitchToRegister }: LoginFormProps) {
+function LoginForm({ className }: LoginFormProps) {
   const { form, message, isPending, handleSubmit } = useLogin();
+  const router = useRouter();
 
   return (
     <div className={cn('flex flex-col gap-6', className)}>
@@ -34,16 +23,11 @@ function LoginForm({ className, onSwitchToRegister }: LoginFormProps) {
           <CardTitle role="heading" aria-level={1}>
             Login to your account
           </CardTitle>
-          <CardDescription>
-            Enter your email below to login to your account
-          </CardDescription>
+          <CardDescription>Enter your email below to login to your account</CardDescription>
         </CardHeader>
         <CardContent className="px-6 pt-0">
           <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(handleSubmit)}
-              data-testid="login-form"
-            >
+            <form onSubmit={form.handleSubmit(handleSubmit)} data-testid="login-form">
               <div className="flex flex-col gap-6">
                 {message && (
                   <p
@@ -95,6 +79,10 @@ function LoginForm({ className, onSwitchToRegister }: LoginFormProps) {
                             href="#"
                             className="inline-block text-sm underline-offset-0 hover:underline"
                             data-testid="forgot-password-link"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              router.navigate({ to: '/reset-password' });
+                            }}
                           >
                             Forgot your password?
                           </a>
@@ -134,7 +122,7 @@ function LoginForm({ className, onSwitchToRegister }: LoginFormProps) {
                   role="link"
                   onClick={(e) => {
                     e.preventDefault();
-                    onSwitchToRegister();
+                    router.navigate({ to: '/register' });
                   }}
                   className="underline underline-offset-4"
                   data-testid="signup-link"
