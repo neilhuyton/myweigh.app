@@ -1,3 +1,4 @@
+// src/components/VerifyEmail.tsx
 import { useEffect, useState } from 'react';
 import { useSearch } from '@tanstack/react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
