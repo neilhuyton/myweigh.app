@@ -141,8 +141,6 @@ test.describe('Weight Form Functionality', () => {
       // Navigate to the weight form
       await page.getByRole('link', { name: 'Weight', exact: true }).click();
       await page.waitForURL(/.*\/weight/, { timeout: 15000 });
-      // Debug: Log page content and take screenshot
-      await page.screenshot({ path: 'weight-form-screenshot.png' });
       await expect(page.getByText('Record Weight')).toBeVisible({ timeout: 15000 });
 
       // Fill in the weight form
@@ -231,8 +229,6 @@ test.describe('Weight Form Functionality', () => {
       // Navigate to the weight form
       await page.getByRole('link', { name: 'Weight', exact: true }).click();
       await page.waitForURL(/.*\/weight/, { timeout: 15000 });
-      // Debug: Log page content and take screenshot
-      await page.screenshot({ path: 'weight-form-error-screenshot.png' });
       await expect(page.getByText('Record Weight')).toBeVisible({ timeout: 15000 });
 
       // Fill in the weight form with invalid input
