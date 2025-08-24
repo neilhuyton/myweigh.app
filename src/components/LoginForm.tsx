@@ -1,11 +1,12 @@
+// src/components/LoginForm.tsx
 import { cn } from '@/lib/utils';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { useLogin } from '../hooks/useLogin'; // Corrected import path
+import { useLogin } from '../hooks/useLogin';
 import { useRouter } from '@tanstack/react-router';
-import { Logo } from './Logo'; // Adjust the import path based on your project structure
+import { Logo } from './Logo';
 
 function LoginForm() {
   const { form, message, isPending, handleSubmit } = useLogin();
@@ -14,7 +15,7 @@ function LoginForm() {
   return (
     <div className="min-h-[100dvh] flex flex-col items-center p-1 sm:p-2 lg:p-3">
       {/* Logo with spacing above */}
-      <div className="pt-8">
+      <div className="pt-14">
         <Logo />
       </div>
       {/* Form centered in the middle */}
@@ -37,17 +38,6 @@ function LoginForm() {
               className="w-full"
             >
               <div className="flex flex-col gap-6">
-                {message && (
-                  <p
-                    data-testid="login-message"
-                    className={cn(
-                      'text-sm text-center',
-                      message.includes('failed') ? 'text-red-500' : 'text-green-500'
-                    )}
-                  >
-                    {message}
-                  </p>
-                )}
                 <div className="grid gap-3">
                   <FormField
                     control={form.control}
@@ -112,6 +102,17 @@ function LoginForm() {
                     )}
                   />
                 </div>
+                {message && (
+                  <p
+                    data-testid="login-message"
+                    className={cn(
+                      'text-sm text-center',
+                      message.includes('failed') ? 'text-red-500' : 'text-green-500'
+                    )}
+                  >
+                    {message}
+                  </p>
+                )}
               </div>
               <div className="mt-8 text-center text-sm">
                 Don&apos;t have an account?{' '}
@@ -133,7 +134,7 @@ function LoginForm() {
         </div>
       </div>
       {/* Submit button at the bottom */}
-      <div className="w-full max-w-md px-4 pb-4">
+      <div className="w-full max-w-md px-4 pb-4 mt-12">
         <Button
           type="submit"
           className="w-full"
@@ -148,4 +149,4 @@ function LoginForm() {
   );
 }
 
-export default LoginForm; // Corrected export
+export default LoginForm;
