@@ -48,7 +48,7 @@ test.describe('Login Functionality', () => {
 
     // Verify logged-in state (check for navigation link instead of Logout button)
     await expect(page.getByTestId('login-form')).not.toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole('link', { name: 'Measurements' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('link', { name: 'Weight' })).toBeVisible({ timeout: 10000 });
   });
 
   test('should display error message with invalid credentials', async ({ page }) => {

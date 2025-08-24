@@ -119,7 +119,7 @@ test.describe('Weight List Functionality', () => {
       });
 
       // Navigate to the weights list
-      await page.getByRole('link', { name: 'Measurements' }).click();
+      await page.getByRole('link', { name: 'Weight' }).click();
       await expect(page.getByText('A list of your recent weight measurements')).toBeVisible({ timeout: 5000 });
 
       // Verify the weight table is displayed with a single item
@@ -216,7 +216,7 @@ test.describe('Weight List Functionality', () => {
       });
 
       // Navigate to the weights list
-      await page.getByRole('link', { name: 'Measurements' }).click();
+      await page.getByRole('link', { name: 'Weight' }).click();
       await expect(page.getByText('A list of your recent weight measurements')).toBeVisible({ timeout: 5000 });
 
       // Verify initial weight (single item)
