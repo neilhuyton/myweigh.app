@@ -1,4 +1,3 @@
-// src/router.ts
 import {
   createRouter,
   createRootRoute,
@@ -55,19 +54,22 @@ const trpcClient = trpc.createClient({
   ],
 });
 
-// Define root route with Navigation and Toaster
+// Define root route with conditional Navigation rendering
 const rootRoute = createRootRoute({
-  component: () => (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-          <Navigation />
-          <Outlet />
-          <Toaster richColors position="top-right" />
-        </ThemeProvider>
-      </QueryClientProvider>
-    </trpc.Provider>
-  ),
+  component: () => {
+    const { isLoggedIn } = useAuthStore(); // Use hook to get auth state
+    return (
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+            {isLoggedIn && <Navigation />}
+            <Outlet />
+            <Toaster richColors position="top-right" />
+          </ThemeProvider>
+        </QueryClientProvider>
+      </trpc.Provider>
+    );
+  },
 });
 
 // Define search schemas
@@ -94,7 +96,7 @@ const homeRoute = createRoute({
 const registerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/register',
-  component: Register, // Simplified, no props needed
+  component: Register,
 });
 
 const loginRoute = createRoute({
