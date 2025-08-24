@@ -24,7 +24,6 @@ import ConfirmResetPasswordForm from "./components/ConfirmResetPasswordForm";
 import VerifyEmail from "./components/VerifyEmail";
 import { useAuthStore } from "./store/authStore";
 import { ThemeProvider } from "./components/ThemeProvider";
-import { Toaster } from "@/components/ui/sonner";
 
 // Create tRPC client
 const queryClient = new QueryClient({
@@ -78,7 +77,6 @@ const rootRoute = createRootRoute({
           <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
             {isLoggedIn && !isPublicRoute && <Navigation />}
             <Outlet />
-            <Toaster richColors position="top-right" />
           </ThemeProvider>
         </QueryClientProvider>
       </trpc.Provider>

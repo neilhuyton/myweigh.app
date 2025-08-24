@@ -1,166 +1,69 @@
 // src/components/Navigation.tsx
-import { Link } from "@tanstack/react-router";
-import { useAuthStore } from "../store/authStore";
-import { Button } from "./ui/button";
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from "./ui/sheet";
-import { Menu } from "lucide-react";
+import { Link } from '@tanstack/react-router';
+import { useAuthStore } from '../store/authStore';
 
 function Navigation() {
-  const { isLoggedIn, logout } = useAuthStore();
+  const { isLoggedIn } = useAuthStore();
 
   return (
-    <nav className="flex items-center justify-between p-4 shadow-md">
-      {/* Logo/Title */}
-      <Link
-        to="/"
-        className="text-xl font-bold hover:underline transition"
-        activeProps={{
-          className: "font-semibold border-b-2",
-        }}
-      >
-        Weight Tracker
-      </Link>
-
-      {/* Desktop Menu */}
-      <div className="hidden lg:flex items-center space-x-4">
+    <nav className="fixed bottom-0 left-0 right-0 bg-background shadow-md z-10">
+      <div className="flex flex-row items-center justify-between p-2 sm:p-4 max-w-screen-lg mx-auto">
         {isLoggedIn ? (
-          <>
+          <div className="flex flex-row w-full">
+            <Link
+              to="/"
+              className="flex-1 text-center py-3 text-sm sm:text-base font-medium hover:bg-muted transition"
+              activeProps={{
+                className: 'font-semibold border-t-2 border-primary',
+              }}
+            >
+              Home
+            </Link>
             <Link
               to="/weight"
-              className="hover:underline transition"
+              className="flex-1 text-center py-3 text-sm sm:text-base font-medium hover:bg-muted transition"
               activeProps={{
-                className: "font-semibold border-b-2",
+                className: 'font-semibold border-t-2 border-primary',
               }}
             >
               Weight
             </Link>
             <Link
               to="/weights"
-              className="hover:underline transition"
+              className="flex-1 text-center py-3 text-sm sm:text-base font-medium hover:bg-muted transition"
               activeProps={{
-                className: "font-semibold border-b-2",
+                className: 'font-semibold border-t-2 border-primary',
               }}
             >
               Weights
             </Link>
             <Link
               to="/weight-chart"
-              className="hover:underline transition"
+              className="flex-1 text-center py-3 text-sm sm:text-base font-medium hover:bg-muted transition"
               activeProps={{
-                className: "font-semibold border-b-2",
+                className: 'font-semibold border-t-2 border-primary',
               }}
             >
               Weight Chart
             </Link>
-            <Link
-              to="/weight-goal"
-              className="hover:underline transition"
-              activeProps={{
-                className: "font-semibold border-b-2",
-              }}
-            >
-              Weight Goal
-            </Link>
-            <Button
-              data-testid="logout-button"
-              variant="outline"
-              onClick={logout}
-              className="hover:underline"
-            >
-              Logout
-            </Button>
-          </>
+          </div>
         ) : (
-          <>
-            <span className="cursor-not-allowed">Weight</span>
-            <span className="cursor-not-allowed">Weights</span>
-            <span className="cursor-not-allowed">Weight Chart</span>
-            <span className="cursor-not-allowed">Weight Goal</span>
-          </>
+          <div className="flex flex-row w-full">
+            <span className="flex-1 text-center py-3 text-sm sm:text-base font-medium text-muted-foreground cursor-not-allowed">
+              Home
+            </span>
+            <span className="flex-1 text-center py-3 text-sm sm:text-base font-medium text-muted-foreground cursor-not-allowed">
+              Weight
+            </span>
+            <span className="flex-1 text-center py-3 text-sm sm:text-base font-medium text-muted-foreground cursor-not-allowed">
+              Weights
+            </span>
+            <span className="flex-1 text-center py-3 text-sm sm:text-base font-medium text-muted-foreground cursor-not-allowed">
+              Weight Chart
+            </span>
+          </div>
         )}
       </div>
-
-      {/* Mobile Menu */}
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button
-            variant="ghost"
-            className="lg:hidden"
-            aria-label="Toggle menu"
-          >
-            <Menu className="h-6 w-6" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="right" className="w-[240px] sm:w-[300px]">
-          <div className="flex flex-col gap-4 mt-4">
-            {isLoggedIn ? (
-              <>
-                <SheetClose asChild>
-                  <Link
-                    to="/weight"
-                    className="hover:underline transition"
-                    activeProps={{
-                      className: "font-semibold",
-                    }}
-                  >
-                    Weight
-                  </Link>
-                </SheetClose>
-                <SheetClose asChild>
-                  <Link
-                    to="/weights"
-                    className="hover:underline transition"
-                    activeProps={{
-                      className: "font-semibold",
-                    }}
-                  >
-                    Weights
-                  </Link>
-                </SheetClose>
-                <SheetClose asChild>
-                  <Link
-                    to="/weight-chart"
-                    className="hover:underline transition"
-                    activeProps={{
-                      className: "font-semibold",
-                    }}
-                  >
-                    Weight Chart
-                  </Link>
-                </SheetClose>
-                <SheetClose asChild>
-                  <Link
-                    to="/weight-goal"
-                    className="hover:underline transition"
-                    activeProps={{
-                      className: "font-semibold",
-                    }}
-                  >
-                    Weight Goal
-                  </Link>
-                </SheetClose>
-                <SheetClose asChild>
-                  <button
-                    data-testid="logout-button"
-                    // variant="outline"
-                    onClick={logout}
-                    className="w-full hover:underline"
-                  >
-                    Logout
-                  </button>
-                </SheetClose>
-              </>
-            ) : (
-              <>
-                <span className="cursor-not-allowed">Weight</span>
-                <span className="cursor-not-allowed">Weights</span>
-                <span className="cursor-not-allowed">Weight Chart</span>
-                <span className="cursor-not-allowed">Weight Goal</span>
-              </>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
     </nav>
   );
 }

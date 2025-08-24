@@ -1,15 +1,15 @@
 // __tests__/setupTests.ts
-import { configure } from '@testing-library/dom';
+// import { configure } from '@testing-library/dom';
 import '@testing-library/jest-dom';
 import { vi, beforeAll, afterEach, afterAll } from 'vitest';
 import { server } from '../__mocks__/server';
 
 // Suppress HTML output in @testing-library error messages
-configure({
-  getElementError: (message: string | null) => {
-    return new Error(message ?? undefined); // Convert null to undefined
-  },
-});
+// configure({
+//   getElementError: (message: string | null) => {
+//     return new Error(message ?? undefined); // Convert null to undefined
+//   },
+// });
 
 // Mock localStorage
 const localStorageMock = (() => {

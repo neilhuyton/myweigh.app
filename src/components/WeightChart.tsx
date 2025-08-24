@@ -20,7 +20,6 @@ ChartJS.register(TimeScale, LinearScale, PointElement, LineElement, Title, Toolt
 
 function WeightChart() {
   const [trendPeriod, setTrendPeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily');
-
   const { weights, isLoading, isError, error, chartData, chartOptions } = useWeightChart(trendPeriod);
 
   const handleTrendPeriodChange = (value: string) => {
@@ -29,109 +28,79 @@ function WeightChart() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div data-slot="card" className="text-card-foreground flex flex-col gap-6 rounded-xl border py-6 w-full max-w-4xl bg-white shadow-lg mx-auto">
-        <div data-slot="card-header" className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6">
-          <h1 data-slot="card-title" className="text-2xl font-bold text-center text-gray-900">
-            Weight Chart
-          </h1>
-        </div>
-        <div data-slot="card-content" className="px-6 space-y-6">
-          <p data-testid="loading">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div data-slot="card" className="text-card-foreground flex flex-col gap-6 rounded-xl border py-6 w-full max-w-4xl bg-white shadow-lg mx-auto">
-        <div data-slot="card-header" className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6">
-          <h1 data-slot="card-title" className="text-2xl font-bold text-center text-gray-900">
-            Weight Chart
-          </h1>
-        </div>
-        <div data-slot="card-content" className="px-6 space-y-6">
-          <p data-testid="error">Error: {error?.message}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!weights.length) {
-    return (
-      // <div data-slot="card" className="text-card-foreground flex flex-col gap-6 rounded-xl border py-6 w-full max-w-4xl bg-white shadow-lg mx-auto">
-        <>
-        <div data-slot="card-header" className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6">
-          
-          
-          <h1 data-slot="card-title" className="text-2xl font-bold text-center text-gray-900">
-            Weight Chart
-          </h1>
-
-
-
-          <div className="flex justify-end">
-            <Select onValueChange={handleTrendPeriodChange} value={trendPeriod}>
-              <SelectTrigger data-testid="unit-select" aria-label="Select trend period" className="w-[100px]">
-                <SelectValue>{trendPeriod.charAt(0).toUpperCase() + trendPeriod.slice(1)}</SelectValue>
-              </SelectTrigger>
-              <SelectContent data-testid="select-content">
-                <SelectItem data-testid="select-option-daily" value="daily">Daily</SelectItem>
-                <SelectItem data-testid="select-option-weekly" value="weekly">Weekly</SelectItem>
-                <SelectItem data-testid="select-option-monthly" value="monthly">Monthly</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-
-
-        </div>
-
-
-        <div data-slot="card-content" className="px-6 space-y-6">
-          <p data-testid="no-data">No weight measurements found</p>
-        </div>
-
-        </>
-
-
-      // </div>
-    );
-  }
-
   return (
-    <div data-slot="card" className="text-card-foreground flex flex-col gap-6 rounded-xl border py-6 w-full max-w-4xl bg-white shadow-lg mx-auto">
-      <div data-slot="card-header" className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6">
-        <h1 data-slot="card-title" className="text-2xl font-bold text-center text-gray-900">
-          Weight Chart
-        </h1>
-        <div className="flex justify-end">
-          <Select onValueChange={handleTrendPeriodChange} value={trendPeriod}>
-            <SelectTrigger data-testid="unit-select" aria-label="Select trend period" className="w-[100px]">
-              <SelectValue>{trendPeriod.charAt(0).toUpperCase() + trendPeriod.slice(1)}</SelectValue>
-            </SelectTrigger>
-            <SelectContent data-testid="select-content">
-              <SelectItem data-testid="select-option-daily" value="daily">Daily</SelectItem>
-              <SelectItem data-testid="select-option-weekly" value="weekly">Weekly</SelectItem>
-              <SelectItem data-testid="select-option-monthly" value="monthly">Monthly</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      <div data-slot="card-content" className="px-6 space-y-6">
-        <div>
-          <Line data={chartData} options={chartOptions} data-testid="chart-mock" />
-          <ul style={{ display: 'none' }}>
-            {weights.map((weight) => (
-              <li key={weight.id} data-testid="weight-data-point">
-                {weight.weightKg} kg -{' '}
-                {new Date(weight.createdAt).toLocaleDateString('en-GB')}{' '}
-                {weight.note && `(${weight.note})`}
-              </li>
-            ))}
-          </ul>
+    <div className="min-h-[100dvh] flex flex-col items-center p-1 sm:p-2 lg:p-3 pb-24 sm:pb-28">
+      {/* Content centered in the middle */}
+      <div className="flex-grow flex items-center justify-center w-full">
+        <div className="w-full max-w-md bg-background rounded-lg p-4 flex flex-col items-center">
+          <h1
+            className="text-2xl font-bold text-center mb-4"
+            role="heading"
+            aria-level={1}
+            data-slot="card-title"
+          >
+            Weight Chart
+          </h1>
+          <div className="space-y-6 w-full">
+            <div className="flex justify-end">
+              <Select onValueChange={handleTrendPeriodChange} value={trendPeriod}>
+                <SelectTrigger
+                  data-testid="unit-select"
+                  aria-label="Select trend period"
+                  className="w-[100px]"
+                >
+                  <SelectValue>
+                    {trendPeriod.charAt(0).toUpperCase() + trendPeriod.slice(1)}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent data-testid="select-content">
+                  <SelectItem data-testid="select-option-daily" value="daily">
+                    Daily
+                  </SelectItem>
+                  <SelectItem data-testid="select-option-weekly" value="weekly">
+                    Weekly
+                  </SelectItem>
+                  <SelectItem data-testid="select-option-monthly" value="monthly">
+                    Monthly
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {isLoading ? (
+              <p data-testid="loading" className="text-center text-sm font-medium">
+                Loading...
+              </p>
+            ) : isError ? (
+              <p
+                data-testid="error"
+                className="text-center text-sm font-medium text-red-500"
+                role="alert"
+              >
+                Error: {error?.message}
+              </p>
+            ) : !weights.length ? (
+              <p
+                data-testid="no-data"
+                className="text-center text-sm font-medium"
+                role="alert"
+              >
+                No weight measurements found
+              </p>
+            ) : (
+              <div>
+                <Line data={chartData} options={chartOptions} data-testid="chart-mock" />
+                <ul style={{ display: 'none' }}>
+                  {weights.map((weight) => (
+                    <li key={weight.id} data-testid="weight-data-point">
+                      {weight.weightKg} kg -{' '}
+                      {new Date(weight.createdAt).toLocaleDateString('en-GB')}{' '}
+                      {weight.note && `(${weight.note})`}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
