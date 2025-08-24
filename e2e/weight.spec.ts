@@ -10,8 +10,8 @@ test.describe('Weight Form Functionality', () => {
             status: 200,
             contentType: 'application/json',
             headers: {
-              "Access-Control-Allow-Origin": "http://localhost:5173",
-              "Access-Control-Allow-Credentials": "true",
+              'Access-Control-Allow-Origin': 'http://localhost:5173',
+              'Access-Control-Allow-Credentials': 'true',
             },
             body: JSON.stringify([
               {
@@ -65,8 +65,8 @@ test.describe('Weight Form Functionality', () => {
               status: 401,
               contentType: 'application/json',
               headers: {
-                "Access-Control-Allow-Origin": "http://localhost:5173",
-                "Access-Control-Allow-Credentials": "true",
+                'Access-Control-Allow-Origin': 'http://localhost:5173',
+                'Access-Control-Allow-Credentials': 'true',
               },
               body: JSON.stringify([
                 {
@@ -86,8 +86,8 @@ test.describe('Weight Form Functionality', () => {
                 status: 400,
                 contentType: 'application/json',
                 headers: {
-                  "Access-Control-Allow-Origin": "http://localhost:5173",
-                  "Access-Control-Allow-Credentials": "true",
+                  'Access-Control-Allow-Origin': 'http://localhost:5173',
+                  'Access-Control-Allow-Credentials': 'true',
                 },
                 body: JSON.stringify([
                   {
@@ -105,8 +105,8 @@ test.describe('Weight Form Functionality', () => {
                 status: 200,
                 contentType: 'application/json',
                 headers: {
-                  "Access-Control-Allow-Origin": "http://localhost:5173",
-                  "Access-Control-Allow-Credentials": "true",
+                  'Access-Control-Allow-Origin': 'http://localhost:5173',
+                  'Access-Control-Allow-Credentials': 'true',
                 },
                 body: JSON.stringify([
                   {
@@ -129,17 +129,8 @@ test.describe('Weight Form Functionality', () => {
         }
       });
 
-      // Check viewport size to handle mobile menu
-      const viewport = await page.evaluate(() => ({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      }));
-      if (viewport.width < 1024) { // lg breakpoint
-        await page.getByRole('button', { name: 'Toggle menu' }).click();
-      }
-
-      // Navigate to the weight form
-      await page.getByRole('link', { name: 'Weight', exact: true }).click();
+      // Navigate directly to the weight form
+      await page.goto('/weight');
       await page.waitForURL(/.*\/weight/, { timeout: 15000 });
       await expect(page.getByText('Record Weight')).toBeVisible({ timeout: 15000 });
 
@@ -175,8 +166,8 @@ test.describe('Weight Form Functionality', () => {
               status: 401,
               contentType: 'application/json',
               headers: {
-                "Access-Control-Allow-Origin": "http://localhost:5173",
-                "Access-Control-Allow-Credentials": "true",
+                'Access-Control-Allow-Origin': 'http://localhost:5173',
+                'Access-Control-Allow-Credentials': 'true',
               },
               body: JSON.stringify([
                 {
@@ -196,8 +187,8 @@ test.describe('Weight Form Functionality', () => {
                 status: 400,
                 contentType: 'application/json',
                 headers: {
-                  "Access-Control-Allow-Origin": "http://localhost:5173",
-                  "Access-Control-Allow-Credentials": "true",
+                  'Access-Control-Allow-Origin': 'http://localhost:5173',
+                  'Access-Control-Allow-Credentials': 'true',
                 },
                 body: JSON.stringify([
                   {
@@ -217,17 +208,8 @@ test.describe('Weight Form Functionality', () => {
         }
       });
 
-      // Check viewport size to handle mobile menu
-      const viewport = await page.evaluate(() => ({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      }));
-      if (viewport.width < 1024) { // lg breakpoint
-        await page.getByRole('button', { name: 'Toggle menu' }).click();
-      }
-
-      // Navigate to the weight form
-      await page.getByRole('link', { name: 'Weight', exact: true }).click();
+      // Navigate directly to the weight form
+      await page.goto('/weight');
       await page.waitForURL(/.*\/weight/, { timeout: 15000 });
       await expect(page.getByText('Record Weight')).toBeVisible({ timeout: 15000 });
 
@@ -256,8 +238,8 @@ test.describe('Weight Form Functionality', () => {
             status: 401,
             contentType: 'application/json',
             headers: {
-              "Access-Control-Allow-Origin": "http://localhost:5173",
-              "Access-Control-Allow-Credentials": "true",
+              'Access-Control-Allow-Origin': 'http://localhost:5173',
+              'Access-Control-Allow-Credentials': 'true',
             },
             body: JSON.stringify([
               {

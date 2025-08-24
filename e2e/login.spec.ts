@@ -1,4 +1,3 @@
-// e2e/login.spec.ts
 import { test, expect } from '@playwright/test';
 
 test.describe('Login Functionality', () => {
@@ -50,9 +49,9 @@ test.describe('Login Functionality', () => {
     // Verify success message
     await expect(page.getByTestId('login-message')).toHaveText('Login successful!', { timeout: 5000 });
 
-    // Verify logged-in state (Logout button or login form absence)
+    // Verify logged-in state (check for navigation link instead of Logout button)
     await expect(page.getByTestId('login-form')).not.toBeVisible({ timeout: 10000 });
-    // await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('link', { name: 'Measurements' })).toBeVisible({ timeout: 10000 });
   });
 
   test('should display error message with invalid credentials', async ({ page }) => {
@@ -104,7 +103,7 @@ test.describe('Login Functionality', () => {
 
     // Verify login did not succeed
     await expect(page.getByTestId('login-form')).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole('button', { name: 'Logout' })).not.toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('link', { name: 'Measurements' })).not.toBeVisible({ timeout: 10000 });
   });
 
   test('should display validation errors for invalid inputs', async ({ page }) => {
@@ -136,6 +135,6 @@ test.describe('Login Functionality', () => {
 
     // Verify login did not succeed
     await expect(page.getByTestId('login-form')).toBeVisible({ timeout: 5000 });
-    await expect(page.getByRole('button', { name: 'Logout' })).not.toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('link', { name: 'Measurements' })).not.toBeVisible({ timeout: 5000 });
   });
 });
