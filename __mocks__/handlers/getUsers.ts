@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw';
 
 export const getUsersHandler = http.get(
   'http://localhost:8888/.netlify/functions/trpc/getUsers',
-  async ({ request }) => {
+  async () => {
     const response = [
       {
         result: {

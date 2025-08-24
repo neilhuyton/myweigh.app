@@ -1,4 +1,3 @@
-// src/hooks/useResetPassword.ts
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -33,7 +32,6 @@ export const useResetPassword = (): UseResetPasswordReturn => {
       form.reset();
     },
     onError: (error) => {
-      console.error('Mutation error:', error);
       setMessage(`Failed to send reset link: ${error.message}`);
     },
   });

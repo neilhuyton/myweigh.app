@@ -18,8 +18,8 @@ import WeightChart from './components/WeightChart';
 import WeightGoal from './components/WeightGoal';
 import Register from './components/Register';
 import LoginForm from './components/LoginForm';
-import ResetPasswordForm from './components/ResetPasswordForm'; // Add import
-import ConfirmResetPasswordForm from './components/ConfirmResetPasswordForm'; // Add import
+import ResetPasswordForm from './components/ResetPasswordForm';
+import ConfirmResetPasswordForm from './components/ConfirmResetPasswordForm';
 import VerifyEmail from './components/VerifyEmail';
 import { useAuthStore } from './store/authStore';
 import { ThemeProvider } from './components/ThemeProvider';
@@ -70,11 +70,10 @@ const rootRoute = createRootRoute({
   ),
 });
 
-// Define search schema for verify-email and confirm-reset-password routes
+// Define search schemas
 const verifyEmailSearchSchema = z.object({
   token: z.string().uuid().optional(),
 });
-
 const confirmResetPasswordSearchSchema = z.object({
   token: z.string().uuid().optional(),
 });
@@ -83,39 +82,40 @@ const confirmResetPasswordSearchSchema = z.object({
 const homeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
+  beforeLoad: () => {
+    const { isLoggedIn } = useAuthStore.getState();
+    if (!isLoggedIn) {
+      throw redirect({ to: '/login' });
+    }
+  },
   component: Home,
 });
 
 const registerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/register',
-  component: () => <Register onSwitchToLogin={() => router.navigate({ to: '/login' })} />,
+  component: Register, // Simplified, no props needed
 });
 
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
-  component: () => (
-    <LoginForm
-      onSwitchToRegister={() => router.navigate({ to: '/register' })}
-      onSwitchToReset={() => router.navigate({ to: '/reset-password' })}
-    />
-  ),
+  component: LoginForm,
 });
 
 const resetPasswordRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/reset-password',
-  component: () => <ResetPasswordForm onSwitchToLogin={() => router.navigate({ to: '/login' })} />,
+  component: ResetPasswordForm,
 });
 
 const confirmResetPasswordRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/confirm-reset-password',
   validateSearch: confirmResetPasswordSearchSchema,
-  component: () => (
-    <ConfirmResetPasswordForm onSwitchToLogin={() => router.navigate({ to: '/login' })} />
-  ),
+  component: () => {
+    return <ConfirmResetPasswordForm />;
+  },
 });
 
 const weightRoute = createRoute({

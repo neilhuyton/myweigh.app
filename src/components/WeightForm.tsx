@@ -20,7 +20,7 @@ function WeightForm() {
           </CardHeader>
           <CardContent className="space-y-6">
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space chronological order-y-2">
+              <div className="space-y-2">
                 <Label htmlFor="weight" className="text-sm font-medium">
                   Weight (kg)
                 </Label>

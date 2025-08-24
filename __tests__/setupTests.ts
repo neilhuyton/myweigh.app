@@ -1,7 +1,15 @@
 // __tests__/setupTests.ts
-import "@testing-library/jest-dom";
-import { vi, beforeAll, afterEach, afterAll } from "vitest";
-import { server } from "../__mocks__/server";
+import { configure } from '@testing-library/dom';
+import '@testing-library/jest-dom';
+import { vi, beforeAll, afterEach, afterAll } from 'vitest';
+import { server } from '../__mocks__/server';
+
+// Suppress HTML output in @testing-library error messages
+configure({
+  getElementError: (message: string | null) => {
+    return new Error(message ?? undefined); // Convert null to undefined
+  },
+});
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -12,13 +20,13 @@ const localStorageMock = (() => {
     clear: () => (store = {}),
   };
 })();
-Object.defineProperty(window, "localStorage", { value: localStorageMock });
+Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
 // Mock matchMedia
 const matchMediaMock = (matchesDark: boolean) =>
   ({
     matches: matchesDark,
-    media: "(prefers-color-scheme: dark)",
+    media: '(prefers-color-scheme: dark)',
     onchange: null,
     addListener: vi.fn(),
     removeListener: vi.fn(),
@@ -27,18 +35,17 @@ const matchMediaMock = (matchesDark: boolean) =>
     dispatchEvent: vi.fn(() => true),
   } as MediaQueryList);
 
-// Default to light theme unless overridden in specific tests
-Object.defineProperty(window, "matchMedia", {
+Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi
     .fn()
     .mockImplementation((query: string) =>
-      matchMediaMock(query === "(prefers-color-scheme: dark)")
+      matchMediaMock(query === '(prefers-color-scheme: dark)')
     ),
 });
 
 // Polyfill PointerEvent for jsdom to support @radix-ui/react-select
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   window.PointerEvent = class PointerEvent extends Event {
     public pointerId: number;
     public clientX: number;
@@ -54,7 +61,7 @@ if (typeof window !== "undefined") {
       this.clientX = init?.clientX ?? 0;
       this.clientY = init?.clientY ?? 0;
       this.isPrimary = init?.isPrimary ?? true;
-      this.pointerType = init?.pointerType ?? "mouse";
+      this.pointerType = init?.pointerType ?? 'mouse';
       this.button = init?.button ?? 0;
       this.buttons = init?.buttons ?? 0;
     }
@@ -72,7 +79,13 @@ if (typeof window !== "undefined") {
 
 // MSW setup for server tests
 export const setupMSW = () => {
-  beforeAll(() => server.listen({ onUnhandledRequest: "warn" }));
+  beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 };
+
+// Enhance console.log for clarity in tests
+// const originalConsoleLog = console.log;
+// console.log = (...args) => {
+//   originalConsoleLog('[TEST LOG]', ...args);
+// };

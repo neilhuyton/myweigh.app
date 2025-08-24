@@ -1,63 +1,40 @@
 // src/components/LoginForm.tsx
-import { cn } from "@/lib/utils";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { useLogin } from "../hooks/useLogin";
+import { cn } from '@/lib/utils';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLogin } from '../hooks/useLogin';
+import { useRouter } from '@tanstack/react-router';
 
 interface LoginFormProps {
   className?: string;
-  onSwitchToRegister: () => void;
-  onSwitchToReset: () => void;
 }
 
-function LoginForm({
-  className,
-  onSwitchToRegister,
-  onSwitchToReset,
-}: LoginFormProps) {
+function LoginForm({ className }: LoginFormProps) {
   const { form, message, isPending, handleSubmit } = useLogin();
+  const router = useRouter();
 
   return (
-    <div className={cn("flex flex-col gap-6", className)}>
+    <div className={cn('flex flex-col gap-6', className)}>
       <Card>
         <CardHeader className="px-6">
           <CardTitle role="heading" aria-level={1}>
             Login to your account
           </CardTitle>
-          <CardDescription>
-            Enter your email below to login to your account
-          </CardDescription>
+          <CardDescription>Enter your email below to login to your account</CardDescription>
         </CardHeader>
         <CardContent className="px-6 pt-0">
           <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(handleSubmit)}
-              data-testid="login-form"
-            >
+            <form onSubmit={form.handleSubmit(handleSubmit)} data-testid="login-form">
               <div className="flex flex-col gap-6">
                 {message && (
                   <p
                     data-testid="login-message"
                     className={cn(
-                      "text-sm",
-                      message.includes("failed")
-                        ? "text-red-500"
-                        : "text-green-500"
+                      'text-sm',
+                      message.includes('failed') ? 'text-red-500' : 'text-green-500'
                     )}
                   >
                     {message}
@@ -95,10 +72,7 @@ function LoginForm({
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center justify-between leading-none mb-0">
-                          <Label
-                            htmlFor="password"
-                            data-testid="password-label"
-                          >
+                          <Label htmlFor="password" data-testid="password-label">
                             Password
                           </Label>
                           <a
@@ -107,7 +81,7 @@ function LoginForm({
                             data-testid="forgot-password-link"
                             onClick={(e) => {
                               e.preventDefault();
-                              onSwitchToReset();
+                              router.navigate({ to: '/reset-password' });
                             }}
                           >
                             Forgot your password?
@@ -137,18 +111,18 @@ function LoginForm({
                     data-testid="login-button"
                     disabled={isPending}
                   >
-                    {isPending ? "Logging in..." : "Login"}
+                    {isPending ? 'Logging in...' : 'Login'}
                   </Button>
                 </div>
               </div>
               <div className="mt-8 text-center text-sm">
-                Don&apos;t have an account?{" "}
+                Don&apos;t have an account?{' '}
                 <a
                   href="#"
                   role="link"
                   onClick={(e) => {
                     e.preventDefault();
-                    onSwitchToRegister();
+                    router.navigate({ to: '/register' });
                   }}
                   className="underline underline-offset-4"
                   data-testid="signup-link"

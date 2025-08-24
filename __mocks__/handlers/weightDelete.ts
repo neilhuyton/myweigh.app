@@ -25,15 +25,14 @@ export const weightDeleteHandler = http.post(
     }
 
     const headers = Object.fromEntries(request.headers.entries());
-    const input = (body as { [key: string]: { id?: number; weightId?: string } })['0'];
-    const id = input?.id ?? 0;
+    const input = (body as { [key: string]: { weightId?: string } })['0'];
     const userId = headers['authorization']?.split('Bearer ')[1];
 
     if (!userId) {
       return HttpResponse.json(
         [
           {
-            id,
+            id: 0,
             error: {
               message: 'Unauthorized: User must be logged in',
               code: -32001,
@@ -48,7 +47,7 @@ export const weightDeleteHandler = http.post(
       return HttpResponse.json(
         [
           {
-            id,
+            id: 0,
             error: {
               message: 'Invalid weight ID',
               code: -32001,
@@ -62,7 +61,7 @@ export const weightDeleteHandler = http.post(
     if (input.weightId === '1') {
       return HttpResponse.json([
         {
-          id,
+          id: 0,
           result: {
             data: { id: input.weightId },
           },
@@ -72,7 +71,7 @@ export const weightDeleteHandler = http.post(
     return HttpResponse.json(
       [
         {
-          id,
+          id: 0,
           error: {
             message: 'Weight measurement not found',
             code: -32001,

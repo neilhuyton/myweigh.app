@@ -1,13 +1,28 @@
 // __tests__/ResetPasswordForm.test.tsx
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  afterEach,
+  vi,
+} from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { trpc } from "../src/trpc";
-import ResetPasswordForm from "../src/components/ResetPasswordForm";
-import "@testing-library/jest-dom";
 import { httpBatchLink } from "@trpc/client";
+import { trpc } from "../src/trpc";
+import "@testing-library/jest-dom";
 import { server } from "../__mocks__/server";
+import {
+  RouterProvider,
+  createRouter,
+  createMemoryHistory,
+} from "@tanstack/react-router";
+import { router } from "../src/router";
 import { http, HttpResponse } from "msw";
+import { act } from "react";
 
 describe("ResetPasswordForm Component", () => {
   const queryClient = new QueryClient({
@@ -28,19 +43,35 @@ describe("ResetPasswordForm Component", () => {
     ],
   });
 
-  const setup = (onSwitchToLogin: () => void = vi.fn()) => {
+  const setup = (initialPath = "/reset-password") => {
+    const history = createMemoryHistory({ initialEntries: [initialPath] });
+    const testRouter = createRouter({ routeTree: router.routeTree, history });
+
+    vi.spyOn(testRouter, "navigate").mockImplementation(async () => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.mock("../src/store/authStore", () => ({
+      useAuthStore: Object.assign(
+        vi.fn().mockReturnValue({ isLoggedIn: false, userId: null }),
+        {
+          getState: vi
+            .fn()
+            .mockReturnValue({ isLoggedIn: false, userId: null }),
+        }
+      ),
+    }));
+
     render(
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
-          <ResetPasswordForm onSwitchToLogin={onSwitchToLogin} />
+          <RouterProvider router={testRouter} />
         </QueryClientProvider>
       </trpc.Provider>
     );
-    return { onSwitchToLogin };
+    return { history, testRouter };
   };
 
   beforeAll(() => {
-    server.listen({ onUnhandledRequest: "warn" });
+    server.listen({ onUnhandledRequest: "error" });
   });
 
   afterEach(() => {
@@ -53,29 +84,19 @@ describe("ResetPasswordForm Component", () => {
     server.close();
   });
 
-  it("renders password reset form with email input, submit button, and back to login link", () => {
-    const { onSwitchToLogin } = setup();
-
-    expect(
-      screen.getByRole("heading", { name: "Reset your password" })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("Enter your email to receive a password reset link")
-    ).toBeInTheDocument();
-    expect(screen.getByRole("form")).toBeInTheDocument();
-    expect(screen.getByLabelText("Email")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Send Reset Link" })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "Back to login" })
-    ).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("link", { name: "Back to login" }));
-    expect(onSwitchToLogin).toHaveBeenCalled();
+  it("renders password reset form with email input, submit button, and back to login link", async () => {
+    setup();
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("email-input")).toBeInTheDocument();
+        expect(screen.getByTestId("submit-button")).toBeInTheDocument();
+        expect(screen.getByTestId("back-to-login-link")).toBeInTheDocument();
+      },
+      { timeout: 500, interval: 50 }
+    );
   });
 
-  it("submits email and displays success message with form reset", async () => {
+  it("submits email and displays neutral success message", async () => {
     server.use(
       http.post(
         "http://localhost:8888/.netlify/functions/trpc/resetPassword.request",
@@ -84,7 +105,7 @@ describe("ResetPasswordForm Component", () => {
             {
               result: {
                 data: {
-                  message: "Reset link sent to your email",
+                  message: "If the email exists, a reset link has been sent.",
                 },
               },
             },
@@ -95,112 +116,34 @@ describe("ResetPasswordForm Component", () => {
 
     setup();
 
-    const emailInput = screen.getByLabelText("Email");
-    const submitButton = screen.getByRole("button", {
-      name: "Send Reset Link",
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("email-input")).toBeInTheDocument();
+      },
+      { timeout: 300, interval: 50 }
+    );
 
-    fireEvent.change(emailInput, {
-      target: { value: "neil.huyton@gmail.com" },
+    await act(async () => {
+      const emailInput = screen.getByTestId("email-input");
+      const form = screen.getByRole("form");
+      await userEvent.type(emailInput, "unknown@example.com");
+      const submitEvent = new Event("submit", {
+        bubbles: true,
+        cancelable: true,
+      });
+      await form.dispatchEvent(submitEvent);
     });
-    fireEvent.click(submitButton);
 
     await waitFor(
       () => {
-        expect(screen.getByRole("alert")).toHaveTextContent(
-          "Reset link sent to your email"
+        const alert = screen.getByRole("alert");
+        expect(alert).toHaveTextContent(
+          "If the email exists, a reset link has been sent."
         );
-        expect(emailInput).toHaveValue("");
+        expect(alert).toHaveClass("text-green-500");
+        expect(screen.getByTestId("email-input")).toHaveValue("");
       },
-      { timeout: 5000 }
+      { timeout: 300, interval: 50 }
     );
-  });
-
-  it("displays error message when email is not found", async () => {
-    server.use(
-      http.post(
-        "http://localhost:8888/.netlify/functions/trpc/resetPassword.request",
-        async () => {
-          return HttpResponse.json(
-            [
-              {
-                error: {
-                  message: "Email not found",
-                  code: -32603,
-                  data: {
-                    code: "NOT_FOUND",
-                    httpStatus: 404,
-                    path: "resetPassword.request",
-                  },
-                },
-              },
-            ],
-            { status: 404 }
-          );
-        }
-      )
-    );
-
-    setup();
-
-    const emailInput = screen.getByLabelText("Email");
-    const submitButton = screen.getByRole("button", {
-      name: "Send Reset Link",
-    });
-
-    fireEvent.change(emailInput, { target: { value: "unknown@example.com" } });
-    fireEvent.click(submitButton);
-
-    await waitFor(
-      () => {
-        expect(screen.getByRole("alert")).toHaveTextContent(
-          "Failed to send reset link: Email not found"
-        );
-      },
-      { timeout: 5000 }
-    );
-  });
-
-  it("submits valid email and displays success message", async () => {
-    server.use(
-      http.post(
-        "http://localhost:8888/.netlify/functions/trpc/resetPassword.request",
-        async () => {
-          return HttpResponse.json([
-            {
-              result: {
-                data: {
-                  message: "Reset link sent to your email",
-                },
-              },
-            },
-          ]);
-        }
-      )
-    );
-
-    const { onSwitchToLogin } = setup();
-
-    const emailInput = screen.getByLabelText("Email");
-    const submitButton = screen.getByRole("button", {
-      name: "Send Reset Link",
-    });
-
-    fireEvent.change(emailInput, {
-      target: { value: "neil.huyton@gmail.com" },
-    });
-    fireEvent.click(submitButton);
-
-    await waitFor(
-      () => {
-        expect(screen.getByRole("alert")).toHaveTextContent(
-          "Reset link sent to your email"
-        );
-        expect(screen.getByRole("alert")).toHaveClass("text-green-500");
-      },
-      { timeout: 5000 }
-    );
-
-    expect(onSwitchToLogin).not.toHaveBeenCalled();
   });
 });

@@ -1,34 +1,34 @@
 // src/components/ResetPasswordForm.tsx
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { useResetPassword } from '../hooks/useResetPassword';
+} from "@/components/ui/card";
+import { useResetPassword } from "../hooks/useResetPassword";
+import { router } from "../router";
 
 interface ResetPasswordFormProps {
   className?: string;
-  onSwitchToLogin: () => void;
 }
 
-function ResetPasswordForm({ className, onSwitchToLogin }: ResetPasswordFormProps) {
+function ResetPasswordForm({ className }: ResetPasswordFormProps) {
   const { form, message, isPending, handleSubmit } = useResetPassword();
 
   return (
-    <div className={cn('flex flex-col gap-6', className)}>
+    <div className={cn("flex flex-col gap-6", className)}>
       <Card>
         <CardHeader className="px-6">
           <CardTitle role="heading" aria-level={1}>
@@ -41,7 +41,9 @@ function ResetPasswordForm({ className, onSwitchToLogin }: ResetPasswordFormProp
         <CardContent className="px-6 pt-0">
           <Form {...form}>
             <form
-              onSubmit={form.handleSubmit(handleSubmit)}
+              onSubmit={(e) => {
+                form.handleSubmit(handleSubmit)(e);
+              }}
               role="form"
             >
               <div className="flex flex-col gap-6">
@@ -49,8 +51,10 @@ function ResetPasswordForm({ className, onSwitchToLogin }: ResetPasswordFormProp
                   <p
                     role="alert"
                     className={cn(
-                      'text-sm',
-                      message.includes('failed') ? 'text-red-500' : 'text-green-500'
+                      "text-sm",
+                      message.includes("failed")
+                        ? "text-red-500"
+                        : "text-green-500"
                     )}
                   >
                     {message}
@@ -62,9 +66,7 @@ function ResetPasswordForm({ className, onSwitchToLogin }: ResetPasswordFormProp
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <Label htmlFor="email">
-                          Email
-                        </Label>
+                        <Label htmlFor="email">Email</Label>
                         <FormControl>
                           <Input
                             id="email"
@@ -72,6 +74,7 @@ function ResetPasswordForm({ className, onSwitchToLogin }: ResetPasswordFormProp
                             placeholder="m@example.com"
                             required
                             disabled={isPending}
+                            data-testid="email-input" // Add this line
                             {...field}
                           />
                         </FormControl>
@@ -85,8 +88,9 @@ function ResetPasswordForm({ className, onSwitchToLogin }: ResetPasswordFormProp
                     type="submit"
                     className="w-full"
                     disabled={isPending}
+                    data-testid="submit-button" // Optional: Add for consistency
                   >
-                    {isPending ? 'Sending...' : 'Send Reset Link'}
+                    {isPending ? "Sending..." : "Send Reset Link"}
                   </Button>
                 </div>
                 <div className="mt-4 text-center text-sm">
@@ -95,9 +99,10 @@ function ResetPasswordForm({ className, onSwitchToLogin }: ResetPasswordFormProp
                     role="link"
                     onClick={(e) => {
                       e.preventDefault();
-                      onSwitchToLogin();
+                      router.navigate({ to: "/login" });
                     }}
                     className="underline underline-offset-4"
+                    data-testid="back-to-login-link" // Optional: Add for consistency
                   >
                     Back to login
                   </a>

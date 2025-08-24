@@ -1,43 +1,51 @@
 // src/hooks/useRegister.ts
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { trpc } from '../trpc';
-import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { trpc } from "../trpc";
+import { useState, useEffect } from "react";
 
-const registerSchema = z.object({
-  email: z.string().email({ message: 'Invalid email address' }),
-  password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
+const formSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters long" }),
 });
 
-type RegisterFormData = z.infer<typeof registerSchema>;
+type FormValues = z.infer<typeof formSchema>;
 
-export function useRegister(onSwitchToLogin: () => void) {
-  const queryClient = useQueryClient();
-  const form = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
+interface UseRegisterReturn {
+  form: ReturnType<typeof useForm<FormValues>>;
+  message: string | null;
+  isRegistering: boolean;
+  handleRegister: (data: FormValues) => Promise<void>;
+}
+
+export const useRegister = (onSuccess: () => void): UseRegisterReturn => {
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
-    mode: 'onChange',
+    mode: "onChange",
   });
 
   const [message, setMessage] = useState<string | null>(null);
 
   const registerMutation = trpc.register.useMutation({
-    onSuccess: (data) => {
-      setMessage(data.message || 'Registration successful!');
+    onSuccess: () => {
+      setMessage(
+        "Registration successful! Please check your email to verify your account.!"
+      );
       setTimeout(() => {
         form.reset();
-        onSwitchToLogin();
-      }, 5000);
-      queryClient.invalidateQueries({ queryKey: ['getUsers'] });
+        onSuccess();
+      }, 3000);
     },
     onError: (error) => {
-      const errorMessage = error.message || 'Registration failed';
-      setMessage(errorMessage);
+      const errorMessage = error.message || "Failed to register";
+      setMessage(`Registration failed: ${errorMessage}`);
     },
   });
 
@@ -46,20 +54,13 @@ export function useRegister(onSwitchToLogin: () => void) {
     return () => subscription.unsubscribe();
   }, [form]);
 
-  const handleRegister = async (data: RegisterFormData) => {
+  const handleRegister = async (data: FormValues) => {
     const isValid = await form.trigger();
-    if (!isValid) return;
-    try {
-      await registerMutation.mutateAsync(data);
-    } catch {
-      // Error handled in onError
+    if (!isValid) {
+      return;
     }
-  };
 
-  const handleSwitchToLogin = () => {
-    setMessage(null);
-    form.reset();
-    onSwitchToLogin();
+    await registerMutation.mutateAsync(data);
   };
 
   return {
@@ -67,6 +68,5 @@ export function useRegister(onSwitchToLogin: () => void) {
     message,
     isRegistering: registerMutation.isPending,
     handleRegister,
-    handleSwitchToLogin,
   };
-}
+};

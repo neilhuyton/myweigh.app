@@ -1,18 +1,29 @@
 // src/hooks/useLogin.ts
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { trpc } from '../trpc';
-import { useAuthStore } from '../store/authStore';
-import { useEffect, useState } from 'react';
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { trpc } from "../trpc";
+import { useAuthStore } from "../store/authStore";
+import { useEffect, useState } from "react";
+import { useRouter } from "@tanstack/react-router"; // Add this import
+import { type TRPCClientErrorLike } from "@trpc/client";
+import type {
+  inferProcedureOutput,
+  inferProcedureInput,
+  TRPCDefaultErrorShape,
+} from "@trpc/server";
+import type { AppRouter } from "../../server/trpc";
 
 interface LoginResponse {
   id: string;
+  email: string;
 }
 
 const formSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address' }),
-  password: z.string().min(8, { message: 'Password must be at least 8 characters long' }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters long" }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -28,31 +39,47 @@ export const useLogin = (): UseLoginReturn => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
-    mode: 'onChange',
+    mode: "onChange",
   });
 
   const [message, setMessage] = useState<string | null>(null);
   const { login } = useAuthStore();
+  const router = useRouter(); // Initialize router
 
   const loginMutation = trpc.login.useMutation({
-    onSuccess: (data: LoginResponse) => {
-      setMessage('Login successful!');
-      setTimeout(() => {
-        form.reset();
-        login(data.id);
-      }, 3000);
+    onMutate: () => {
+      setMessage(null); // Clear message before mutation
     },
-    onError: (error) => {
-      const errorMessage = error.message || 'Invalid email or password';
+    onSuccess: (data: LoginResponse) => {
+      setMessage("Login successful!");
+      login(data.id);
+      form.reset(); // Reset form after setting message
+      router.navigate({ to: "/" });
+    },
+    onError: (
+      error: TRPCClientErrorLike<{
+        input: inferProcedureInput<AppRouter["login"]>;
+        output: inferProcedureOutput<AppRouter["login"]>;
+        transformer: false;
+        errorShape: TRPCDefaultErrorShape;
+      }>
+    ) => {
+      const errorMessage = error.message || "Invalid email or password";
       setMessage(`Login failed: ${errorMessage}`);
     },
+    onSettled: () => {},
   });
 
   useEffect(() => {
-    const subscription = form.watch(() => setMessage(null));
+    // Only clear message on user-initiated form changes
+    const subscription = form.watch((_, { name }) => {
+      if (name === "email" || name === "password") {
+        setMessage(null);
+      }
+    });
     return () => subscription.unsubscribe();
   }, [form]);
 
@@ -62,11 +89,7 @@ export const useLogin = (): UseLoginReturn => {
       return;
     }
 
-    try {
-      await loginMutation.mutateAsync(data);
-    } catch (error) {
-
-    }
+    await loginMutation.mutateAsync(data);
   };
 
   return {

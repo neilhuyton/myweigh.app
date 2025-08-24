@@ -1,29 +1,34 @@
-import { http, HttpResponse } from "msw";
-import { mockUsers } from "../mockUsers";
+// __mocks__/handlers/resetPasswordConfirm.ts
+import { http, HttpResponse } from 'msw';
+import { mockUsers, type MockUser } from '../mockUsers';
+import bcrypt from 'bcryptjs';
 
 interface TrpcRequestBody {
-  [key: string]: { token?: string; newPassword?: string };
+  id: number;
+  json: { input: { token: string; newPassword: string } };
 }
 
 export const resetPasswordConfirmHandler = http.post(
-  "http://localhost:8888/.netlify/functions/trpc/resetPassword.confirm",
+  'http://localhost:8888/.netlify/functions/trpc/resetPassword.confirm',
   async ({ request }) => {
-    const body = (await request.json()) as TrpcRequestBody;
-    const input = body["0"] || {};
+    const body = (await request.json()) as TrpcRequestBody[];
+    const {
+      id = 0,
+      json: { input },
+    } = body[0] || {};
 
-
-    if (!input.token || !input.newPassword) {
+    if (!input?.token || !input?.newPassword) {
       return HttpResponse.json(
         [
           {
-            id: 0,
+            id,
             error: {
-              message: "Token and password are required",
+              message: 'Token and new password are required',
               code: -32603,
               data: {
-                code: "BAD_REQUEST",
+                code: 'BAD_REQUEST',
                 httpStatus: 400,
-                path: "resetPassword.confirm",
+                path: 'resetPassword.confirm',
               },
             },
           },
@@ -32,58 +37,41 @@ export const resetPasswordConfirmHandler = http.post(
       );
     }
 
-    const user = mockUsers.find(
-      (u) =>
-        u.resetPasswordToken === input.token &&
-        new Date(u.resetPasswordTokenExpiresAt || 0) > new Date()
-    );
-    if (!user) {
+    const user = mockUsers.find((u: MockUser) => u.resetPasswordToken === input.token);
+    if (!user || !user.resetPasswordTokenExpiresAt || new Date(user.resetPasswordTokenExpiresAt) < new Date()) {
       return HttpResponse.json(
         [
           {
-            id: 0,
+            id,
             error: {
-              message: "Invalid or expired reset token",
-              code: -32603,
+              message: 'Invalid or expired token',
+              code: -32001,
               data: {
-                code: "BAD_REQUEST",
-                httpStatus: 400,
-                path: "resetPassword.confirm",
+                code: 'UNAUTHORIZED',
+                httpStatus: 401,
+                path: 'resetPassword.confirm',
               },
             },
           },
         ],
-        { status: 400 }
+        { status: 401 }
       );
     }
 
-    if (input.newPassword.length < 8) {
-      return HttpResponse.json(
-        [
-          {
-            id: 0,
-            error: {
-              message: "Password must be at least 8 characters",
-              code: -32603,
-              data: {
-                code: "BAD_REQUEST",
-                httpStatus: 400,
-                path: "resetPassword.confirm",
-              },
-            },
-          },
-        ],
-        { status: 400 }
-      );
-    }
+    // Update the user's password
+    const hashedPassword = await bcrypt.hash(input.newPassword, 10);
+    user.password = hashedPassword;
+    user.resetPasswordToken = null; // Now allowed by MockUser type
+    user.resetPasswordTokenExpiresAt = null;
+    user.updatedAt = new Date().toISOString();
 
     return HttpResponse.json(
       [
         {
-          id: 0,
+          id,
           result: {
             data: {
-              message: "Password reset successfully",
+              message: 'Password reset successfully',
             },
           },
         },

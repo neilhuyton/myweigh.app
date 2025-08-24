@@ -39,7 +39,7 @@ export async function sendVerificationEmail(to: string, verificationToken: strin
 export async function sendResetPasswordEmail(to: string, resetToken: string) {
   const resetUrl = `${
     process.env.VITE_APP_URL || 'http://localhost:5173'
-  }/reset-password?token=${resetToken}`;
+  }/confirm-reset-password?token=${resetToken}`; // Changed to /confirm-reset-password
 
   const mailOptions = {
     from: process.env.EMAIL_FROM,
