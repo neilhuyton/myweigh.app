@@ -1,6 +1,6 @@
 // src/components/WeightList.tsx
-import { useWeightList } from "../hooks/useWeightList";
-import { Button } from "@/components/ui/button";
+import { useWeightList } from '../hooks/useWeightList';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -9,8 +9,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 
 function WeightList() {
   const {
@@ -25,31 +25,25 @@ function WeightList() {
 
   if (isLoading) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center bg-background dark:bg-gray-900">
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background">
         <p>Loading weights...</p>
-      </div>
-    );
-  }
-  if (isError) {
-    return (
-      <div className="min-h-[100dvh] flex items-center justify-center bg-background dark:bg-gray-900">
-        <p className="text-destructive dark:text-red-400">
-          Error: {error?.message}
-        </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-[100dvh] flex flex-col">
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 pt-16 sm:pt-20">
-        <Card className="w-full max-w-md shadow-lg mx-auto">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center">
-              Weight List
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
+    <div className="min-h-[100dvh] flex flex-col items-center p-1 sm:p-2 lg:p-3">
+      {/* Content centered in the middle */}
+      <div className="flex-grow flex items-center justify-center w-full">
+        <div className="w-full max-w-md bg-background rounded-lg p-4 flex flex-col items-center">
+          <h1
+            className="text-2xl font-bold text-center mb-4"
+            role="heading"
+            aria-level={1}
+          >
+            Weight List
+          </h1>
+          <div className="space-y-6 w-full">
             <Table>
               <TableCaption>
                 A list of your recent weight measurements.
@@ -67,7 +61,7 @@ function WeightList() {
                   weights.map((weight) => (
                     <TableRow key={weight.id}>
                       <TableCell>{weight.weightKg}</TableCell>
-                      <TableCell>{weight.note || "-"}</TableCell>
+                      <TableCell>{weight.note || '-'}</TableCell>
                       <TableCell>{formatDate(weight.createdAt)}</TableCell>
                       <TableCell className="text-right">
                         <Button
@@ -93,9 +87,20 @@ function WeightList() {
                 )}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
-      </main>
+            {isError && (
+              <p
+                role="alert"
+                className={cn(
+                  'text-sm text-center text-destructive dark:text-red-400'
+                )}
+                data-testid="error-message"
+              >
+                Error: {error?.message}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
