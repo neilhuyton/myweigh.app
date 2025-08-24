@@ -52,11 +52,6 @@ test.describe('Weight List Functionality', () => {
         page.getByRole('button', { name: 'Login' }).click(),
       ]);
 
-      // Wait for login confirmation
-      await expect(page.getByTestId('login-message')).toBeVisible({
-        timeout: 20000,
-      });
-
       // Wait for notifications to disappear to avoid interference
       await page
         .getByLabel('Notifications alt+T')

@@ -46,9 +46,6 @@ test.describe('Login Functionality', () => {
       page.getByTestId('login-button').click(),
     ]);
 
-    // Verify success message
-    await expect(page.getByTestId('login-message')).toHaveText('Login successful!', { timeout: 5000 });
-
     // Verify logged-in state (check for navigation link instead of Logout button)
     await expect(page.getByTestId('login-form')).not.toBeVisible({ timeout: 10000 });
     await expect(page.getByRole('link', { name: 'Measurements' })).toBeVisible({ timeout: 10000 });

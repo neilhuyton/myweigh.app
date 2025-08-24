@@ -1,18 +1,14 @@
-// src/router.tsx
 import {
   createRouter,
   createRootRoute,
   createRoute,
   redirect,
-  Outlet,
-  useLocation,
-} from "@tanstack/react-router"; // Added useLocation
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+} from "@tanstack/react-router";
+import { QueryClient } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
 import { z } from "zod";
 import { trpc } from "./trpc";
 import Home from "./components/Home";
-import Navigation from "./components/Navigation";
 import WeightForm from "./components/WeightForm";
 import WeightList from "./components/WeightList";
 import WeightChart from "./components/WeightChart";
@@ -23,7 +19,7 @@ import ResetPasswordForm from "./components/ResetPasswordForm";
 import ConfirmResetPasswordForm from "./components/ConfirmResetPasswordForm";
 import VerifyEmail from "./components/VerifyEmail";
 import { useAuthStore } from "./store/authStore";
-import { ThemeProvider } from "./components/ThemeProvider";
+import Root from "./components/Root";
 
 // Create tRPC client
 const queryClient = new QueryClient({
@@ -55,33 +51,9 @@ const trpcClient = trpc.createClient({
   ],
 });
 
-// Define public routes where Navigation should not be shown
-const publicRoutes = [
-  "/login",
-  "/register",
-  "/reset-password",
-  "/confirm-reset-password",
-  "/verify-email",
-];
-
-// Define root route with conditional Navigation rendering
+// Define root route with Root component
 const rootRoute = createRootRoute({
-  component: () => {
-    const { isLoggedIn } = useAuthStore();
-    const location = useLocation(); // Get current route path
-    const isPublicRoute = publicRoutes.includes(location.pathname);
-
-    return (
-      <trpc.Provider client={trpcClient} queryClient={queryClient}>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-            {isLoggedIn && !isPublicRoute && <Navigation />}
-            <Outlet />
-          </ThemeProvider>
-        </QueryClientProvider>
-      </trpc.Provider>
-    );
-  },
+  component: () => <Root queryClient={queryClient} trpcClient={trpcClient} />,
 });
 
 // Define search schemas
@@ -127,7 +99,7 @@ const confirmResetPasswordRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/confirm-reset-password",
   validateSearch: confirmResetPasswordSearchSchema,
-  component: ConfirmResetPasswordForm, // Simplified, as component was already correct
+  component: ConfirmResetPasswordForm,
 });
 
 const weightRoute = createRoute({
