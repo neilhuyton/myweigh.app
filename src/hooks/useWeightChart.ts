@@ -1,14 +1,7 @@
 // src/hooks/useWeightChart.ts
 import { useMemo } from 'react';
 import { trpc } from '../trpc';
-import type { TooltipItem } from 'chart.js';
-
-// Define the data point structure for the chart
-interface WeightDataPoint {
-  x: string | null;
-  y: number;
-  note: string | null;
-}
+import { startOfWeek, startOfMonth, format } from 'date-fns';
 
 export const useWeightChart = (trendPeriod: 'daily' | 'weekly' | 'monthly' = 'daily') => {
   const { data, isLoading, isError, error } = trpc.weight.getWeights.useQuery();
@@ -24,66 +17,49 @@ export const useWeightChart = (trendPeriod: 'daily' | 'weekly' | 'monthly' = 'da
     });
   }, [data]);
 
-  const chartData = useMemo(() => ({
-    datasets: [
-      {
+  const chartData = useMemo(() => {
+    if (!weights.length) return [];
+    if (trendPeriod === 'daily') {
+      return weights.map((weight) => ({
+        date: isNaN(new Date(weight.createdAt).getTime()) ? null : weight.createdAt,
+        weight: weight.weightKg,
+        note: weight.note,
+      }));
+    }
+
+    const groupedData = weights.reduce((acc, weight) => {
+      const date = new Date(weight.createdAt);
+      if (isNaN(date.getTime())) return acc;
+      let key: string;
+      if (trendPeriod === 'weekly') {
+        key = format(startOfWeek(date, { weekStartsOn: 0 }), 'yyyy-MM-dd');
+      } else {
+        key = format(startOfMonth(date), 'yyyy-MM');
+      }
+      if (!acc[key]) acc[key] = { weights: [], note: weight.note };
+      acc[key].weights.push(weight.weightKg);
+      return acc;
+    }, {} as Record<string, { weights: number[]; note: string | null }>);
+
+    return Object.entries(groupedData).map(([date, { weights, note }]) => ({
+      date,
+      weight: weights.reduce((sum, w) => sum + w, 0) / weights.length,
+      note,
+    }));
+  }, [weights, trendPeriod]);
+
+  const chartConfig = useMemo(
+    () => ({
+      weight: {
         label: 'Weight (kg)',
-        data: weights.map((weight) => ({
-          x: isNaN(new Date(weight.createdAt).getTime()) ? null : weight.createdAt,
-          y: weight.weightKg,
-          note: weight.note,
-        })),
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        tension: 0.1,
-      },
-    ],
-  }), [weights]);
-
-  const chartOptions = useMemo(() => {
-    const timeUnitMap: Record<'daily' | 'weekly' | 'monthly', 'day' | 'week' | 'month'> = {
-      daily: 'day',
-      weekly: 'week',
-      monthly: 'month',
-    };
-
-    return {
-      responsive: true,
-      scales: {
-        x: {
-          type: 'time' as const,
-          time: {
-            unit: timeUnitMap[trendPeriod],
-          },
-          title: {
-            display: true,
-            text: 'Date',
-          },
-        },
-        y: {
-          title: {
-            display: true,
-            text: 'Weight (kg)',
-          },
-          beginAtZero: false,
+        theme: {
+          light: 'oklch(0.6 0.15 190)', // Teal, ~#26c6b3
+          dark: 'oklch(0.75 0.15 180)', // Bright cyan, ~#33e6cc
         },
       },
-      plugins: {
-        legend: {
-          display: true,
-        },
-        tooltip: {
-          callbacks: {
-            label: (context: TooltipItem<'line'> & { raw: WeightDataPoint }) => {
-              const weight = context.raw.y;
-              const note = context.raw.note ? ` (${context.raw.note})` : '';
-              return `${weight} kg${note}`;
-            },
-          },
-        },
-      },
-    };
-  }, [trendPeriod]);
+    }),
+    []
+  );
 
-  return { weights, isLoading, isError, error, chartData, chartOptions };
+  return { weights, isLoading, isError, error, chartData, chartConfig };
 };

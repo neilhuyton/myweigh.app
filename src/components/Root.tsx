@@ -1,3 +1,4 @@
+// src/components/Root.tsx
 import { useLocation, Outlet } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { trpc } from "../trpc";
@@ -17,7 +18,13 @@ const publicRoutes = [
 ];
 
 // Define Root component
-function Root({ queryClient, trpcClient }: { queryClient: QueryClient; trpcClient: TRPCClient<AppRouter> }) {
+function Root({
+  queryClient,
+  trpcClient,
+}: {
+  queryClient: QueryClient;
+  trpcClient: TRPCClient<AppRouter>;
+}) {
   const { isLoggedIn } = useAuthStore();
   const location = useLocation();
   const isPublicRoute = publicRoutes.includes(location.pathname);
@@ -25,7 +32,11 @@ function Root({ queryClient, trpcClient }: { queryClient: QueryClient; trpcClien
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <ThemeProvider
+          defaultTheme="dark"
+          storageKey="vite-ui-theme"
+          enableSystem={true}
+        >
           {isLoggedIn && !isPublicRoute && <Navigation />}
           <Outlet />
         </ThemeProvider>
