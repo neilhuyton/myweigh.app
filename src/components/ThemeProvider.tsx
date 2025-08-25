@@ -1,19 +1,22 @@
 // src/components/ThemeProvider.tsx
-import { ThemeProvider as NextThemeProvider } from "next-themes";
-import type { ReactNode } from "react";
+'use client'; // Required for Next.js App Router
 
+import { ThemeProvider as NextThemeProvider } from 'next-themes';
+import type { ReactNode } from 'react';
+import type { ThemeProviderProps as NextThemeProviderProps } from 'next-themes';
+
+// Extend next-themes' ThemeProviderProps to include only the props you want to expose
 type ThemeProviderProps = {
   children: ReactNode;
   defaultTheme?: string;
   storageKey?: string;
   enableSystem?: boolean;
-  [key: string]: any;
-};
+} & Omit<NextThemeProviderProps, 'children' | 'defaultTheme' | 'storageKey' | 'enableSystem'>;
 
 export function ThemeProvider({
   children,
-  defaultTheme = "dark",
-  storageKey = "vite-ui-theme",
+  defaultTheme = 'dark',
+  storageKey = 'vite-ui-theme',
   enableSystem = true,
   ...props
 }: ThemeProviderProps) {
