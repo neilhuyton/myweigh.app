@@ -55,7 +55,6 @@ vi.mock('@/components/ui/chart', () => ({
   ChartTooltipContent: vi.fn(() => null),
 }));
 
-// Remove getComputedStyle mock since we're not using it anymore
 describe('WeightChart Component', () => {
   const createTestQueryClient = () =>
     new QueryClient({
@@ -150,8 +149,8 @@ describe('WeightChart Component', () => {
   });
 
   it.each([
-    { theme: 'dark' as const, expectedColor: 'hsl(0.696 0.17 162.48)' },
-    { theme: 'light' as const, expectedColor: 'hsl(0.6 0.118 184.704)' },
+    { theme: 'dark' as const, expectedColor: 'oklch(0.75 0.15 180)' },
+    { theme: 'light' as const, expectedColor: 'oklch(0.6 0.15 190)' },
   ])('displays weight chart with correct theme color ($theme)', async ({ theme, expectedColor }) => {
     useAuthStore.setState({ isLoggedIn: true, userId: 'test-user-id' });
     server.use(
@@ -188,8 +187,8 @@ describe('WeightChart Component', () => {
       expect(bar).toHaveAttribute('data-fill-opacity', '0.8');
       const config = JSON.parse(screen.getByTestId('chart-container-mock').getAttribute('data-chart-config') || '{}');
       expect(config.weight.theme).toEqual({
-        light: 'hsl(0.6 0.118 184.704)',
-        dark: 'hsl(0.696 0.17 162.48)',
+        light: 'oklch(0.6 0.15 190)',
+        dark: 'oklch(0.75 0.15 180)',
       });
       const dataPoints = screen.getAllByTestId('weight-data-point');
       expect(dataPoints).toHaveLength(2);
@@ -272,12 +271,12 @@ describe('WeightChart Component', () => {
       expect(screen.getByTestId('chart-container-mock')).toHaveClass('h-full w-full');
       expect(screen.getByTestId('chart-container-mock')).toHaveAttribute('data-chart', 'weight-chart');
       const bar = screen.getByTestId('bar-mock');
-      expect(bar).toHaveAttribute('data-fill', 'hsl(0.696 0.17 162.48)');
+      expect(bar).toHaveAttribute('data-fill', 'oklch(0.75 0.15 180)');
       expect(bar).toHaveAttribute('data-fill-opacity', '0.8');
       const config = JSON.parse(screen.getByTestId('chart-container-mock').getAttribute('data-chart-config') || '{}');
       expect(config.weight.theme).toEqual({
-        light: 'hsl(0.6 0.118 184.704)',
-        dark: 'hsl(0.696 0.17 162.48)',
+        light: 'oklch(0.6 0.15 190)',
+        dark: 'oklch(0.75 0.15 180)',
       });
     });
 
@@ -290,7 +289,7 @@ describe('WeightChart Component', () => {
       expect(chartData[0].weight).toBeCloseTo((70.5 + 71) / 2);
       expect(chartData[0].date).toBe('2025-08-17');
       const bar = screen.getByTestId('bar-mock');
-      expect(bar).toHaveAttribute('data-fill', 'hsl(0.696 0.17 162.48)');
+      expect(bar).toHaveAttribute('data-fill', 'oklch(0.75 0.15 180)');
     });
   });
 
@@ -315,7 +314,7 @@ describe('WeightChart Component', () => {
     await setup('/weight-chart', 'dark');
     await waitFor(() => {
       const bar = screen.getByTestId('bar-mock');
-      expect(bar).toHaveAttribute('data-fill', 'hsl(0.696 0.17 162.48)');
+      expect(bar).toHaveAttribute('data-fill', 'oklch(0.75 0.15 180)');
     });
 
     // Simulate theme switch to light
@@ -328,7 +327,7 @@ describe('WeightChart Component', () => {
 
     await waitFor(() => {
       const bar = screen.getByTestId('bar-mock');
-      expect(bar).toHaveAttribute('data-fill', 'hsl(0.6 0.118 184.704)');
+      expect(bar).toHaveAttribute('data-fill', 'oklch(0.6 0.15 190)');
     });
   });
 });

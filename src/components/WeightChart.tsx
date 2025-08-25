@@ -1,6 +1,8 @@
 // src/components/WeightChart.tsx
+'use client';
+
 import { useState, useEffect } from 'react';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@radix-ui/react-select';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
@@ -10,28 +12,28 @@ import { useTheme } from 'next-themes';
 function WeightChart() {
   const [trendPeriod, setTrendPeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const { weights, isLoading, isError, error, chartData, chartConfig } = useWeightChart(trendPeriod);
-  const { theme } = useTheme(); // Use next-themes to get the current theme
+  const { theme } = useTheme();
 
-  // Resolve bar color based on the current theme
+  // Set bar color based on the current theme
   const [barColor, setBarColor] = useState<string>(
-    theme === 'dark' ? 'hsl(0.696 0.17 162.48)' : 'hsl(0.6 0.118 184.704)'
+    theme === 'dark' ? chartConfig.weight.theme.dark : chartConfig.weight.theme.light
   );
 
   useEffect(() => {
-    // Update bar color based on the theme
-    const resolvedColor = theme === 'dark' ? 'hsl(0.696 0.17 162.48)' : 'hsl(0.6 0.118 184.704)';
-    setBarColor(resolvedColor);
+    // Update bar color when theme changes
+    const newColor = theme === 'dark' ? chartConfig.weight.theme.dark : chartConfig.weight.theme.light;
+    setBarColor(newColor);
 
     // Observe theme changes
     const observer = new MutationObserver(() => {
       const newTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-      const newColor = newTheme === 'dark' ? 'hsl(0.696 0.17 162.48)' : 'hsl(0.6 0.118 184.704)';
+      const newColor = newTheme === 'dark' ? chartConfig.weight.theme.dark : chartConfig.weight.theme.light;
       setBarColor(newColor);
     });
 
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     return () => observer.disconnect();
-  }, [theme]);
+  }, [theme, chartConfig]);
 
   const handleTrendPeriodChange = (value: string) => {
     if (value === 'daily' || value === 'weekly' || value === 'monthly') {

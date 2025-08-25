@@ -53,8 +53,8 @@ export const useWeightChart = (trendPeriod: 'daily' | 'weekly' | 'monthly' = 'da
       weight: {
         label: 'Weight (kg)',
         theme: {
-          light: 'hsl(0.6 0.118 184.704)', // Matches :root { --chart-2 }
-          dark: 'hsl(0.696 0.17 162.48)', // Matches .dark { --chart-2 }
+          light: 'oklch(0.6 0.15 190)', // Teal, ~#26c6b3
+          dark: 'oklch(0.75 0.15 180)', // Bright cyan, ~#33e6cc
         },
       },
     }),
