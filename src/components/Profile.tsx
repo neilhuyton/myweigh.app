@@ -1,7 +1,9 @@
 // src/components/Profile.tsx
 import { Link } from "@tanstack/react-router";
-import { MailIcon, LockIcon } from "lucide-react";
+import { MailIcon, LockIcon, LogOutIcon } from "lucide-react";
 import { useProfile } from "../hooks/useProfile";
+import { useAuthStore } from "../store/authStore";
+import { useRouter } from "@tanstack/react-router";
 
 function Profile() {
   const {
@@ -14,6 +16,13 @@ function Profile() {
     handleEmailSubmit,
     handlePasswordSubmit,
   } = useProfile();
+  const { logout } = useAuthStore();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    logout();
+    router.navigate({ to: "/login" });
+  };
 
   return (
     <div className="min-h-screen p-4 sm:p-6 bg-background text-foreground flex flex-col items-center">
@@ -81,7 +90,7 @@ function Profile() {
             <input
               type="email"
               placeholder="Enter your email to reset password"
-              {...passwordForm.register("email")} // Changed from resetEmail
+              {...passwordForm.register("email")}
               className="flex-1 p-2 bg-background border border-input rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               aria-label="Email for password reset"
               data-testid="password-input"
@@ -118,13 +127,23 @@ function Profile() {
           </button>
         </form>
 
-        <Link
-          to="/"
-          className="block text-center text-primary hover:underline"
-          aria-label="Back to Home"
-        >
-          Back to Home
-        </Link>
+        <div className="flex justify-between items-center">
+          <Link
+            to="/"
+            className="text-primary hover:underline"
+            aria-label="Back to Home"
+          >
+            Back to Home
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="flex items-center p-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/80 transition-colors"
+            data-testid="logout-button"
+          >
+            <LogOutIcon className="h-5 w-5 mr-2" />
+            Logout
+          </button>
+        </div>
       </div>
     </div>
   );
