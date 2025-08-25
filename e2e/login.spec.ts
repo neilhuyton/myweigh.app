@@ -134,4 +134,33 @@ test.describe('Login Functionality', () => {
     await expect(page.getByTestId('login-form')).toBeVisible({ timeout: 5000 });
     await expect(page.getByRole('link', { name: 'Measurements' })).not.toBeVisible({ timeout: 5000 });
   });
+
+  test('should navigate form elements in correct tab order', async ({ page }) => {
+    // Navigate to the login page
+    await page.goto('/', { waitUntil: 'networkidle' });
+
+    // Wait for the login form to be visible
+    await expect(page.getByTestId('login-form')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByPlaceholder('m@example.com')).toBeVisible({ timeout: 5000 });
+
+    // Focus on the Email input and verify
+    await page.getByPlaceholder('m@example.com').focus();
+    await expect(page.getByPlaceholder('m@example.com')).toBeFocused({ timeout: 5000 });
+
+    // Tab to Password input
+    await page.keyboard.press('Tab');
+    await expect(page.getByPlaceholder('Enter your password')).toBeFocused({ timeout: 5000 });
+
+    // Tab to Forgot Password link
+    await page.keyboard.press('Tab');
+    await expect(page.getByTestId('forgot-password-link')).toBeFocused({ timeout: 5000 });
+
+    // Tab to Sign Up link
+    await page.keyboard.press('Tab');
+    await expect(page.getByTestId('signup-link')).toBeFocused({ timeout: 5000 });
+
+    // Tab to Login button
+    await page.keyboard.press('Tab');
+    await expect(page.getByTestId('login-button')).toBeFocused({ timeout: 5000 });
+  });
 });

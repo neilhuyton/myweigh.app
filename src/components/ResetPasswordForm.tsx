@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useResetPassword } from '../hooks/useResetPassword';
 import { router } from '../router';
-import { Logo } from './Logo'; // Adjust the import path based on your project structure
+import { Logo } from './Logo';
 
 interface ResetPasswordFormProps {
   className?: string;
@@ -60,6 +60,7 @@ function ResetPasswordForm({ className }: ResetPasswordFormProps) {
                             required
                             disabled={isPending}
                             data-testid="email-input"
+                            tabIndex={1}
                             {...field}
                           />
                         </FormControl>
@@ -80,7 +81,16 @@ function ResetPasswordForm({ className }: ResetPasswordFormProps) {
                     {message}
                   </p>
                 )}
-                <div className="mt-8 text-center text-sm">
+                <Button
+                  type="submit"
+                  className="w-full mt-4"
+                  disabled={isPending}
+                  data-testid="submit-button"
+                  tabIndex={2}
+                >
+                  {isPending ? 'Sending...' : 'Send Reset Link'}
+                </Button>
+                <div className="mt-4 text-center text-sm">
                   <a
                     href="#"
                     role="link"
@@ -90,6 +100,7 @@ function ResetPasswordForm({ className }: ResetPasswordFormProps) {
                     }}
                     className="underline underline-offset-4"
                     data-testid="back-to-login-link"
+                    tabIndex={3}
                   >
                     Back to login
                   </a>
@@ -98,18 +109,6 @@ function ResetPasswordForm({ className }: ResetPasswordFormProps) {
             </form>
           </Form>
         </div>
-      </div>
-      {/* Submit button at the bottom */}
-      <div className="w-full max-w-md px-4 pb-4 mt-12">
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={isPending}
-          data-testid="submit-button"
-          onClick={form.handleSubmit(handleSubmit)}
-        >
-          {isPending ? 'Sending...' : 'Send Reset Link'}
-        </Button>
       </div>
     </div>
   );

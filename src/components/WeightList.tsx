@@ -1,4 +1,3 @@
-// src/components/WeightList.tsx
 import { useWeightList } from '../hooks/useWeightList';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 function WeightList() {
@@ -25,83 +25,78 @@ function WeightList() {
 
   if (isLoading) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center bg-background">
-        <p>Loading weights...</p>
-      </div>
+      <p className="text-center text-sm font-medium">Loading weights...</p>
     );
   }
 
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center p-1 sm:p-2 lg:p-3">
-      {/* Content centered in the middle */}
-      <div className="flex-grow flex items-center justify-center w-full">
-        <div className="w-full max-w-md bg-background rounded-lg p-4 flex flex-col items-center">
-          <h1
-            className="text-2xl font-bold text-center mb-4"
-            role="heading"
-            aria-level={1}
-          >
-            Weight List
-          </h1>
-          <div className="space-y-6 w-full">
-            <Table>
-              <TableCaption>
-                A list of your recent weight measurements.
-              </TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Weight (kg)</TableHead>
-                  <TableHead>Note</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {weights && weights.length > 0 ? (
-                  weights.map((weight) => (
-                    <TableRow key={weight.id}>
-                      <TableCell>{weight.weightKg}</TableCell>
-                      <TableCell>{weight.note || '-'}</TableCell>
-                      <TableCell>{formatDate(weight.createdAt)}</TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          onClick={() => handleDelete(weight.id)}
-                          disabled={isDeleting}
-                          variant="destructive"
-                          size="sm"
-                          aria-label={`Delete weight measurement from ${formatDate(
-                            weight.createdAt
-                          )}`}
-                        >
-                          Delete
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={4}>
-                      No weight measurements found
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-            {isError && (
-              <p
-                role="alert"
+    <>
+      <h1
+        className="text-2xl font-bold text-left mb-4"
+        role="heading"
+        aria-level={1}
+      >
+        Past Measurements
+      </h1>
+      <Table className="border">
+        <TableCaption className="text-muted-foreground">
+          A list of your recent weight measurements.
+        </TableCaption>
+        <TableHeader>
+          <TableRow className="hover:bg-muted/50 rounded-t-lg">
+            <TableHead className="font-bold bg-muted/50">Weight (kg)</TableHead>
+            <TableHead className="font-bold bg-muted/50">Note</TableHead>
+            <TableHead className="font-bold bg-muted/50">Date</TableHead>
+            <TableHead className="font-bold bg-muted/50 text-right">Action</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {weights && weights.length > 0 ? (
+            weights.map((weight, index) => (
+              <TableRow
+                key={weight.id}
                 className={cn(
-                  'text-sm text-center text-destructive dark:text-red-400'
+                  'hover:bg-muted/50',
+                  index === weights.length - 1 && 'rounded-b-lg'
                 )}
-                data-testid="error-message"
               >
-                Error: {error?.message}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+                <TableCell>{weight.weightKg}</TableCell>
+                <TableCell>{weight.note || '-'}</TableCell>
+                <TableCell>{formatDate(weight.createdAt)}</TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    onClick={() => handleDelete(weight.id)}
+                    disabled={isDeleting}
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Delete weight measurement from ${formatDate(
+                      weight.createdAt
+                    )}`}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" data-lucide-name="trash-2" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow className="hover:bg-muted/50 rounded-b-lg">
+              <TableCell colSpan={4} className="text-center">
+                No weight measurements found
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+      {isError && (
+        <p
+          role="alert"
+          className="text-sm text-center text-destructive dark:text-red-400 mt-4"
+          data-testid="error-message"
+        >
+          Error: {error?.message}
+        </p>
+      )}
+    </>
   );
 }
 

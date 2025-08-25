@@ -1,15 +1,14 @@
-// src/components/Root.tsx
 import { useLocation, Outlet } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { trpc } from "../trpc";
 import { useAuthStore } from "../store/authStore";
 import { ThemeProvider } from "./ThemeProvider";
 import Navigation from "./Navigation";
+import ProfileIcon from "./ProfileIcon";
+import { ThemeToggle } from "./ThemeToggle";
 import type { TRPCClient } from "@trpc/client";
 import type { AppRouter } from "../../server/trpc";
-import ProfileIcon from "./ProfileIcon";
 
-// Define public routes where Navigation should not be shown
 const publicRoutes = [
   "/login",
   "/register",
@@ -18,7 +17,6 @@ const publicRoutes = [
   "/verify-email",
 ];
 
-// Define Root component
 function Root({
   queryClient,
   trpcClient,
@@ -38,13 +36,18 @@ function Root({
           storageKey="vite-ui-theme"
           enableSystem={true}
         >
-          {isLoggedIn && !isPublicRoute && (
-            <>
-              <ProfileIcon />
-              <Navigation />
-            </>
-          )}
-          <Outlet />
+          <div className="flex flex-col">
+            {isLoggedIn && !isPublicRoute && (
+              <header className="sticky top-0 left-0 right-0 z-50 bg-background flex items-center justify-between px-4 py-2">
+                <ThemeToggle />
+                <ProfileIcon />
+              </header>
+            )}
+            <main className={isLoggedIn && !isPublicRoute ? "min-h-[calc(100vh-3.5rem)]" : "min-h-screen"}>
+              {isLoggedIn && !isPublicRoute && <Navigation />}
+              <Outlet />
+            </main>
+          </div>
         </ThemeProvider>
       </QueryClientProvider>
     </trpc.Provider>

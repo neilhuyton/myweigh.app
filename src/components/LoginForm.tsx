@@ -1,12 +1,18 @@
 // src/components/LoginForm.tsx
-import { cn } from '@/lib/utils';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { useLogin } from '../hooks/useLogin';
-import { useRouter } from '@tanstack/react-router';
-import { Logo } from './Logo';
+import { cn } from "@/lib/utils";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { useLogin } from "../hooks/useLogin";
+import { useRouter } from "@tanstack/react-router";
+import { Logo } from "./Logo";
 
 function LoginForm() {
   const { form, message, isPending, handleSubmit } = useLogin();
@@ -55,6 +61,7 @@ function LoginForm() {
                             required
                             data-testid="email-input"
                             disabled={isPending}
+                            tabIndex={1}
                             {...field}
                           />
                         </FormControl>
@@ -70,16 +77,20 @@ function LoginForm() {
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center justify-between leading-none mb-0">
-                          <Label htmlFor="password" data-testid="password-label">
+                          <Label
+                            htmlFor="password"
+                            data-testid="password-label"
+                          >
                             Password
                           </Label>
                           <a
                             href="#"
                             className="inline-block text-sm underline-offset-0 hover:underline"
                             data-testid="forgot-password-link"
+                            tabIndex={3}
                             onClick={(e) => {
                               e.preventDefault();
-                              router.navigate({ to: '/reset-password' });
+                              router.navigate({ to: "/reset-password" });
                             }}
                           >
                             Forgot your password?
@@ -94,6 +105,7 @@ function LoginForm() {
                             data-testid="password-input"
                             disabled={isPending}
                             className="w-full"
+                            tabIndex={2}
                             {...field}
                           />
                         </FormControl>
@@ -106,44 +118,44 @@ function LoginForm() {
                   <p
                     data-testid="login-message"
                     className={cn(
-                      'text-sm text-center',
-                      message.includes('failed') ? 'text-red-500' : 'text-green-500'
+                      "text-sm text-center",
+                      message.includes("failed")
+                        ? "text-red-500"
+                        : "text-green-500"
                     )}
                   >
                     {message}
                   </p>
                 )}
-              </div>
-              <div className="mt-8 text-center text-sm">
-                Don&apos;t have an account?{' '}
-                <a
-                  href="#"
-                  role="link"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    router.navigate({ to: '/register' });
-                  }}
-                  className="underline underline-offset-4"
-                  data-testid="signup-link"
+                <Button
+                  type="submit"
+                  className="w-full mt-4"
+                  data-testid="login-button"
+                  disabled={isPending}
+                  tabIndex={5}
                 >
-                  Sign up
-                </a>
+                  {isPending ? "Logging in..." : "Login"}
+                </Button>
+                <div className="mt-4 text-center text-sm">
+                  Don&apos;t have an account?{" "}
+                  <a
+                    href="#"
+                    role="link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      router.navigate({ to: "/register" });
+                    }}
+                    className="underline underline-offset-4"
+                    data-testid="signup-link"
+                    tabIndex={4}
+                  >
+                    Sign up
+                  </a>
+                </div>
               </div>
             </form>
           </Form>
         </div>
-      </div>
-      {/* Submit button at the bottom */}
-      <div className="w-full max-w-md px-4 pb-4 mt-12">
-        <Button
-          type="submit"
-          className="w-full"
-          data-testid="login-button"
-          disabled={isPending}
-          onClick={form.handleSubmit(handleSubmit)}
-        >
-          {isPending ? 'Logging in...' : 'Login'}
-        </Button>
       </div>
     </div>
   );

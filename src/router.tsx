@@ -10,7 +10,7 @@ import { httpBatchLink } from "@trpc/client";
 import { z } from "zod";
 import { trpc } from "./trpc";
 import Home from "./components/Home";
-import WeightForm from "./components/WeightForm";
+import Weight from "./components/Weight";
 import WeightList from "./components/WeightList";
 import WeightChart from "./components/WeightChart";
 import WeightGoal from "./components/WeightGoal";
@@ -113,19 +113,7 @@ const weightRoute = createRoute({
       throw redirect({ to: "/login" });
     }
   },
-  component: WeightForm,
-});
-
-const weightsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/weights",
-  beforeLoad: () => {
-    const { isLoggedIn } = useAuthStore.getState();
-    if (!isLoggedIn) {
-      throw redirect({ to: "/login" });
-    }
-  },
-  component: WeightList,
+  component: Weight,
 });
 
 const weightChartRoute = createRoute({
@@ -179,7 +167,6 @@ const routeTree = rootRoute.addChildren([
   resetPasswordRoute,
   confirmResetPasswordRoute,
   weightRoute,
-  weightsRoute,
   weightChartRoute,
   weightGoalRoute,
   verifyEmailRoute,
