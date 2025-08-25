@@ -1,4 +1,3 @@
-// src/components/Root.tsx
 import { useLocation, Outlet } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { trpc } from "../trpc";
@@ -37,16 +36,18 @@ function Root({
           storageKey="vite-ui-theme"
           enableSystem={true}
         >
-          {isLoggedIn && !isPublicRoute && (
-            <header className="sticky top-0 left-0 right-0 z-50 bg-background flex items-center justify-between px-4 py-2">
-              <ThemeToggle />
-              <ProfileIcon />
-            </header>
-          )}
-          <main className="min-h-screen">
-            {isLoggedIn && !isPublicRoute && <Navigation />}
-            <Outlet />
-          </main>
+          <div className="flex flex-col">
+            {isLoggedIn && !isPublicRoute && (
+              <header className="sticky top-0 left-0 right-0 z-50 bg-background flex items-center justify-between px-4 py-2">
+                <ThemeToggle />
+                <ProfileIcon />
+              </header>
+            )}
+            <main className={isLoggedIn && !isPublicRoute ? "min-h-[calc(100vh-3.5rem)]" : "min-h-screen"}>
+              {isLoggedIn && !isPublicRoute && <Navigation />}
+              <Outlet />
+            </main>
+          </div>
         </ThemeProvider>
       </QueryClientProvider>
     </trpc.Provider>

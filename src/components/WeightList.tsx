@@ -25,15 +25,15 @@ function WeightList() {
 
   if (isLoading) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center bg-background">
+      <div className="flex items-center justify-center bg-background">
         <p>Loading weights...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-[100dvh]">
-      <div className="w-full max-w-md mx-auto bg-background rounded-lg p-4 overflow-hidden">
+    <div>
+      <div className="w-full max-w-md lg:max-w-full mx-auto bg-background rounded-lg p-4 pb-24 overflow-hidden">
         <h1
           className="text-2xl font-bold text-left mb-4"
           role="heading"

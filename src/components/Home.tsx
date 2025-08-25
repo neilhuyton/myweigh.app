@@ -1,4 +1,3 @@
-import { useRouter } from "@tanstack/react-router";
 import { useAuthStore } from "../store/authStore";
 import { ScaleIcon, TargetIcon, TrendingUpIcon, ClockIcon } from "lucide-react";
 import { trpc } from "../trpc";
@@ -6,7 +5,6 @@ import { DashboardCard } from "./DashboardCard";
 
 function Home() {
   const { isLoggedIn } = useAuthStore();
-  const router = useRouter();
 
   // tRPC queries
   const {
@@ -31,8 +29,8 @@ function Home() {
     latestWeight && goalWeight ? latestWeight - goalWeight : null;
 
   return (
-    <div className="min-h-[100dvh]">
-      <div className="w-full max-w-md mx-auto bg-background rounded-lg p-4">
+    <div>
+      <div className="w-full max-w-md lg:max-w-full mx-auto bg-background rounded-lg p-4 pb-24">
         <h1
           className="text-2xl font-bold text-left mb-4"
           role="heading"
@@ -49,7 +47,7 @@ function Home() {
           </p>
         )}
         {!weightsLoading && !goalLoading && !weightsError && !goalError && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 pb-24">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <DashboardCard
               title="Current Weight"
               icon={ScaleIcon}
@@ -77,11 +75,15 @@ function Home() {
               icon={TrendingUpIcon}
               value={
                 weightChange !== null
-                  ? `${weightChange > 0 ? "+" : ""}${weightChange.toFixed(1)} kg`
+                  ? `${weightChange > 0 ? "+" : ""}${weightChange.toFixed(
+                      1
+                    )} kg`
                   : null
               }
               description={
-                weightChange !== null ? "Difference from goal" : "Track progress"
+                weightChange !== null
+                  ? "Difference from goal"
+                  : "Track progress"
               }
               buttonText="View Chart"
               buttonLink="/weight-chart"
@@ -91,7 +93,9 @@ function Home() {
               title="Recent Measurement"
               icon={ClockIcon}
               value={
-                weightsData[0] ? `${weightsData[0].weightKg.toFixed(1)} kg` : null
+                weightsData[0]
+                  ? `${weightsData[0].weightKg.toFixed(1)} kg`
+                  : null
               }
               description={
                 weightsData[0]
@@ -104,6 +108,7 @@ function Home() {
               buttonLink="/weights"
               testId="recent-measurement-card"
             />
+            
           </div>
         )}
       </div>
