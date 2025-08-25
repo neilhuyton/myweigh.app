@@ -20,7 +20,7 @@ function Navigation() {
             Home
           </Link>
           <Link
-            to="/weights"
+            to="/weight"
             className="flex-1 flex flex-col items-center py-3 text-sm sm:text-base font-medium hover:bg-muted transition relative"
             activeProps={{
               className:
