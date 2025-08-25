@@ -10,6 +10,13 @@ export function useWeightForm() {
   const [weight, setWeight] = useState("");
   const [note, setNote] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [fadeOut, setFadeOut] = useState(false);
+
+  // Fetch user's weight goal
+  const { data: weightGoal } = trpc.weight.getGoal.useQuery(undefined, {
+    enabled: !!userId,
+  });
 
   // Redirect to login if not logged in
   useEffect(() => {
@@ -19,10 +26,19 @@ export function useWeightForm() {
   }, [isLoggedIn, navigate]);
 
   const weightMutation = trpc.weight.create.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
       setMessage("Weight recorded successfully!");
       setWeight("");
       setNote("");
+      // Check if the entered weight meets or is below the goal
+      if (weightGoal && data.weightKg <= weightGoal.goalWeightKg) {
+        setShowConfetti(true);
+        setFadeOut(false);
+        // Start fade-out 1 second before the end
+        setTimeout(() => setFadeOut(true), 6000);
+        // Hide confetti after 7 seconds
+        setTimeout(() => setShowConfetti(false), 10000);
+      }
     },
     onError: (error) => {
       if (error.data?.code === "UNAUTHORIZED") {
@@ -62,6 +78,8 @@ export function useWeightForm() {
     note,
     message,
     isSubmitting: weightMutation.isPending,
+    showConfetti,
+    fadeOut,
     handleSubmit,
     handleWeightChange,
     handleNoteChange,
