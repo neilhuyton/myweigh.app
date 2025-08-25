@@ -59,6 +59,7 @@ function ConfirmResetPasswordForm() {
                             required
                             data-testid="password-input"
                             disabled={isPending}
+                            tabIndex={1}
                             {...field}
                           />
                         </FormControl>
@@ -81,7 +82,16 @@ function ConfirmResetPasswordForm() {
                     {message}
                   </p>
                 )}
-                <div className="mt-8 text-center text-sm">
+                <Button
+                  type="submit"
+                  className="w-full mt-4"
+                  data-testid="reset-password-button"
+                  disabled={isPending}
+                  tabIndex={2}
+                >
+                  {isPending ? 'Resetting...' : 'Reset Password'}
+                </Button>
+                <div className="mt-4 text-center text-sm">
                   <a
                     href="#"
                     role="link"
@@ -91,6 +101,7 @@ function ConfirmResetPasswordForm() {
                     }}
                     className="underline underline-offset-4"
                     data-testid="back-to-login-link"
+                    tabIndex={3}
                   >
                     Back to login
                   </a>
@@ -99,20 +110,6 @@ function ConfirmResetPasswordForm() {
             </form>
           </Form>
         </div>
-      </div>
-      {/* Submit button at the bottom */}
-      <div className="w-full max-w-md px-4 pb-4 mt-12">
-        <Button
-          type="submit"
-          className="w-full"
-          data-testid="reset-password-button"
-          disabled={isPending}
-          onClick={form.handleSubmit((data) =>
-            handleSubmit(data, () => router.navigate({ to: '/login' }))
-          )}
-        >
-          {isPending ? 'Resetting...' : 'Reset Password'}
-        </Button>
       </div>
     </div>
   );

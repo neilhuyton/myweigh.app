@@ -1,11 +1,18 @@
-import { cn } from '@/lib/utils';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { useRegister } from '../hooks/useRegister';
-import { useRouter } from '@tanstack/react-router';
-import { Logo } from './Logo'; // Adjust the import path based on your project structure
+// src/components/Register.tsx
+import { cn } from "@/lib/utils";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { useRegister } from "../hooks/useRegister";
+import { useRouter } from "@tanstack/react-router";
+import { Logo } from "./Logo";
 
 interface RegisterProps {
   className?: string;
@@ -14,11 +21,16 @@ interface RegisterProps {
 function Register({ className }: RegisterProps) {
   const router = useRouter();
   const { form, message, isRegistering, handleRegister } = useRegister(() =>
-    router.navigate({ to: '/login' })
+    router.navigate({ to: "/login" })
   );
 
   return (
-    <div className={cn('min-h-[100dvh] flex flex-col items-center p-1 sm:p-2 lg:p-3', className)}>
+    <div
+      className={cn(
+        "min-h-[100dvh] flex flex-col items-center p-1 sm:p-2 lg:p-3",
+        className
+      )}
+    >
       {/* Logo with spacing above */}
       <div className="pt-14">
         <Logo />
@@ -60,6 +72,7 @@ function Register({ className }: RegisterProps) {
                             required
                             data-testid="email-input"
                             disabled={isRegistering}
+                            tabIndex={1}
                             {...field}
                           />
                         </FormControl>
@@ -85,6 +98,7 @@ function Register({ className }: RegisterProps) {
                             required
                             data-testid="password-input"
                             disabled={isRegistering}
+                            tabIndex={2}
                             {...field}
                           />
                         </FormControl>
@@ -97,44 +111,44 @@ function Register({ className }: RegisterProps) {
                   <p
                     data-testid="register-message"
                     className={cn(
-                      'text-sm text-center',
-                      message.includes('failed') ? 'text-red-500' : 'text-green-500'
+                      "text-sm text-center",
+                      message.includes("failed")
+                        ? "text-red-500"
+                        : "text-green-500"
                     )}
                   >
                     {message}
                   </p>
                 )}
-              </div>
-              <div className="mt-8 text-center text-sm">
-                Already have an account?{' '}
-                <a
-                  href="#"
-                  role="link"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    router.navigate({ to: '/login' });
-                  }}
-                  className="underline underline-offset-4"
-                  data-testid="login-link"
+                <Button
+                  type="submit"
+                  className="w-full mt-4"
+                  data-testid="register-button"
+                  disabled={isRegistering}
+                  tabIndex={3}
                 >
-                  Login
-                </a>
+                  {isRegistering ? "Registering..." : "Register"}
+                </Button>
+                <div className="mt-4 text-center text-sm">
+                  Already have an account?{" "}
+                  <a
+                    href="#"
+                    role="link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      router.navigate({ to: "/login" });
+                    }}
+                    className="underline underline-offset-4"
+                    data-testid="login-link"
+                    tabIndex={4}
+                  >
+                    Login
+                  </a>
+                </div>
               </div>
             </form>
           </Form>
         </div>
-      </div>
-      {/* Submit button at the bottom */}
-      <div className="w-full max-w-md px-4 pb-4 mt-12">
-        <Button
-          type="submit"
-          className="w-full"
-          data-testid="register-button"
-          disabled={isRegistering}
-          onClick={form.handleSubmit(handleRegister)}
-        >
-          {isRegistering ? 'Registering...' : 'Register'}
-        </Button>
       </div>
     </div>
   );
