@@ -1,7 +1,6 @@
-// src/components/Navigation.tsx (unchanged)
+// src/components/Navigation.tsx
 import { Link } from '@tanstack/react-router';
 import { HomeIcon, ScaleIcon, LineChartIcon, TargetIcon } from 'lucide-react';
-import { ThemeToggle } from './ThemeToggle';
 
 function Navigation() {
   return (
@@ -56,9 +55,6 @@ function Navigation() {
             <TargetIcon className="h-5 w-5 sm:h-6 sm:w-6 mb-1" />
             Goals
           </Link>
-          <div className="flex items-center px-2">
-            <ThemeToggle />
-          </div>
         </div>
       </div>
     </nav>

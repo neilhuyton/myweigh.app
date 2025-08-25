@@ -5,11 +5,11 @@ import { trpc } from "../trpc";
 import { useAuthStore } from "../store/authStore";
 import { ThemeProvider } from "./ThemeProvider";
 import Navigation from "./Navigation";
+import ProfileIcon from "./ProfileIcon";
+import { ThemeToggle } from "./ThemeToggle";
 import type { TRPCClient } from "@trpc/client";
 import type { AppRouter } from "../../server/trpc";
-import ProfileIcon from "./ProfileIcon";
 
-// Define public routes where Navigation should not be shown
 const publicRoutes = [
   "/login",
   "/register",
@@ -18,7 +18,6 @@ const publicRoutes = [
   "/verify-email",
 ];
 
-// Define Root component
 function Root({
   queryClient,
   trpcClient,
@@ -39,12 +38,15 @@ function Root({
           enableSystem={true}
         >
           {isLoggedIn && !isPublicRoute && (
-            <>
+            <header className="sticky top-0 left-0 right-0 z-50 bg-background flex items-center justify-between px-4 py-2">
+              <ThemeToggle />
               <ProfileIcon />
-              <Navigation />
-            </>
+            </header>
           )}
-          <Outlet />
+          <main className="min-h-screen">
+            {isLoggedIn && !isPublicRoute && <Navigation />}
+            <Outlet />
+          </main>
         </ThemeProvider>
       </QueryClientProvider>
     </trpc.Provider>
