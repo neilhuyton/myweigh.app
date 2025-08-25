@@ -1,3 +1,4 @@
+// src/router.tsx
 import {
   createRouter,
   createRootRoute,
@@ -18,6 +19,7 @@ import LoginForm from "./components/LoginForm";
 import ResetPasswordForm from "./components/ResetPasswordForm";
 import ConfirmResetPasswordForm from "./components/ConfirmResetPasswordForm";
 import VerifyEmail from "./components/VerifyEmail";
+import Profile from "./components/Profile"; // Import the new Profile component
 import { useAuthStore } from "./store/authStore";
 import Root from "./components/Root";
 
@@ -157,6 +159,18 @@ const verifyEmailRoute = createRoute({
   component: VerifyEmail,
 });
 
+const profileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/profile",
+  beforeLoad: () => {
+    const { isLoggedIn } = useAuthStore.getState();
+    if (!isLoggedIn) {
+      throw redirect({ to: "/login" });
+    }
+  },
+  component: Profile,
+});
+
 // Create route tree
 const routeTree = rootRoute.addChildren([
   homeRoute,
@@ -169,6 +183,7 @@ const routeTree = rootRoute.addChildren([
   weightChartRoute,
   weightGoalRoute,
   verifyEmailRoute,
+  profileRoute, // Add the new profile route
 ]);
 
 // Create router

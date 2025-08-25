@@ -7,6 +7,7 @@ import { ThemeProvider } from "./ThemeProvider";
 import Navigation from "./Navigation";
 import type { TRPCClient } from "@trpc/client";
 import type { AppRouter } from "../../server/trpc";
+import ProfileIcon from "./ProfileIcon";
 
 // Define public routes where Navigation should not be shown
 const publicRoutes = [
@@ -37,7 +38,12 @@ function Root({
           storageKey="vite-ui-theme"
           enableSystem={true}
         >
-          {isLoggedIn && !isPublicRoute && <Navigation />}
+          {isLoggedIn && !isPublicRoute && (
+            <>
+              <ProfileIcon />
+              <Navigation />
+            </>
+          )}
           <Outlet />
         </ThemeProvider>
       </QueryClientProvider>
