@@ -2,7 +2,7 @@
 import { t } from '../trpc-base';
 import { z } from 'zod';
 import crypto from 'crypto';
-import { sendResetPasswordEmail } from '../email';
+import { sendResetPasswordEmail, sendPasswordChangeNotification } from '../email';
 import bcrypt from 'bcryptjs';
 
 export const resetPasswordRouter = t.router({
@@ -62,7 +62,7 @@ export const resetPasswordRouter = t.router({
       }
 
       const hashedPassword = await bcrypt.hash(input.newPassword, 10);
-      await ctx.prisma.user.update({
+      const updatedUser = await ctx.prisma.user.update({
         where: { id: user.id },
         data: {
           password: hashedPassword,
@@ -70,6 +70,13 @@ export const resetPasswordRouter = t.router({
           resetPasswordTokenExpiresAt: null,
         },
       });
+
+      // Send notification to the user's email
+      const emailResult = await sendPasswordChangeNotification(updatedUser.email);
+      if (!emailResult.success) {
+        console.warn(`Failed to send password change notification to ${updatedUser.email}: ${emailResult.error}`);
+        // Note: Don't throw an error to avoid reverting the password update
+      }
 
       return { message: 'Password reset successfully' };
     }),
