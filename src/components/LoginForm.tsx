@@ -1,4 +1,3 @@
-// src/components/LoginForm.tsx
 import { cn } from '@/lib/utils';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -55,6 +54,7 @@ function LoginForm() {
                             required
                             data-testid="email-input"
                             disabled={isPending}
+                            tabIndex={1} // Set tabIndex to 1 for Email input
                             {...field}
                           />
                         </FormControl>
@@ -77,6 +77,7 @@ function LoginForm() {
                             href="#"
                             className="inline-block text-sm underline-offset-0 hover:underline"
                             data-testid="forgot-password-link"
+                            tabIndex={3} // Set tabIndex to 3 for Forgot Password link
                             onClick={(e) => {
                               e.preventDefault();
                               router.navigate({ to: '/reset-password' });
@@ -94,6 +95,7 @@ function LoginForm() {
                             data-testid="password-input"
                             disabled={isPending}
                             className="w-full"
+                            tabIndex={2} // Set tabIndex to 2 for Password input
                             {...field}
                           />
                         </FormControl>
@@ -125,6 +127,7 @@ function LoginForm() {
                   }}
                   className="underline underline-offset-4"
                   data-testid="signup-link"
+                  tabIndex={4} // Set tabIndex to 4 for Sign Up link
                 >
                   Sign up
                 </a>
@@ -141,6 +144,7 @@ function LoginForm() {
           data-testid="login-button"
           disabled={isPending}
           onClick={form.handleSubmit(handleSubmit)}
+          tabIndex={5} // Set tabIndex to 5 for Login button
         >
           {isPending ? 'Logging in...' : 'Login'}
         </Button>
