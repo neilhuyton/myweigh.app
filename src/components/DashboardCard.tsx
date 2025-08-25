@@ -1,4 +1,3 @@
-// src/components/DashboardCard.tsx
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { LucideIcon } from 'lucide-react';
@@ -11,7 +10,7 @@ type DashboardCardProps = {
   description: string | null;
   buttonText: string;
   buttonLink: string;
-  testId?: string; // Optional for testing purposes
+  testId?: string;
 };
 
 export function DashboardCard({
@@ -31,18 +30,21 @@ export function DashboardCard({
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value ?? 'No data'}</div>
-        <p className="text-xs text-muted-foreground">{description ?? 'No description'}</p>
-        <Button
-          variant="outline"
-          size="sm"
-          className="mt-4"
-          onClick={() => router.navigate({ to: buttonLink })}
-          data-testid={testId ? `${testId}-button` : undefined}
-        >
-          {buttonText}
-        </Button>
+      <CardContent className="pb-0">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <div className="text-2xl font-bold">{value ?? 'No data'}</div>
+            <p className="text-xs text-muted-foreground">{description ?? 'No description'}</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.navigate({ to: buttonLink })}
+            data-testid={testId ? `${testId}-button` : undefined}
+          >
+            {buttonText}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
