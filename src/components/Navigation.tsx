@@ -1,18 +1,19 @@
-// src/components/Navigation.tsx
-import { Link } from "@tanstack/react-router";
-import { HomeIcon, ScaleIcon, LineChartIcon, TargetIcon } from "lucide-react";
+// src/components/Navigation.tsx (unchanged)
+import { Link } from '@tanstack/react-router';
+import { HomeIcon, ScaleIcon, LineChartIcon, TargetIcon } from 'lucide-react';
+import { ThemeToggle } from './ThemeToggle';
 
 function Navigation() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-background shadow-md z-10">
       <div className="flex flex-row items-center justify-between p-2 sm:p-4">
-        <div className="flex flex-row w-full">
+        <div className="flex flex-row w-full items-center">
           <Link
             to="/"
             className="flex-1 flex flex-col items-center py-3 text-sm sm:text-base font-medium hover:bg-muted transition relative"
             activeProps={{
               className:
-                "font-semibold before:absolute before:top-0 before:left-0 before:right-0 before:h-[2px] before:bg-primary",
+                'font-semibold before:absolute before:top-0 before:left-0 before:right-0 before:h-[2px] before:bg-primary',
             }}
             aria-label="Navigate to Home"
           >
@@ -24,7 +25,7 @@ function Navigation() {
             className="flex-1 flex flex-col items-center py-3 text-sm sm:text-base font-medium hover:bg-muted transition relative"
             activeProps={{
               className:
-                "font-semibold before:absolute before:top-0 before:left-0 before:right-0 before:h-[2px] before:bg-primary",
+                'font-semibold before:absolute before:top-0 before:left-0 before:right-0 before:h-[2px] before:bg-primary',
             }}
             aria-label="Navigate to Weight"
           >
@@ -36,7 +37,7 @@ function Navigation() {
             className="flex-1 flex flex-col items-center py-3 text-sm sm:text-base font-medium hover:bg-muted transition relative"
             activeProps={{
               className:
-                "font-semibold before:absolute before:top-0 before:left-0 before:right-0 before:h-[2px] before:bg-primary",
+                'font-semibold before:absolute before:top-0 before:left-0 before:right-0 before:h-[2px] before:bg-primary',
             }}
             aria-label="Navigate to Chart"
           >
@@ -48,13 +49,16 @@ function Navigation() {
             className="flex-1 flex flex-col items-center py-3 text-sm sm:text-base font-medium hover:bg-muted transition relative"
             activeProps={{
               className:
-                "font-semibold before:absolute before:top-0 before:left-0 before:right-0 before:h-[2px] before:bg-primary",
+                'font-semibold before:absolute before:top-0 before:left-0 before:right-0 before:h-[2px] before:bg-primary',
             }}
             aria-label="Navigate to Goals"
           >
             <TargetIcon className="h-5 w-5 sm:h-6 sm:w-6 mb-1" />
             Goals
           </Link>
+          <div className="flex items-center px-2">
+            <ThemeToggle />
+          </div>
         </div>
       </div>
     </nav>

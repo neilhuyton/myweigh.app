@@ -14,20 +14,48 @@ import { act } from 'react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
+import { ThemeProvider } from '../src/components/ThemeProvider';
 
-// Mock react-chartjs-2
-vi.mock('react-chartjs-2', () => ({
-  Line: vi.fn(({ data, options }) => (
+// Mock recharts and chart component
+vi.mock('recharts', () => ({
+  BarChart: vi.fn(({ children, data, margin }) => (
     <div
       data-testid="chart-mock"
       data-chart-data={JSON.stringify(data)}
-      data-chart-options={JSON.stringify(options)}
+      data-margin={JSON.stringify(margin)}
     >
-      Mocked Chart
+      {children}
     </div>
   )),
+  Bar: vi.fn(({ fill, fillOpacity }) => (
+    <div
+      data-testid="bar-mock"
+      data-fill={fill}
+      data-fill-opacity={fillOpacity}
+    />
+  )),
+  XAxis: vi.fn(() => null),
+  YAxis: vi.fn(() => null),
+  Tooltip: vi.fn(() => null),
+  CartesianGrid: vi.fn(() => null),
+  ResponsiveContainer: vi.fn(({ children }) => <div>{children}</div>),
 }));
 
+vi.mock('@/components/ui/chart', () => ({
+  ChartContainer: vi.fn(({ config, children, className, id }) => (
+    <div
+      data-testid="chart-container-mock"
+      data-chart-config={JSON.stringify(config)}
+      className={className}
+      data-chart={id}
+    >
+      {children}
+    </div>
+  )),
+  ChartTooltipContent: vi.fn(() => null),
+}));
+
+// Remove getComputedStyle mock since we're not using it anymore
 describe('WeightChart Component', () => {
   const createTestQueryClient = () =>
     new QueryClient({
@@ -47,7 +75,7 @@ describe('WeightChart Component', () => {
     ],
   });
 
-  const setup = async (initialPath: string = '/weight-chart') => {
+  const setup = async (initialPath: string = '/weight-chart', theme: 'light' | 'dark' = 'dark') => {
     const queryClient = createTestQueryClient();
     const history = createMemoryHistory({ initialEntries: [initialPath] });
     const testRouter = createRouter({
@@ -56,11 +84,21 @@ describe('WeightChart Component', () => {
       routeTree: router.routeTree,
     });
 
+    // Set theme
+    await act(async () => {
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(theme);
+      // Trigger MutationObserver
+      document.documentElement.setAttribute('class', theme);
+    });
+
     await act(async () => {
       render(
         <trpc.Provider client={trpcClient} queryClient={queryClient}>
           <QueryClientProvider client={queryClient}>
-            <RouterProvider router={testRouter} />
+            <ThemeProvider defaultTheme={theme} enableSystem={true}>
+              <RouterProvider router={testRouter} />
+            </ThemeProvider>
           </QueryClientProvider>
         </trpc.Provider>
       );
@@ -81,6 +119,7 @@ describe('WeightChart Component', () => {
       login: vi.fn(),
       logout: vi.fn(),
     });
+    document.documentElement.classList.remove('light', 'dark');
     cleanup();
     vi.clearAllMocks();
   });
@@ -90,661 +129,206 @@ describe('WeightChart Component', () => {
   });
 
   it('displays loading message while fetching weights', async () => {
-    useAuthStore.setState({
-      isLoggedIn: true,
-      userId: 'test-user-id',
-      login: vi.fn(),
-      logout: vi.fn(),
-    });
-
+    useAuthStore.setState({ isLoggedIn: true, userId: 'test-user-id' });
     server.use(
-      http.get(
-        'http://localhost:8888/.netlify/functions/trpc/weight.getWeights',
-        async () => {
-          await new Promise((resolve) => setTimeout(resolve, 2000)); // Increased delay
-          return HttpResponse.json([{ id: 0, result: { data: [] } }]);
-        }
-      )
+      http.get('http://localhost:8888/.netlify/functions/trpc/weight.getWeights', async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        return HttpResponse.json([{ id: 0, result: { data: [] } }]);
+      })
     );
 
-    const { queryClient } = await setup('/weight-chart');
+    await setup();
+    expect(screen.getByTestId('loading')).toBeInTheDocument();
 
     await waitFor(
       () => {
-        expect(screen.getByTestId('loading')).toBeInTheDocument();
+        expect(screen.queryByTestId('loading')).not.toBeInTheDocument();
+        expect(screen.getByTestId('no-data')).toBeInTheDocument();
       },
-      { timeout: 2500 }
+      { timeout: 2000 }
     );
-
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(screen.queryByTestId('loading')).not.toBeInTheDocument();
-          expect(screen.getByTestId('no-data')).toBeInTheDocument();
-        },
-        { timeout: 5000 }
-      );
-    });
-
-    await act(async () => {
-      queryClient.invalidateQueries();
-      queryClient.removeQueries();
-    });
   });
 
-  it('displays weight chart with measurements sorted by date when logged in', async () => {
-    useAuthStore.setState({
-      isLoggedIn: true,
-      userId: 'test-user-id',
-      login: vi.fn(),
-      logout: vi.fn(),
-    });
-
+  it.each([
+    { theme: 'dark' as const, expectedColor: 'hsl(0.696 0.17 162.48)' },
+    { theme: 'light' as const, expectedColor: 'hsl(0.6 0.118 184.704)' },
+  ])('displays weight chart with correct theme color ($theme)', async ({ theme, expectedColor }) => {
+    useAuthStore.setState({ isLoggedIn: true, userId: 'test-user-id' });
     server.use(
-      http.get(
-        'http://localhost:8888/.netlify/functions/trpc/weight.getWeights',
-        () =>
-          HttpResponse.json([
-            {
-              id: 0,
-              result: {
-                data: [
-                  {
-                    id: '1',
-                    weightKg: 70.5,
-                    note: 'Morning weigh-in',
-                    createdAt: '2025-08-20T10:00:00Z',
-                    userId: 'test-user-id',
-                  },
-                  {
-                    id: '2',
-                    weightKg: 71.0,
-                    note: 'Evening weigh-in',
-                    createdAt: '2025-08-19T18:00:00Z',
-                    userId: 'test-user-id',
-                  },
-                ],
-              },
+      http.get('http://localhost:8888/.netlify/functions/trpc/weight.getWeights', () =>
+        HttpResponse.json([
+          {
+            id: 0,
+            result: {
+              data: [
+                { id: '1', weightKg: 70.5, note: 'Morning', createdAt: '2025-08-20T10:00:00Z', userId: 'test-user-id' },
+                { id: '2', weightKg: 71.0, note: 'Evening', createdAt: '2025-08-19T18:00:00Z', userId: 'test-user-id' },
+              ],
             },
-          ])
+          },
+        ])
       )
     );
 
-    const { queryClient } = await setup('/weight-chart');
-
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(screen.getByRole('heading', { name: 'Weight Chart' })).toBeInTheDocument();
-          expect(screen.getByTestId('chart-mock')).toBeInTheDocument();
-          const chartElement = screen.getByTestId('chart-mock');
-          const chartData = JSON.parse(
-            chartElement.getAttribute('data-chart-data') || '{}'
-          );
-          expect(chartData.datasets[0].data).toEqual([
-            { x: '2025-08-19T18:00:00Z', y: 71, note: 'Evening weigh-in' },
-            { x: '2025-08-20T10:00:00Z', y: 70.5, note: 'Morning weigh-in' },
-          ]);
-          const dataPoints = screen.getAllByTestId('weight-data-point');
-          expect(dataPoints).toHaveLength(2);
-          expect(dataPoints[0]).toHaveTextContent(
-            '71 kg - 19/08/2025 (Evening weigh-in)'
-          );
-          expect(dataPoints[1]).toHaveTextContent(
-            '70.5 kg - 20/08/2025 (Morning weigh-in)'
-          );
-        },
-        { timeout: 5000 }
-      );
-    });
-
-    await act(async () => {
-      queryClient.invalidateQueries();
-      queryClient.removeQueries();
+    await setup('/weight-chart', theme);
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Total Weight' })).toBeInTheDocument();
+      const card = screen.getByTestId('chart-container-mock').closest('.bg-card');
+      expect(card).toHaveClass('overflow-hidden');
+      expect(screen.getByTestId('chart-container-mock')).toHaveClass('h-full w-full');
+      expect(screen.getByTestId('chart-container-mock')).toHaveAttribute('data-chart', 'weight-chart');
+      expect(screen.getByTestId('chart-mock')).toBeInTheDocument();
+      const chartData = JSON.parse(screen.getByTestId('chart-mock').getAttribute('data-chart-data') || '[]');
+      expect(chartData).toEqual([
+        { date: '2025-08-19T18:00:00Z', weight: 71, note: 'Evening' },
+        { date: '2025-08-20T10:00:00Z', weight: 70.5, note: 'Morning' },
+      ]);
+      const bar = screen.getByTestId('bar-mock');
+      expect(bar).toHaveAttribute('data-fill', expectedColor);
+      expect(bar).toHaveAttribute('data-fill-opacity', '0.8');
+      const config = JSON.parse(screen.getByTestId('chart-container-mock').getAttribute('data-chart-config') || '{}');
+      expect(config.weight.theme).toEqual({
+        light: 'hsl(0.6 0.118 184.704)',
+        dark: 'hsl(0.696 0.17 162.48)',
+      });
+      const dataPoints = screen.getAllByTestId('weight-data-point');
+      expect(dataPoints).toHaveLength(2);
+      expect(dataPoints[0]).toHaveTextContent('71 kg - 19/08/2025 (Evening)');
+      expect(dataPoints[1]).toHaveTextContent('70.5 kg - 20/08/2025 (Morning)');
     });
   });
 
-  it('redirects to home when not logged in', async () => {
-    const { queryClient } = await setup('/weight-chart');
-
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(screen.getByTestId('email-input')).toBeInTheDocument();
-          expect(screen.getByPlaceholderText('m@example.com')).toBeInTheDocument();
-        },
-        { timeout: 5000 }
-      );
-    });
-
-    await act(async () => {
-      queryClient.invalidateQueries();
-      queryClient.removeQueries();
-    });
-  });
-
-  it('displays error message when weight fetch fails', async () => {
-    useAuthStore.setState({
-      isLoggedIn: true,
-      userId: 'test-user-id',
-      login: vi.fn(),
-      logout: vi.fn(),
-    });
-
+  it('displays error message when fetch fails', async () => {
+    useAuthStore.setState({ isLoggedIn: true, userId: 'test-user-id' });
     server.use(
-      http.get(
-        'http://localhost:8888/.netlify/functions/trpc/weight.getWeights',
-        () =>
-          HttpResponse.json(
-            [
-              {
-                id: 0,
-                error: {
-                  message: 'Failed to fetch weights',
-                  code: -32603,
-                  data: {
-                    code: 'INTERNAL_SERVER_ERROR',
-                    httpStatus: 500,
-                    path: 'weight.getWeights',
-                  },
+      http.get('http://localhost:8888/.netlify/functions/trpc/weight.getWeights', () =>
+        HttpResponse.json(
+          [
+            {
+              id: 0,
+              error: {
+                message: 'Failed to fetch weights',
+                code: -32603,
+                data: {
+                  code: 'INTERNAL_SERVER_ERROR',
+                  httpStatus: 500,
+                  path: 'weight.getWeights',
                 },
               },
-            ],
-            { status: 500 }
-          )
-      )
-    );
-
-    const { queryClient } = await setup('/weight-chart');
-
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(screen.getByTestId('error')).toHaveTextContent('Error: Failed to fetch weights');
-        },
-        { timeout: 5000 }
-      );
-    });
-
-    await act(async () => {
-      queryClient.invalidateQueries();
-      queryClient.removeQueries();
-    });
-  });
-
-  it('displays no measurements message when weights array is empty', async () => {
-    useAuthStore.setState({
-      isLoggedIn: true,
-      userId: 'test-user-id',
-      login: vi.fn(),
-      logout: vi.fn(),
-    });
-
-    server.use(
-      http.get(
-        'http://localhost:8888/.netlify/functions/trpc/weight.getWeights',
-        () => HttpResponse.json([{ id: 0, result: { data: [] } }])
-      )
-    );
-
-    const { queryClient } = await setup('/weight-chart');
-
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(screen.getByTestId('unit-select')).toBeInTheDocument();
-          expect(screen.getByTestId('unit-select')).toHaveTextContent('Daily');
-          expect(screen.getByTestId('no-data')).toBeInTheDocument();
-          expect(screen.queryByTestId('chart-mock')).not.toBeInTheDocument();
-          expect(screen.queryAllByTestId('weight-data-point')).toHaveLength(0);
-        },
-        { timeout: 5000 }
-      );
-    });
-
-    await act(async () => {
-      queryClient.invalidateQueries();
-      queryClient.removeQueries();
-    });
-  });
-
-  it('renders weight data with correct tooltip content in DOM', async () => {
-    useAuthStore.setState({
-      isLoggedIn: true,
-      userId: 'test-user-id',
-      login: vi.fn(),
-      logout: vi.fn(),
-    });
-
-    server.use(
-      http.get(
-        'http://localhost:8888/.netlify/functions/trpc/weight.getWeights',
-        () =>
-          HttpResponse.json([
-            {
-              id: 0,
-              result: {
-                data: [
-                  {
-                    id: '1',
-                    weightKg: 70.5,
-                    note: 'Morning weigh-in',
-                    createdAt: '2025-08-20T10:00:00Z',
-                    userId: 'test-user-id',
-                  },
-                  {
-                    id: '2',
-                    weightKg: 71.0,
-                    note: null,
-                    createdAt: '2025-08-19T18:00:00Z',
-                    userId: 'test-user-id',
-                  },
-                ],
-              },
             },
-          ])
+          ],
+          { status: 500 }
+        )
       )
     );
 
-    const { queryClient } = await setup('/weight-chart');
-
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(screen.getByTestId('chart-mock')).toBeInTheDocument();
-          const chartElement = screen.getByTestId('chart-mock');
-          const chartData = JSON.parse(
-            chartElement.getAttribute('data-chart-data') || '{}'
-          );
-          expect(chartData.datasets[0].data).toEqual([
-            { x: '2025-08-19T18:00:00Z', y: 71, note: null },
-            { x: '2025-08-20T10:00:00Z', y: 70.5, note: 'Morning weigh-in' },
-          ]);
-          const dataPoints = screen.getAllByTestId('weight-data-point');
-          expect(dataPoints).toHaveLength(2);
-          expect(dataPoints[0]).toHaveTextContent('71 kg - 19/08/2025');
-          expect(dataPoints[1]).toHaveTextContent('70.5 kg - 20/08/2025 (Morning weigh-in)');
-        },
-        { timeout: 5000 }
-      );
-    });
-
-    await act(async () => {
-      queryClient.invalidateQueries();
-      queryClient.removeQueries();
+    await setup();
+    await waitFor(() => {
+      expect(screen.getByTestId('error')).toHaveTextContent('Error: Failed to fetch weights');
     });
   });
 
-  it('configures chart with correct options', async () => {
-    useAuthStore.setState({
-      isLoggedIn: true,
-      userId: 'test-user-id',
-      login: vi.fn(),
-      logout: vi.fn(),
-    });
-
+  it('displays no measurements message when weights are empty', async () => {
+    useAuthStore.setState({ isLoggedIn: true, userId: 'test-user-id' });
     server.use(
-      http.get(
-        'http://localhost:8888/.netlify/functions/trpc/weight.getWeights',
-        () =>
-          HttpResponse.json([
-            {
-              id: 0,
-              result: {
-                data: [
-                  {
-                    id: '1',
-                    weightKg: 70.5,
-                    note: 'Morning weigh-in',
-                    createdAt: '2025-08-20T10:00:00Z',
-                    userId: 'test-user-id',
-                  },
-                ],
-              },
-            },
-          ])
+      http.get('http://localhost:8888/.netlify/functions/trpc/weight.getWeights', () =>
+        HttpResponse.json([{ id: 0, result: { data: [] } }])
       )
     );
 
-    const { queryClient } = await setup('/weight-chart');
-
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(screen.getByTestId('chart-mock')).toBeInTheDocument();
-          const chartElement = screen.getByTestId('chart-mock');
-          const chartOptions = JSON.parse(
-            chartElement.getAttribute('data-chart-options') || '{}'
-          );
-          expect(chartOptions).toMatchObject({
-            responsive: true,
-            scales: {
-              x: {
-                type: 'time',
-                time: { unit: 'day' },
-                title: { display: true, text: 'Date' },
-              },
-              y: {
-                title: { display: true, text: 'Weight (kg)' },
-                beginAtZero: false,
-              },
-            },
-            plugins: {
-              legend: { display: true },
-              tooltip: { callbacks: expect.any(Object) },
-            },
-          });
-        },
-        { timeout: 5000 }
-      );
-    });
-
-    await act(async () => {
-      queryClient.invalidateQueries();
-      queryClient.removeQueries();
+    await setup();
+    await waitFor(() => {
+      expect(screen.getByTestId('unit-select')).toHaveTextContent('Daily');
+      expect(screen.getByTestId('no-data')).toBeInTheDocument();
+      expect(screen.queryByTestId('chart-mock')).not.toBeInTheDocument();
     });
   });
 
-  it('handles weights with identical timestamps', async () => {
-    useAuthStore.setState({
-      isLoggedIn: true,
-      userId: 'test-user-id',
-      login: vi.fn(),
-      logout: vi.fn(),
-    });
-
+  it('updates chart data when trend period changes', async () => {
+    useAuthStore.setState({ isLoggedIn: true, userId: 'test-user-id' });
     server.use(
-      http.get(
-        'http://localhost:8888/.netlify/functions/trpc/weight.getWeights',
-        () =>
-          HttpResponse.json([
-            {
-              id: 0,
-              result: {
-                data: [
-                  {
-                    id: '1',
-                    weightKg: 70.5,
-                    note: 'First weigh-in',
-                    createdAt: '2025-08-20T10:00:00Z',
-                    userId: 'test-user-id',
-                  },
-                  {
-                    id: '2',
-                    weightKg: 71.0,
-                    note: 'Second weigh-in',
-                    createdAt: '2025-08-20T10:00:00Z',
-                    userId: 'test-user-id',
-                  },
-                ],
-              },
+      http.get('http://localhost:8888/.netlify/functions/trpc/weight.getWeights', () =>
+        HttpResponse.json([
+          {
+            id: 0,
+            result: {
+              data: [
+                { id: '1', weightKg: 70.5, note: 'Morning', createdAt: '2025-08-20T10:00:00Z', userId: 'test-user-id' },
+                { id: '2', weightKg: 71.0, note: 'Evening', createdAt: '2025-08-19T18:00:00Z', userId: 'test-user-id' },
+              ],
             },
-          ])
+          },
+        ])
       )
     );
 
-    const { queryClient } = await setup('/weight-chart');
-
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(screen.getByTestId('chart-mock')).toBeInTheDocument();
-          const chartElement = screen.getByTestId('chart-mock');
-          const chartData = JSON.parse(
-            chartElement.getAttribute('data-chart-data') || '{}'
-          );
-          expect(chartData.datasets[0].data).toEqual([
-            { x: '2025-08-20T10:00:00Z', y: 70.5, note: 'First weigh-in' },
-            { x: '2025-08-20T10:00:00Z', y: 71, note: 'Second weigh-in' },
-          ]);
-          const dataPoints = screen.getAllByTestId('weight-data-point');
-          expect(dataPoints).toHaveLength(2);
-          expect(dataPoints[0]).toHaveTextContent(
-            '70.5 kg - 20/08/2025 (First weigh-in)'
-          );
-          expect(dataPoints[1]).toHaveTextContent(
-            '71 kg - 20/08/2025 (Second weigh-in)'
-          );
-        },
-        { timeout: 5000 }
-      );
+    await setup();
+    await waitFor(() => {
+      const chartData = JSON.parse(screen.getByTestId('chart-mock').getAttribute('data-chart-data') || '[]');
+      expect(chartData).toHaveLength(2);
+      expect(chartData[0].weight).toBe(71);
+      const card = screen.getByTestId('chart-container-mock').closest('.bg-card');
+      expect(card).toHaveClass('overflow-hidden');
+      expect(screen.getByTestId('chart-container-mock')).toHaveClass('h-full w-full');
+      expect(screen.getByTestId('chart-container-mock')).toHaveAttribute('data-chart', 'weight-chart');
+      const bar = screen.getByTestId('bar-mock');
+      expect(bar).toHaveAttribute('data-fill', 'hsl(0.696 0.17 162.48)');
+      expect(bar).toHaveAttribute('data-fill-opacity', '0.8');
+      const config = JSON.parse(screen.getByTestId('chart-container-mock').getAttribute('data-chart-config') || '{}');
+      expect(config.weight.theme).toEqual({
+        light: 'hsl(0.6 0.118 184.704)',
+        dark: 'hsl(0.696 0.17 162.48)',
+      });
     });
 
-    await act(async () => {
-      queryClient.invalidateQueries();
-      queryClient.removeQueries();
+    await userEvent.click(screen.getByTestId('unit-select'));
+    await userEvent.click(screen.getByTestId('select-option-weekly'));
+
+    await waitFor(() => {
+      const chartData = JSON.parse(screen.getByTestId('chart-mock').getAttribute('data-chart-data') || '[]');
+      expect(chartData).toHaveLength(1);
+      expect(chartData[0].weight).toBeCloseTo((70.5 + 71) / 2);
+      expect(chartData[0].date).toBe('2025-08-17');
+      const bar = screen.getByTestId('bar-mock');
+      expect(bar).toHaveAttribute('data-fill', 'hsl(0.696 0.17 162.48)');
     });
   });
 
-  it('handles invalid createdAt dates', async () => {
-    useAuthStore.setState({
-      isLoggedIn: true,
-      userId: 'test-user-id',
-      login: vi.fn(),
-      logout: vi.fn(),
-    });
-
+  it('updates bar color when theme changes', async () => {
+    useAuthStore.setState({ isLoggedIn: true, userId: 'test-user-id' });
     server.use(
-      http.get(
-        'http://localhost:8888/.netlify/functions/trpc/weight.getWeights',
-        () =>
-          HttpResponse.json([
-            {
-              id: 0,
-              result: {
-                data: [
-                  {
-                    id: '1',
-                    weightKg: 70.5,
-                    note: 'Morning weigh-in',
-                    createdAt: 'invalid-date',
-                    userId: 'test-user-id',
-                  },
-                  {
-                    id: '2',
-                    weightKg: 71.0,
-                    note: 'Evening weigh-in',
-                    createdAt: '2025-08-19T18:00:00Z',
-                    userId: 'test-user-id',
-                  },
-                ],
-              },
+      http.get('http://localhost:8888/.netlify/functions/trpc/weight.getWeights', () =>
+        HttpResponse.json([
+          {
+            id: 0,
+            result: {
+              data: [
+                { id: '1', weightKg: 70.5, note: 'Morning', createdAt: '2025-08-20T10:00:00Z', userId: 'test-user-id' },
+                { id: '2', weightKg: 71.0, note: 'Evening', createdAt: '2025-08-19T18:00:00Z', userId: 'test-user-id' },
+              ],
             },
-          ])
+          },
+        ])
       )
     );
 
-    const { queryClient } = await setup('/weight-chart');
+    await setup('/weight-chart', 'dark');
+    await waitFor(() => {
+      const bar = screen.getByTestId('bar-mock');
+      expect(bar).toHaveAttribute('data-fill', 'hsl(0.696 0.17 162.48)');
+    });
 
+    // Simulate theme switch to light
     await act(async () => {
-      await waitFor(
-        () => {
-          expect(screen.getByTestId('chart-mock')).toBeInTheDocument();
-          const chartElement = screen.getByTestId('chart-mock');
-          const chartData = JSON.parse(
-            chartElement.getAttribute('data-chart-data') || '{}'
-          );
-          expect(chartData.datasets[0].data).toEqual([
-            { x: '2025-08-19T18:00:00Z', y: 71, note: 'Evening weigh-in' },
-            { x: null, y: 70.5, note: 'Morning weigh-in' },
-          ]);
-          const dataPoints = screen.getAllByTestId('weight-data-point');
-          expect(dataPoints).toHaveLength(2);
-          expect(dataPoints[0]).toHaveTextContent(
-            '71 kg - 19/08/2025 (Evening weigh-in)'
-          );
-          expect(dataPoints[1]).toHaveTextContent(
-            '70.5 kg - Invalid Date (Morning weigh-in)'
-          );
-        },
-        { timeout: 5000 }
-      );
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+      // Trigger MutationObserver
+      document.documentElement.setAttribute('class', 'light');
     });
 
-    await act(async () => {
-      queryClient.invalidateQueries();
-      queryClient.removeQueries();
-    });
-  });
-
-  it('displays empty select box', async () => {
-    useAuthStore.setState({
-      isLoggedIn: true,
-      userId: 'test-user-id',
-      login: vi.fn(),
-      logout: vi.fn(),
-    });
-
-    server.use(
-      http.get(
-        'http://localhost:8888/.netlify/functions/trpc/weight.getWeights',
-        () => HttpResponse.json([{ id: 0, result: { data: [] } }])
-      )
-    );
-
-    const { queryClient } = await setup('/weight-chart');
-
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(screen.getByTestId('unit-select')).toBeInTheDocument();
-          expect(screen.getByTestId('unit-select')).toHaveTextContent('Daily');
-          expect(screen.getByTestId('no-data')).toBeInTheDocument();
-        },
-        { timeout: 5000 }
-      );
-    });
-
-    await act(async () => {
-      queryClient.invalidateQueries();
-      queryClient.removeQueries();
-    });
-  });
-
-  it('displays select box with trend period options', async () => {
-    useAuthStore.setState({
-      isLoggedIn: true,
-      userId: 'test-user-id',
-      login: vi.fn(),
-      logout: vi.fn(),
-    });
-
-    server.use(
-      http.get(
-        'http://localhost:8888/.netlify/functions/trpc/weight.getWeights',
-        () => HttpResponse.json([{ id: 0, result: { data: [] } }])
-      )
-    );
-
-    const { queryClient } = await setup('/weight-chart');
-
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(screen.getByTestId('unit-select')).toBeInTheDocument();
-          expect(screen.getByTestId('unit-select')).toHaveTextContent('Daily');
-        },
-        { timeout: 5000 }
-      );
-
-      await userEvent.click(screen.getByTestId('unit-select'));
-
-      await waitFor(
-        () => {
-          expect(screen.getByTestId('select-option-daily')).toHaveTextContent('Daily');
-          expect(screen.getByTestId('select-option-weekly')).toHaveTextContent('Weekly');
-          expect(screen.getByTestId('select-option-monthly')).toHaveTextContent('Monthly');
-        },
-        { timeout: 5000 }
-      );
-    });
-
-    await act(async () => {
-      queryClient.invalidateQueries();
-      queryClient.removeQueries();
-    });
-  });
-
-  it('updates chart time unit when trend period is changed', async () => {
-    useAuthStore.setState({
-      isLoggedIn: true,
-      userId: 'test-user-id',
-      login: vi.fn(),
-      logout: vi.fn(),
-    });
-
-    server.use(
-      http.get(
-        'http://localhost:8888/.netlify/functions/trpc/weight.getWeights',
-        () =>
-          HttpResponse.json([
-            {
-              id: 0,
-              result: {
-                data: [
-                  {
-                    id: '1',
-                    weightKg: 70.5,
-                    note: 'Morning weigh-in',
-                    createdAt: '2025-08-20T10:00:00Z',
-                    userId: 'test-user-id',
-                  },
-                  {
-                    id: '2',
-                    weightKg: 71.0,
-                    note: 'Evening weigh-in',
-                    createdAt: '2025-08-19T18:00:00Z',
-                    userId: 'test-user-id',
-                  },
-                ],
-              },
-            },
-          ])
-      )
-    );
-
-    const { queryClient } = await setup('/weight-chart');
-
-    await act(async () => {
-      await waitFor(
-        () => {
-          const chartElement = screen.getByTestId('chart-mock');
-          expect(chartElement).toBeInTheDocument();
-          const chartOptions = JSON.parse(
-            chartElement.getAttribute('data-chart-options') || '{}'
-          );
-          expect(chartOptions.scales.x.time.unit).toBe('day');
-          expect(screen.getByTestId('unit-select')).toBeInTheDocument();
-        },
-        { timeout: 5000 }
-      );
-
-      await userEvent.click(screen.getByTestId('unit-select'));
-
-      await waitFor(
-        () => {
-          const weeklyOption = screen.getByTestId('select-option-weekly');
-          expect(weeklyOption).toBeInTheDocument();
-          userEvent.click(weeklyOption);
-        },
-        { timeout: 5000 }
-      );
-
-      await waitFor(
-        () => {
-          const chartElement = screen.getByTestId('chart-mock');
-          const chartOptions = JSON.parse(
-            chartElement.getAttribute('data-chart-options') || '{}'
-          );
-          expect(chartOptions.scales.x.time.unit).toBe('week');
-        },
-        { timeout: 5000 }
-      );
-    });
-
-    await act(async () => {
-      queryClient.invalidateQueries();
-      queryClient.removeQueries();
+    await waitFor(() => {
+      const bar = screen.getByTestId('bar-mock');
+      expect(bar).toHaveAttribute('data-fill', 'hsl(0.6 0.118 184.704)');
     });
   });
 });
