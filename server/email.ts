@@ -39,7 +39,7 @@ export async function sendVerificationEmail(to: string, verificationToken: strin
 export async function sendResetPasswordEmail(to: string, resetToken: string) {
   const resetUrl = `${
     process.env.VITE_APP_URL || 'http://localhost:5173'
-  }/confirm-reset-password?token=${resetToken}`; // Changed to /confirm-reset-password
+  }/confirm-reset-password?token=${resetToken}`;
 
   const mailOptions = {
     from: process.env.EMAIL_FROM,
@@ -58,6 +58,50 @@ export async function sendResetPasswordEmail(to: string, resetToken: string) {
     return { success: true };
   } catch (error) {
     console.error('Error sending reset email:', error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+export async function sendEmailChangeNotification(oldEmail: string, newEmail: string) {
+  const mailOptions = {
+    from: process.env.EMAIL_FROM,
+    to: oldEmail,
+    subject: 'Your Email Address Has Been Changed',
+    html: `
+      <h1>Email Address Change Notification</h1>
+      <p>The email address associated with your account has been changed to <strong>${newEmail}</strong>.</p>
+      <p>If you initiated this change, no further action is required. If you did not request this change, please contact support immediately at <a href="mailto:support@yourdomain.com">support@yourdomain.com</a>.</p>
+      <p>Thank you,<br>Your App Team</p>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending email change notification:', error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+export async function sendPasswordChangeNotification(to: string) {
+  const mailOptions = {
+    from: process.env.EMAIL_FROM,
+    to,
+    subject: 'Your Password Has Been Changed',
+    html: `
+      <h1>Password Change Notification</h1>
+      <p>The password for your account has been successfully changed.</p>
+      <p>If you initiated this change, no further action is required. If you did not request this change, please contact support immediately at <a href="mailto:support@yourdomain.com">support@yourdomain.com</a>.</p>
+      <p>Thank you,<br>Your App Team</p>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending password change notification:', error);
     return { success: false, error: (error as Error).message };
   }
 }

@@ -8,7 +8,7 @@ import { weightRouter } from "./routers/weight";
 import { resetPasswordRouter } from "./routers/resetPassword";
 
 export const appRouter = t.router({
-  getUsers: userRouter.getUsers,
+  user: userRouter,
   register: registerRouter.register,
   login: loginRouter.login,
   verifyEmail: verifyEmailRouter.verifyEmail,
