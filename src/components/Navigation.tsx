@@ -1,15 +1,19 @@
 // src/components/Navigation.tsx
-import { Link } from '@tanstack/react-router';
-import { HomeIcon, ScaleIcon, LineChartIcon, TargetIcon, type LucideIcon } from 'lucide-react';
+import { Link } from "@tanstack/react-router";
+import {
+  HomeIcon,
+  ScaleIcon,
+  LineChartIcon,
+  TargetIcon,
+  type LucideIcon,
+} from "lucide-react";
 
-// Simple props interface for NavItem
 interface NavItemProps {
   to: string;
   label: string;
   Icon: LucideIcon;
 }
 
-// Reusable NavItem component
 function NavItem({ to, label, Icon }: NavItemProps) {
   return (
     <Link
@@ -17,7 +21,7 @@ function NavItem({ to, label, Icon }: NavItemProps) {
       className="flex-1 flex flex-col items-center py-3 text-sm sm:text-base font-medium hover:bg-muted transition relative"
       activeProps={{
         className:
-          'font-semibold bg-muted before:absolute before:top-0 before:left-0 before:right-0 before:h-[2px] before:bg-primary',
+          "font-semibold bg-muted before:absolute before:top-0 before:left-0 before:right-0 before:h-[2px] before:bg-primary",
       }}
       aria-label={`Navigate to ${label}`}
     >
