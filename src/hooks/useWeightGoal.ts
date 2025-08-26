@@ -9,10 +9,18 @@ export function useWeightGoal() {
   const { userId } = useAuthStore();
 
   const {
-    data: goal,
-    isLoading,
-    error,
-  } = trpc.weight.getGoal.useQuery(undefined, {
+    data: currentGoal,
+    isLoading: isGoalLoading,
+    error: goalError,
+  } = trpc.weight.getCurrentGoal.useQuery(undefined, {
+    enabled: !!userId,
+  });
+
+  const {
+    data: goals,
+    isLoading: isGoalsLoading,
+    error: goalsError,
+  } = trpc.weight.getGoals.useQuery(undefined, {
     enabled: !!userId,
   });
 
@@ -21,10 +29,23 @@ export function useWeightGoal() {
     onSuccess: () => {
       setGoalWeight("");
       setMessage("Goal set successfully!");
-      queryClient.weight.getGoal.invalidate();
+      queryClient.weight.getCurrentGoal.invalidate();
+      queryClient.weight.getGoals.invalidate();
     },
     onError: (error) => {
       setMessage(`Failed to set goal: ${error.message}`);
+    },
+  });
+
+  const updateGoalMutation = trpc.weight.updateGoal.useMutation({
+    onSuccess: () => {
+      setGoalWeight("");
+      setMessage("Goal updated successfully!");
+      queryClient.weight.getCurrentGoal.invalidate();
+      queryClient.weight.getGoals.invalidate();
+    },
+    onError: (error) => {
+      setMessage(`Failed to update goal: ${error.message}`);
     },
   });
 
@@ -39,21 +60,28 @@ export function useWeightGoal() {
       setMessage("Goal weight must be a positive number");
       return;
     }
-    setGoalMutation.mutate({ goalWeightKg });
+    if (currentGoal) {
+      // Update existing goal
+      updateGoalMutation.mutate({ goalId: currentGoal.id, goalWeightKg });
+    } else {
+      // Set new goal
+      setGoalMutation.mutate({ goalWeightKg });
+    }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleGoalWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setGoalWeight(e.target.value);
   };
 
   return {
-    goal,
-    isLoading,
-    error,
+    currentGoal,
+    goals,
+    isLoading: isGoalLoading || isGoalsLoading,
+    error: goalError || goalsError,
     goalWeight,
     message,
-    isSettingGoal: setGoalMutation.isPending,
+    isSettingGoal: setGoalMutation.isPending || updateGoalMutation.isPending,
     handleSubmit,
-    handleInputChange,
+    handleGoalWeightChange,
   };
 }

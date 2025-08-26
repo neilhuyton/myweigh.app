@@ -13,8 +13,8 @@ export function useWeightForm() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
 
-  // Fetch user's weight goal
-  const { data: weightGoal } = trpc.weight.getGoal.useQuery(undefined, {
+  // Fetch user's current (unreached) weight goal
+  const { data: currentGoal } = trpc.weight.getCurrentGoal.useQuery(undefined, {
     enabled: !!userId,
   });
 
@@ -25,20 +25,25 @@ export function useWeightForm() {
     }
   }, [isLoggedIn, navigate]);
 
+  const queryClient = trpc.useContext();
   const weightMutation = trpc.weight.create.useMutation({
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       setMessage("Weight recorded successfully!");
       setWeight("");
       setNote("");
-      // Check if the entered weight meets or is below the goal
-      if (weightGoal && data.weightKg <= weightGoal.goalWeightKg) {
+      // Check if the entered weight meets the current goal
+      if (currentGoal && Math.abs(variables.weightKg - currentGoal.goalWeightKg) < 0.1) {
         setShowConfetti(true);
         setFadeOut(false);
         // Start fade-out 1 second before the end
         setTimeout(() => setFadeOut(true), 6000);
         // Hide confetti after 7 seconds
-        setTimeout(() => setShowConfetti(false), 10000);
+        setTimeout(() => setShowConfetti(false), 7000);
       }
+      // Invalidate queries to refresh goal and weight data
+      queryClient.weight.getWeights.invalidate();
+      queryClient.weight.getCurrentGoal.invalidate();
+      queryClient.weight.getGoals.invalidate();
     },
     onError: (error) => {
       if (error.data?.code === "UNAUTHORIZED") {

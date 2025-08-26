@@ -1,3 +1,4 @@
+// src/components/Weight.tsx
 import WeightForm from './WeightForm';
 import WeightList from './WeightList';
 

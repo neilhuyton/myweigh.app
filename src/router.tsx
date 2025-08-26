@@ -11,7 +11,6 @@ import { z } from "zod";
 import { trpc } from "./trpc";
 import Home from "./components/Home";
 import Weight from "./components/Weight";
-import WeightList from "./components/WeightList";
 import WeightChart from "./components/WeightChart";
 import WeightGoal from "./components/WeightGoal";
 import Register from "./components/Register";

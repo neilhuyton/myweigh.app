@@ -14,6 +14,7 @@ function WeightForm() {
     message,
     isSubmitting,
     showConfetti,
+    fadeOut,
     handleSubmit,
     handleWeightChange,
     handleNoteChange,
@@ -29,7 +30,14 @@ function WeightForm() {
             numberOfPieces={200}
             recycle={false}
             data-testid="confetti"
-            style={{ position: 'fixed', top: 0, left: 0, zIndex: 1000 }}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              zIndex: 1000,
+              opacity: fadeOut ? 0 : 1,
+              transition: 'opacity 1s ease-out',
+            }}
           />,
           document.body
         )}

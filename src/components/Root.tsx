@@ -1,3 +1,4 @@
+// src/components/Root.tsx
 import { useLocation, Outlet } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { trpc } from "../trpc";
