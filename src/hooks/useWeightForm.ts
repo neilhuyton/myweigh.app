@@ -4,6 +4,14 @@ import { useNavigate } from "@tanstack/react-router";
 import { trpc } from "../trpc";
 import { useAuthStore } from "../store/authStore";
 
+// Define Goal type to match weightRouter.ts and Prisma schema
+type Goal = {
+  id: string;
+  goalWeightKg: number;
+  goalSetAt: string;
+  reachedAt: Date | null;
+};
+
 export function useWeightForm() {
   const { isLoggedIn, userId } = useAuthStore();
   const navigate = useNavigate();
@@ -16,7 +24,18 @@ export function useWeightForm() {
   // Fetch user's current (unreached) weight goal
   const { data: currentGoal } = trpc.weight.getCurrentGoal.useQuery(undefined, {
     enabled: !!userId,
-  });
+  }) as { data: Goal | null };
+
+  // Fetch all goals to check for recently achieved goals
+  const { data: goals = [] } = trpc.weight.getGoals.useQuery(undefined, {
+    enabled: !!userId,
+  }) as { data: Goal[] };
+
+  // Get the most recent goal
+  const latestGoal: Goal | null =
+    goals.length > 0
+      ? goals.sort((a, b) => new Date(b.goalSetAt).getTime() - new Date(a.goalSetAt).getTime())[0]
+      : currentGoal;
 
   // Redirect to login if not logged in
   useEffect(() => {
@@ -31,8 +50,8 @@ export function useWeightForm() {
       setMessage("Weight recorded successfully!");
       setWeight("");
       setNote("");
-      // Check if the entered weight meets the current goal
-      if (currentGoal && Math.abs(variables.weightKg - currentGoal.goalWeightKg) < 0.1) {
+      // Check if the entered weight meets or is below the latest goal
+      if (latestGoal && variables.weightKg <= latestGoal.goalWeightKg) {
         setShowConfetti(true);
         setFadeOut(false);
         // Start fade-out 1 second before the end
