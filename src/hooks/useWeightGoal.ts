@@ -3,26 +3,54 @@ import { useState } from "react";
 import { trpc } from "../trpc";
 import { useAuthStore } from "../store/authStore";
 
+// Define Goal type to match weightRouter.ts
+type Goal = {
+  id: string;
+  goalWeightKg: number;
+  goalSetAt: string;
+  reachedAt: Date | null;
+};
+
 export function useWeightGoal() {
   const [goalWeight, setGoalWeight] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const { userId } = useAuthStore();
 
   const {
-    data: currentGoal,
+    data: currentGoal = null,
     isLoading: isGoalLoading,
     error: goalError,
   } = trpc.weight.getCurrentGoal.useQuery(undefined, {
     enabled: !!userId,
-  });
+  }) as { data: Goal | null; isLoading: boolean; error: any };
 
   const {
-    data: goals,
+    data: goals = [],
     isLoading: isGoalsLoading,
     error: goalsError,
   } = trpc.weight.getGoals.useQuery(undefined, {
     enabled: !!userId,
+  }) as { data: Goal[]; isLoading: boolean; error: any };
+
+  const {
+    data: weights = [],
+    isLoading: isWeightsLoading,
+    error: weightsError,
+  } = trpc.weight.getWeights.useQuery(undefined, {
+    enabled: !!userId,
   });
+
+  // Get the most recent goal
+  const latestGoal: Goal | null =
+    goals.length > 0
+      ? goals.sort((a, b) => new Date(b.goalSetAt).getTime() - new Date(a.goalSetAt).getTime())[0]
+      : currentGoal;
+  const latestWeight = weights?.[0]?.weightKg ?? null;
+  // Ensure latestGoal is defined before accessing properties
+  const isGoalAchieved =
+    latestGoal &&
+    latestWeight !== null &&
+    (latestGoal.reachedAt !== null || latestWeight <= latestGoal.goalWeightKg);
 
   const queryClient = trpc.useContext();
   const setGoalMutation = trpc.weight.setGoal.useMutation({
@@ -76,11 +104,12 @@ export function useWeightGoal() {
   return {
     currentGoal,
     goals,
-    isLoading: isGoalLoading || isGoalsLoading,
-    error: goalError || goalsError,
+    isLoading: isGoalLoading || isGoalsLoading || isWeightsLoading,
+    error: goalError || goalsError || weightsError,
     goalWeight,
     message,
     isSettingGoal: setGoalMutation.isPending || updateGoalMutation.isPending,
+    isGoalAchieved: isGoalAchieved || false, // Ensure boolean return
     handleSubmit,
     handleGoalWeightChange,
   };

@@ -1,6 +1,6 @@
 // server/routers/weight.ts
-import { t } from '../trpc-base';
-import { z } from 'zod';
+import { t } from "../trpc-base";
+import { z } from "zod";
 
 export const weightRouter = t.router({
   create: t.procedure
@@ -8,13 +8,13 @@ export const weightRouter = t.router({
       z.object({
         weightKg: z
           .number()
-          .positive({ message: 'Weight must be a positive number' }),
+          .positive({ message: "Weight must be a positive number" }),
         note: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
       if (!ctx.userId) {
-        throw new Error('Unauthorized: User must be logged in');
+        throw new Error("Unauthorized: User must be logged in");
       }
 
       const weight = await ctx.prisma.weightMeasurement.create({
@@ -32,9 +32,7 @@ export const weightRouter = t.router({
       });
 
       if (currentGoal) {
-        // Consider goal reached if weight is within 0.1kg of goalWeightKg
-        const isGoalReached = Math.abs(input.weightKg - currentGoal.goalWeightKg) < 0.1;
-
+        const isGoalReached = input.weightKg <= currentGoal.goalWeightKg;
         if (isGoalReached) {
           await ctx.prisma.goal.update({
             where: { id: currentGoal.id },
@@ -51,23 +49,23 @@ export const weightRouter = t.router({
     }),
   getWeights: t.procedure.query(async ({ ctx }) => {
     if (!ctx.userId) {
-      throw new Error('Unauthorized: User must be logged in');
+      throw new Error("Unauthorized: User must be logged in");
     }
 
     return ctx.prisma.weightMeasurement.findMany({
       where: { userId: ctx.userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
   }),
   delete: t.procedure
     .input(
       z.object({
-        weightId: z.string().uuid({ message: 'Invalid weight ID' }),
+        weightId: z.string().uuid({ message: "Invalid weight ID" }),
       })
     )
     .mutation(async ({ input, ctx }) => {
       if (!ctx.userId) {
-        throw new Error('Unauthorized: User must be logged in');
+        throw new Error("Unauthorized: User must be logged in");
       }
 
       const weight = await ctx.prisma.weightMeasurement.findUnique({
@@ -75,11 +73,13 @@ export const weightRouter = t.router({
       });
 
       if (!weight) {
-        throw new Error('Weight measurement not found');
+        throw new Error("Weight measurement not found");
       }
 
       if (weight.userId !== ctx.userId) {
-        throw new Error('Unauthorized: Cannot delete another user\'s weight measurement');
+        throw new Error(
+          "Unauthorized: Cannot delete another user's weight measurement"
+        );
       }
 
       await ctx.prisma.weightMeasurement.delete({
@@ -93,12 +93,12 @@ export const weightRouter = t.router({
       z.object({
         goalWeightKg: z
           .number()
-          .positive({ message: 'Goal weight must be a positive number' }),
+          .positive({ message: "Goal weight must be a positive number" }),
       })
     )
     .mutation(async ({ input, ctx }) => {
       if (!ctx.userId) {
-        throw new Error('Unauthorized: User must be logged in');
+        throw new Error("Unauthorized: User must be logged in");
       }
 
       // Check if there's an active (unreached) goal
@@ -107,7 +107,9 @@ export const weightRouter = t.router({
       });
 
       if (currentGoal) {
-        throw new Error('Cannot set a new goal until the current goal is reached or edited');
+        throw new Error(
+          "Cannot set a new goal until the current goal is reached or edited"
+        );
       }
 
       const goal = await ctx.prisma.goal.create({
@@ -127,15 +129,15 @@ export const weightRouter = t.router({
   updateGoal: t.procedure
     .input(
       z.object({
-        goalId: z.string().uuid({ message: 'Invalid goal ID' }),
+        goalId: z.string().uuid({ message: "Invalid goal ID" }),
         goalWeightKg: z
           .number()
-          .positive({ message: 'Goal weight must be a positive number' }),
+          .positive({ message: "Goal weight must be a positive number" }),
       })
     )
     .mutation(async ({ input, ctx }) => {
       if (!ctx.userId) {
-        throw new Error('Unauthorized: User must be logged in');
+        throw new Error("Unauthorized: User must be logged in");
       }
 
       const goal = await ctx.prisma.goal.findUnique({
@@ -143,15 +145,15 @@ export const weightRouter = t.router({
       });
 
       if (!goal) {
-        throw new Error('Goal not found');
+        throw new Error("Goal not found");
       }
 
       if (goal.userId !== ctx.userId) {
-        throw new Error('Unauthorized: Cannot edit another user\'s goal');
+        throw new Error("Unauthorized: Cannot edit another user's goal");
       }
 
       if (goal.reachedAt) {
-        throw new Error('Cannot edit a goal that has already been reached');
+        throw new Error("Cannot edit a goal that has already been reached");
       }
 
       const updatedGoal = await ctx.prisma.goal.update({
@@ -167,12 +169,12 @@ export const weightRouter = t.router({
     }),
   getCurrentGoal: t.procedure.query(async ({ ctx }) => {
     if (!ctx.userId) {
-      throw new Error('Unauthorized: User must be logged in');
+      throw new Error("Unauthorized: User must be logged in");
     }
 
     const goal = await ctx.prisma.goal.findFirst({
       where: { userId: ctx.userId, reachedAt: null },
-      orderBy: { goalSetAt: 'desc' },
+      orderBy: { goalSetAt: "desc" },
     });
 
     if (!goal) {
@@ -187,12 +189,12 @@ export const weightRouter = t.router({
   }),
   getGoals: t.procedure.query(async ({ ctx }) => {
     if (!ctx.userId) {
-      throw new Error('Unauthorized: User must be logged in');
+      throw new Error("Unauthorized: User must be logged in");
     }
 
     return ctx.prisma.goal.findMany({
       where: { userId: ctx.userId },
-      orderBy: { goalSetAt: 'desc' },
+      orderBy: { goalSetAt: "desc" },
     });
   }),
 });

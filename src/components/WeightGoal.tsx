@@ -14,6 +14,7 @@ function WeightGoal() {
     goalWeight,
     message,
     isSettingGoal,
+    isGoalAchieved,
     handleSubmit,
     handleGoalWeightChange,
   } = useWeightGoal();
@@ -34,7 +35,7 @@ function WeightGoal() {
           role="heading"
           aria-level={1}
         >
-          {currentGoal ? 'Edit Weight Goal' : 'Set Weight Goal'}
+          Weight Goal
         </h1>
         <div className="max-w-sm mx-auto space-y-6">
           {error && (
@@ -46,6 +47,7 @@ function WeightGoal() {
             <p className="text-center text-lg px-6 my-6">
               Current Goal: {currentGoal.goalWeightKg} kg (Set on{' '}
               {new Date(currentGoal.goalSetAt).toLocaleDateString('en-GB')})
+              {isGoalAchieved && <span className="text-green-500"> - Goal achieved!</span>}
             </p>
           )}
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -70,13 +72,7 @@ function WeightGoal() {
               disabled={isSettingGoal}
               className="w-full font-semibold py-2"
             >
-              {isSettingGoal
-                ? currentGoal
-                  ? 'Updating Goal...'
-                  : 'Setting Goal...'
-                : currentGoal
-                  ? 'Update Goal'
-                  : 'Set Goal'}
+              {isSettingGoal ? 'Setting Goal...' : 'Set Goal'}
             </Button>
           </form>
           {message && (

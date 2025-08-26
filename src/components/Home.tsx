@@ -1,7 +1,16 @@
+// src/components/Home.tsx
 import { useAuthStore } from "../store/authStore";
 import { ScaleIcon, TargetIcon, TrendingUpIcon, ClockIcon } from "lucide-react";
 import { trpc } from "../trpc";
 import { DashboardCard } from "./DashboardCard";
+
+// Define goal type to match Prisma schema
+type Goal = {
+  id: string;
+  goalWeightKg: number;
+  goalSetAt: string;
+  reachedAt: Date | null;
+};
 
 function Home() {
   const { isLoggedIn } = useAuthStore();
@@ -20,13 +29,30 @@ function Home() {
     error: goalError,
   } = trpc.weight.getCurrentGoal.useQuery(undefined, {
     enabled: isLoggedIn,
-  });
+  }) as { data: Goal | null; isLoading: boolean; error: any };
+  const {
+    data: goalsData = [],
+    isLoading: goalsLoading,
+    error: goalsError,
+  } = trpc.weight.getGoals.useQuery(undefined, {
+    enabled: isLoggedIn,
+  }) as { data: Goal[]; isLoading: boolean; error: any };
 
   // Latest weight and goal weight
   const latestWeight = weightsData?.[0]?.weightKg ?? null;
-  const goalWeight = goalData?.goalWeightKg ?? null;
+  // Use the most recent goal from getGoals if available, fallback to getCurrentGoal
+  const latestGoal: Goal | null =
+    goalsData?.length > 0
+      ? goalsData.sort((a, b) => new Date(b.goalSetAt).getTime() - new Date(a.goalSetAt).getTime())[0]
+      : goalData;
+  const goalWeight = latestGoal?.goalWeightKg ?? null;
   const weightChange =
     latestWeight && goalWeight ? latestWeight - goalWeight : null;
+  // Check if goal is achieved (prefer reachedAt, fallback to weight <= goal)
+  const isGoalAchieved =
+    latestGoal !== null &&
+    (latestGoal.reachedAt !== null ||
+      (latestWeight !== null && goalWeight !== null && latestWeight <= goalWeight));
 
   return (
     <div>
@@ -38,15 +64,15 @@ function Home() {
         >
           Let's Burn!
         </h1>
-        {(weightsLoading || goalLoading) && (
+        {(weightsLoading || goalLoading || goalsLoading) && (
           <p data-testid="loading">Loading dashboard...</p>
         )}
-        {(weightsError || goalError) && (
+        {(weightsError || goalError || goalsError) && (
           <p className="text-red-600" data-testid="error">
             Error loading data. Please try again.
           </p>
         )}
-        {!weightsLoading && !goalLoading && !weightsError && !goalError && (
+        {!weightsLoading && !goalLoading && !goalsLoading && !weightsError && !goalError && !goalsError && (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <DashboardCard
               title="Current Weight"
@@ -64,11 +90,16 @@ function Home() {
               icon={TargetIcon}
               value={goalWeight ? `${goalWeight.toFixed(1)} kg` : null}
               description={
-                goalWeight ? "Your target weight" : "Set a weight goal"
+                goalWeight
+                  ? isGoalAchieved
+                    ? "Goal achieved!"
+                    : "Your target weight"
+                  : "Set a weight goal"
               }
               buttonText="Set Goal"
               buttonLink="/weight-goal"
               testId="goal-weight-card"
+              isGoalAchieved={isGoalAchieved}
             />
             <DashboardCard
               title="Weight Change"
@@ -108,7 +139,6 @@ function Home() {
               buttonLink="/weights"
               testId="recent-measurement-card"
             />
-            
           </div>
         )}
       </div>
