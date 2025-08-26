@@ -3,10 +3,20 @@ import { useWeightGoal } from '../hooks/useWeightGoal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import GoalList from './GoalList';
+import { cn } from '@/lib/utils';
 
 function WeightGoal() {
-  const { goal, isLoading, error, goalWeight, message, isSettingGoal, handleSubmit, handleInputChange } =
-    useWeightGoal();
+  const {
+    currentGoal,
+    isLoading,
+    error,
+    goalWeight,
+    message,
+    isSettingGoal,
+    handleSubmit,
+    handleGoalWeightChange,
+  } = useWeightGoal();
 
   if (isLoading) {
     return (
@@ -24,7 +34,7 @@ function WeightGoal() {
           role="heading"
           aria-level={1}
         >
-          Set Weight Goal
+          {currentGoal ? 'Edit Weight Goal' : 'Set Weight Goal'}
         </h1>
         <div className="max-w-sm mx-auto space-y-6">
           {error && (
@@ -32,9 +42,10 @@ function WeightGoal() {
               Error loading goal: {error.message}
             </p>
           )}
-          {goal && (
+          {currentGoal && (
             <p className="text-center text-lg px-6 my-6">
-              Current Goal: {goal.goalWeightKg} kg
+              Current Goal: {currentGoal.goalWeightKg} kg (Set on{' '}
+              {new Date(currentGoal.goalSetAt).toLocaleDateString('en-GB')})
             </p>
           )}
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -46,7 +57,7 @@ function WeightGoal() {
                 id="goalWeight"
                 type="number"
                 value={goalWeight}
-                onChange={handleInputChange}
+                onChange={handleGoalWeightChange}
                 placeholder="Enter your goal weight (kg)"
                 required
                 min="0"
@@ -59,18 +70,30 @@ function WeightGoal() {
               disabled={isSettingGoal}
               className="w-full font-semibold py-2"
             >
-              {isSettingGoal ? 'Setting Goal...' : 'Set Goal'}
+              {isSettingGoal
+                ? currentGoal
+                  ? 'Updating Goal...'
+                  : 'Setting Goal...'
+                : currentGoal
+                  ? 'Update Goal'
+                  : 'Set Goal'}
             </Button>
           </form>
           {message && (
             <p
-              className="text-center text-sm font-medium px-6 my-6"
+              className={cn(
+                'text-center text-sm font-medium px-6 my-6',
+                message.toLowerCase().includes('success') ? 'text-green-500' : 'text-red-500'
+              )}
               role="alert"
             >
               {message}
             </p>
           )}
         </div>
+      </div>
+      <div className="w-full max-w-md lg:max-w-full mx-auto bg-background rounded-lg p-4 pb-24">
+        <GoalList />
       </div>
     </div>
   );

@@ -4,7 +4,6 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { trpc } from "../trpc";
 import { useEffect, useState } from "react";
-import { useRouter } from "@tanstack/react-router";
 import { type TRPCClientErrorLike } from "@trpc/client";
 import type {
   inferProcedureOutput,
@@ -59,7 +58,6 @@ export const useProfile = (): UseProfileReturn => {
 
   const [emailMessage, setEmailMessage] = useState<string | null>(null);
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
-  const router = useRouter();
 
   const updateEmailMutation = trpc.user.updateEmail.useMutation({
     onMutate: () => {

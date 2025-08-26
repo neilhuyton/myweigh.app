@@ -26,6 +26,23 @@ export const weightRouter = t.router({
         },
       });
 
+      // Check if the new weight meets the current goal
+      const currentGoal = await ctx.prisma.goal.findFirst({
+        where: { userId: ctx.userId, reachedAt: null },
+      });
+
+      if (currentGoal) {
+        // Consider goal reached if weight is within 0.1kg of goalWeightKg
+        const isGoalReached = Math.abs(input.weightKg - currentGoal.goalWeightKg) < 0.1;
+
+        if (isGoalReached) {
+          await ctx.prisma.goal.update({
+            where: { id: currentGoal.id },
+            data: { reachedAt: new Date() },
+          });
+        }
+      }
+
       return {
         id: weight.id,
         weightKg: weight.weightKg,
@@ -62,9 +79,7 @@ export const weightRouter = t.router({
       }
 
       if (weight.userId !== ctx.userId) {
-        throw new Error(
-          'Unauthorized: Cannot delete another user\'s weight measurement'
-        );
+        throw new Error('Unauthorized: Cannot delete another user\'s weight measurement');
       }
 
       await ctx.prisma.weightMeasurement.delete({
@@ -86,31 +101,98 @@ export const weightRouter = t.router({
         throw new Error('Unauthorized: User must be logged in');
       }
 
-      const goal = await ctx.prisma.goal.upsert({
-        where: { userId: ctx.userId },
-        update: { goalWeightKg: input.goalWeightKg },
-        create: {
+      // Check if there's an active (unreached) goal
+      const currentGoal = await ctx.prisma.goal.findFirst({
+        where: { userId: ctx.userId, reachedAt: null },
+      });
+
+      if (currentGoal) {
+        throw new Error('Cannot set a new goal until the current goal is reached or edited');
+      }
+
+      const goal = await ctx.prisma.goal.create({
+        data: {
           userId: ctx.userId,
           goalWeightKg: input.goalWeightKg,
-          startWeightKg: 0,
+          goalSetAt: new Date(),
         },
       });
 
-      return { goalWeightKg: goal.goalWeightKg };
+      return {
+        id: goal.id,
+        goalWeightKg: goal.goalWeightKg,
+        goalSetAt: goal.goalSetAt,
+      };
     }),
-  getGoal: t.procedure.query(async ({ ctx }) => {
+  updateGoal: t.procedure
+    .input(
+      z.object({
+        goalId: z.string().uuid({ message: 'Invalid goal ID' }),
+        goalWeightKg: z
+          .number()
+          .positive({ message: 'Goal weight must be a positive number' }),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      if (!ctx.userId) {
+        throw new Error('Unauthorized: User must be logged in');
+      }
+
+      const goal = await ctx.prisma.goal.findUnique({
+        where: { id: input.goalId },
+      });
+
+      if (!goal) {
+        throw new Error('Goal not found');
+      }
+
+      if (goal.userId !== ctx.userId) {
+        throw new Error('Unauthorized: Cannot edit another user\'s goal');
+      }
+
+      if (goal.reachedAt) {
+        throw new Error('Cannot edit a goal that has already been reached');
+      }
+
+      const updatedGoal = await ctx.prisma.goal.update({
+        where: { id: input.goalId },
+        data: { goalWeightKg: input.goalWeightKg },
+      });
+
+      return {
+        id: updatedGoal.id,
+        goalWeightKg: updatedGoal.goalWeightKg,
+        goalSetAt: updatedGoal.goalSetAt,
+      };
+    }),
+  getCurrentGoal: t.procedure.query(async ({ ctx }) => {
     if (!ctx.userId) {
       throw new Error('Unauthorized: User must be logged in');
     }
 
-    const goal = await ctx.prisma.goal.findUnique({
-      where: { userId: ctx.userId },
+    const goal = await ctx.prisma.goal.findFirst({
+      where: { userId: ctx.userId, reachedAt: null },
+      orderBy: { goalSetAt: 'desc' },
     });
 
     if (!goal) {
       return null;
     }
 
-    return { goalWeightKg: goal.goalWeightKg };
+    return {
+      id: goal.id,
+      goalWeightKg: goal.goalWeightKg,
+      goalSetAt: goal.goalSetAt,
+    };
+  }),
+  getGoals: t.procedure.query(async ({ ctx }) => {
+    if (!ctx.userId) {
+      throw new Error('Unauthorized: User must be logged in');
+    }
+
+    return ctx.prisma.goal.findMany({
+      where: { userId: ctx.userId },
+      orderBy: { goalSetAt: 'desc' },
+    });
   }),
 });

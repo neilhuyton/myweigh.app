@@ -18,7 +18,7 @@ function Home() {
     data: goalData = null,
     isLoading: goalLoading,
     error: goalError,
-  } = trpc.weight.getGoal.useQuery(undefined, {
+  } = trpc.weight.getCurrentGoal.useQuery(undefined, {
     enabled: isLoggedIn,
   });
 
@@ -36,7 +36,7 @@ function Home() {
           role="heading"
           aria-level={1}
         >
-          Weight Tracker Dashboard
+          Let's Burn!
         </h1>
         {(weightsLoading || goalLoading) && (
           <p data-testid="loading">Loading dashboard...</p>
