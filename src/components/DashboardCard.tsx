@@ -1,3 +1,4 @@
+// src/components/DashboardCard.tsx
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { LucideIcon } from 'lucide-react';
@@ -28,7 +29,7 @@ export function DashboardCard({
     <Card data-testid={testId}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+        <Icon className="h-8 w-8 text-muted-foreground" />
       </CardHeader>
       <CardContent className="pb-0">
         <div className="flex items-end justify-between gap-4">
