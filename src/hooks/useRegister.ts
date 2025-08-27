@@ -4,6 +4,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { trpc } from "../trpc";
 import { useState, useEffect } from "react";
+import { useAuthStore } from "../store/authStore";
+import { useRouter } from "@tanstack/react-router";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -14,6 +16,13 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+interface RegisterResponse {
+  id: string;
+  email: string;
+  token: string;
+  message: string;
+}
+
 interface UseRegisterReturn {
   form: ReturnType<typeof useForm<FormValues>>;
   message: string | null;
@@ -21,7 +30,7 @@ interface UseRegisterReturn {
   handleRegister: (data: FormValues) => Promise<void>;
 }
 
-export const useRegister = (onSuccess: () => void): UseRegisterReturn => {
+export const useRegister = (): UseRegisterReturn => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -32,15 +41,16 @@ export const useRegister = (onSuccess: () => void): UseRegisterReturn => {
   });
 
   const [message, setMessage] = useState<string | null>(null);
+  const { login } = useAuthStore();
+  const router = useRouter();
 
   const registerMutation = trpc.register.useMutation({
-    onSuccess: () => {
-      setMessage(
-        "Registration successful! Please check your email to verify your account.!"
-      );
+    onSuccess: (data: RegisterResponse) => {
+      setMessage(data.message);
+      login(data.id, data.token);
       setTimeout(() => {
         form.reset();
-        onSuccess();
+        router.navigate({ to: "/login" });
       }, 3000);
     },
     onError: (error) => {
