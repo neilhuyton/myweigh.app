@@ -1,43 +1,12 @@
-'use client';
-
-import { useState, useEffect } from 'react';
+// src/components/WeightChart.tsx
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { useWeightChart } from '../hooks/useWeightChart';
-import { useTheme } from 'next-themes';
 
 function WeightChart() {
-  const [trendPeriod, setTrendPeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily');
-  const { weights, isLoading, isError, error, chartData, chartConfig } = useWeightChart(trendPeriod);
-  const { theme } = useTheme();
-
-  // Set bar color based on the current theme
-  const [barColor, setBarColor] = useState<string>(
-    theme === 'dark' ? chartConfig.weight.theme.dark : chartConfig.weight.theme.light
-  );
-
-  useEffect(() => {
-    // Update bar color when theme changes
-    const newColor = theme === 'dark' ? chartConfig.weight.theme.dark : chartConfig.weight.theme.light;
-    setBarColor(newColor);
-
-    // Observe theme changes
-    const observer = new MutationObserver(() => {
-      const newTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-      const newColor = newTheme === 'dark' ? chartConfig.weight.theme.dark : chartConfig.weight.theme.light;
-      setBarColor(newColor);
-    });
-
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, [theme, chartConfig]);
-
-  const handleTrendPeriodChange = (value: string) => {
-    if (value === 'daily' || value === 'weekly' || value === 'monthly') {
-      setTrendPeriod(value);
-    }
-  };
+  const { weights, isLoading, isError, error, chartData, chartConfig, barColor, trendPeriod, handleTrendPeriodChange } =
+    useWeightChart('daily');
 
   return (
     <div>

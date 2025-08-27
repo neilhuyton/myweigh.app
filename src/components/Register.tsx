@@ -20,7 +20,7 @@ interface RegisterProps {
 
 function Register({ className }: RegisterProps) {
   const { form, message, isRegistering, handleRegister } = useRegister();
-  const router = useRouter(); // Define router
+  const router = useRouter();
 
   return (
     <div

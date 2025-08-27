@@ -1,36 +1,12 @@
 // src/components/VerifyEmail.tsx
-import { useEffect, useState } from 'react';
-import { useSearch } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Link } from '@tanstack/react-router';
-import { trpc } from '../trpc';
 import { Logo } from './Logo';
 import { cn } from '@/lib/utils';
+import { useVerifyEmail } from '../hooks/useVerifyEmail';
 
 function VerifyEmail() {
-  const { token } = useSearch({ from: '/verify-email' });
-  const [message, setMessage] = useState<string | null>(null);
-  const [isVerifying, setIsVerifying] = useState(false);
-
-  const verifyEmailMutation = trpc.verifyEmail.useMutation({
-    onSuccess: (data) => {
-      setMessage(data.message);
-      setIsVerifying(false);
-    },
-    onError: (error) => {
-      setMessage(`Verification failed: ${error.message}`);
-      setIsVerifying(false);
-    },
-  });
-
-  useEffect(() => {
-    if (token && !isVerifying && !verifyEmailMutation.isPending) {
-      setIsVerifying(true);
-      verifyEmailMutation.mutate({ token });
-    } else if (!token) {
-      setMessage('No verification token provided');
-    }
-  }, [token, isVerifying, verifyEmailMutation]);
+  const { message, isVerifying, isSuccess } = useVerifyEmail();
 
   return (
     <div className="min-h-[100dvh] flex flex-col items-center p-1 sm:p-2 lg:p-3">
@@ -57,14 +33,14 @@ function VerifyEmail() {
             <p
               className={cn(
                 'text-sm text-center',
-                message.includes('successfully') ? 'text-green-500' : 'text-red-500'
+                isSuccess ? 'text-green-500' : 'text-red-500'
               )}
               data-testid="verify-message"
             >
               {message}
             </p>
           )}
-          {message?.includes('successfully') && (
+          {isSuccess && (
             <Button asChild className="w-full mt-4" data-testid="go-to-login-button">
               <Link to="/login">Go to Login</Link>
             </Button>
