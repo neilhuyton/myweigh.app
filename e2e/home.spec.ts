@@ -58,8 +58,6 @@ test.describe('Home Page', () => {
     // Debug: Log page content and take screenshot if button is not found
     const logoutButton = page.getByTestId('logout-button');
     if (!(await logoutButton.isVisible({ timeout: 10000 }))) {
-      console.log('Logout button not found. Page content:');
-      console.log(await page.content());
       await page.screenshot({ path: 'test-results/profile-page-failure.png' });
       throw new Error('Logout button not found on profile page');
     }

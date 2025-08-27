@@ -21,94 +21,93 @@ function ResetPasswordForm({ className }: ResetPasswordFormProps) {
       <div className="pt-14">
         <Logo />
       </div>
-      {/* Form centered in the middle */}
-      <div className="flex-grow flex items-center justify-center w-full">
-        <div className="w-full max-w-md bg-background rounded-lg p-4 flex flex-col items-center">
-          <h1
-            className="text-2xl font-bold text-center mb-4"
-            role="heading"
-            aria-level={1}
+      {/* Form with adjusted top margin */}
+      <div className="w-full max-w-md bg-background rounded-lg p-4 flex flex-col items-center mt-16 sm:mt-20">
+        <h1
+          className="text-2xl font-bold text-center mb-4"
+          role="heading"
+          aria-level={1}
+        >
+          Reset your password
+        </h1>
+        <p className="text-muted-foreground text-center mb-6">
+          Enter your email to receive a password reset link
+        </p>
+        <Form {...form}>
+          <form
+            onSubmit={(e) => {
+              form.handleSubmit(handleSubmit)(e);
+            }}
+            role="form"
+            data-testid="reset-password-form"
+            className="w-full"
           >
-            Reset your password
-          </h1>
-          <p className="text-muted-foreground text-center mb-6">
-            Enter your email to receive a password reset link
-          </p>
-          <Form {...form}>
-            <form
-              onSubmit={(e) => {
-                form.handleSubmit(handleSubmit)(e);
-              }}
-              role="form"
-              data-testid="reset-password-form"
-            >
-              <div className="flex flex-col gap-6">
-                <div className="grid gap-3">
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <Label htmlFor="email" data-testid="email-label">
-                          Email
-                        </Label>
-                        <FormControl>
-                          <Input
-                            id="email"
-                            type="email"
-                            placeholder="m@example.com"
-                            required
-                            disabled={isPending}
-                            data-testid="email-input"
-                            tabIndex={1}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                {message && (
-                  <p
-                    role="alert"
-                    className={cn(
-                      'text-sm text-center',
-                      message.includes('failed') ? 'text-red-500' : 'text-green-500'
-                    )}
-                    data-testid="reset-password-message"
-                  >
-                    {message}
-                  </p>
-                )}
-                <Button
-                  type="submit"
-                  className="w-full mt-4"
-                  disabled={isPending}
-                  data-testid="submit-button"
-                  tabIndex={2}
-                >
-                  {isPending ? 'Sending...' : 'Send Reset Link'}
-                </Button>
-                <div className="mt-4 text-center text-sm">
-                  <a
-                    href="#"
-                    role="link"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      router.navigate({ to: '/login' });
-                    }}
-                    className="underline underline-offset-4"
-                    data-testid="back-to-login-link"
-                    tabIndex={3}
-                  >
-                    Back to login
-                  </a>
-                </div>
+            <div className="flex flex-col gap-6">
+              <div className="grid gap-3">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label htmlFor="email" data-testid="email-label">
+                        Email
+                      </Label>
+                      <FormControl>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="m@example.com"
+                          required
+                          disabled={isPending}
+                          data-testid="email-input"
+                          tabIndex={1}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-            </form>
-          </Form>
-        </div>
+              {message && (
+                <p
+                  role="alert"
+                  className={cn(
+                    'text-sm text-center',
+                    message.includes('failed') ? 'text-red-500' : 'text-green-500'
+                  )}
+                  data-testid="reset-password-message"
+                >
+                  {message}
+                </p>
+              )}
+              <Button
+                type="submit"
+                className="w-full mt-4"
+                disabled={isPending}
+                data-testid="submit-button"
+                tabIndex={2}
+              >
+                {isPending ? 'Sending...' : 'Send Reset Link'}
+              </Button>
+              <div className="mt-4 text-center text-sm">
+                <a
+                  href="#"
+                  role="link"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    router.navigate({ to: '/login' });
+                  }}
+                  className="underline underline-offset-4"
+                  data-testid="back-to-login-link"
+                  tabIndex={3}
+                >
+                  Back to login
+                </a>
+              </div>
+            </div>
+          </form>
+        </Form>
       </div>
     </div>
   );
