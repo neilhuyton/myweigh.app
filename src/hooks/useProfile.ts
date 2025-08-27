@@ -120,24 +120,18 @@ export const useProfile = (): UseProfileReturn => {
   }, [emailForm, passwordForm]);
 
   const handleEmailSubmit = async (data: EmailFormValues) => {
-    console.log("Email form submitted with:", data.email);
     const isValid = await emailForm.trigger();
     if (!isValid) {
-      console.log("Email form validation failed");
       return;
     }
-    console.log("Calling updateEmailMutation");
     await updateEmailMutation.mutateAsync(data);
   };
 
   const handlePasswordSubmit = async (data: PasswordFormValues) => {
-    console.log("Password form submitted with:", data.email);
     const isValid = await passwordForm.trigger();
     if (!isValid) {
-      console.log("Password form validation failed");
       return;
     }
-    console.log("Calling resetPasswordMutation");
     await resetPasswordMutation.mutateAsync({ email: data.email });
   };
 

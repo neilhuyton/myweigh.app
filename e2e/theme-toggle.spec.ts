@@ -67,10 +67,6 @@ test.describe('Theme Toggle Functionality', () => {
     // Debug: Log HTML attributes
     const htmlElement = page.locator('html');
     if (!(await htmlElement.evaluate((el) => el.classList.contains('dark'), { timeout: 5000 }))) {
-      console.log('HTML attributes:', await htmlElement.evaluate((el) => ({
-        class: el.className,
-        dataTheme: el.getAttribute('data-theme'),
-      })));
       await page.screenshot({ path: 'test-results/theme-toggle-failure.png' });
       throw new Error('Expected dark class on html element');
     }
