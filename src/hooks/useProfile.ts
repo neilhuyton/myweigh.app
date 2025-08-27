@@ -11,6 +11,8 @@ import type {
   TRPCDefaultErrorShape,
 } from "@trpc/server";
 import type { AppRouter } from "../../server/trpc";
+import { useAuthStore } from "@/store/authStore";
+import { useRouter } from "@tanstack/react-router";
 
 interface EmailFormValues {
   email: string;
@@ -37,9 +39,18 @@ interface UseProfileReturn {
   isPasswordPending: boolean;
   handleEmailSubmit: (data: EmailFormValues) => Promise<void>;
   handlePasswordSubmit: (data: PasswordFormValues) => Promise<void>;
+  handleLogout: () => void;
 }
 
 export const useProfile = (): UseProfileReturn => {
+  const { logout } = useAuthStore();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    logout();
+    router.navigate({ to: "/login" });
+  };
+
   const emailForm = useForm<EmailFormValues>({
     resolver: zodResolver(emailFormSchema),
     defaultValues: {
@@ -87,7 +98,6 @@ export const useProfile = (): UseProfileReturn => {
     onSuccess: (data) => {
       setPasswordMessage(data.message || "Reset link sent to your email");
       passwordForm.reset();
-      // Removed router.navigate({ to: "/login" }) to stay on /profile
     },
     onError: (
       error: TRPCClientErrorLike<{
@@ -144,5 +154,6 @@ export const useProfile = (): UseProfileReturn => {
     isPasswordPending: resetPasswordMutation.isPending,
     handleEmailSubmit,
     handlePasswordSubmit,
+    handleLogout,
   };
 };
