@@ -1,12 +1,28 @@
 // src/components/WeightChart.tsx
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
-import { useWeightChart } from '../hooks/useWeightChart';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import { useWeightChart } from "../hooks/useWeightChart";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 function WeightChart() {
-  const { weights, isLoading, isError, error, chartData, chartConfig, barColor, trendPeriod, handleTrendPeriodChange } =
-    useWeightChart('daily');
+  const {
+    weights,
+    isLoading,
+    isError,
+    error,
+    chartData,
+    chartConfig,
+    barColor,
+    trendPeriod,
+    handleTrendPeriodChange,
+  } = useWeightChart("daily");
 
   return (
     <div>
@@ -44,9 +60,9 @@ function WeightChart() {
           </Select>
         </div>
         {isLoading ? (
-          <p data-testid="loading" className="text-center text-sm font-medium">
-            Loading...
-          </p>
+          <div className="py-4">
+            <LoadingSpinner size="md" testId="weight-chart-loading" />
+          </div>
         ) : isError ? (
           <p
             data-testid="error"
@@ -65,8 +81,15 @@ function WeightChart() {
           </p>
         ) : (
           <div className="h-[400px] w-full overflow-hidden">
-            <ChartContainer config={chartConfig} id="weight-chart" className="h-full w-full">
-              <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
+            <ChartContainer
+              config={chartConfig}
+              id="weight-chart"
+              className="h-full w-full"
+            >
+              <BarChart
+                data={chartData}
+                margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
+              >
                 <CartesianGrid stroke="hsl(var(--border))" />
                 <XAxis
                   dataKey="date"
@@ -75,12 +98,13 @@ function WeightChart() {
                   axisLine={false}
                   tickFormatter={(value) =>
                     value
-                      ? new Date(value).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: trendPeriod === 'daily' ? 'numeric' : undefined,
-                          year: trendPeriod === 'monthly' ? 'numeric' : undefined,
+                      ? new Date(value).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: trendPeriod === "daily" ? "numeric" : undefined,
+                          year:
+                            trendPeriod === "monthly" ? "numeric" : undefined,
                         })
-                      : ''
+                      : ""
                   }
                   stroke="hsl(var(--foreground))"
                 />
@@ -97,20 +121,27 @@ function WeightChart() {
                     <ChartTooltipContent
                       indicator="dot"
                       formatter={(value, name, props) => [
-                        `${value} kg${props.payload.note ? ` (${props.payload.note})` : ''}`,
-                        'Weight',
+                        `${value} kg${
+                          props.payload.note ? ` (${props.payload.note})` : ""
+                        }`,
+                        "Weight",
                       ]}
                     />
                   }
                 />
-                <Bar dataKey="weight" fill={barColor} fillOpacity={0.8} radius={4} />
+                <Bar
+                  dataKey="weight"
+                  fill={barColor}
+                  fillOpacity={0.8}
+                  radius={4}
+                />
               </BarChart>
             </ChartContainer>
-            <ul style={{ display: 'none' }}>
+            <ul style={{ display: "none" }}>
               {weights.map((weight) => (
                 <li key={weight.id} data-testid="weight-data-point">
-                  {weight.weightKg} kg -{' '}
-                  {new Date(weight.createdAt).toLocaleDateString('en-GB')}{' '}
+                  {weight.weightKg} kg -{" "}
+                  {new Date(weight.createdAt).toLocaleDateString("en-GB")}{" "}
                   {weight.note && `(${weight.note})`}
                 </li>
               ))}

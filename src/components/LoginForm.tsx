@@ -76,10 +76,7 @@ function LoginForm() {
                   render={({ field }) => (
                     <FormItem>
                       <div className="flex items-center justify-between leading-none mb-0">
-                        <Label
-                          htmlFor="password"
-                          data-testid="password-label"
-                        >
+                        <Label htmlFor="password" data-testid="password-label">
                           Password
                         </Label>
                         <a

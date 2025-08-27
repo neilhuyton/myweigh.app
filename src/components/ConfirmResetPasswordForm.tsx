@@ -1,23 +1,28 @@
 // src/components/ConfirmResetPasswordForm.tsx
-import { cn } from '@/lib/utils';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { useConfirmResetPassword } from '../hooks/useConfirmResetPassword';
-import { router } from '../router';
-import { Logo } from './Logo';
+import { cn } from "@/lib/utils";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { useConfirmResetPassword } from "../hooks/useConfirmResetPassword";
+import { router } from "../router";
+import { Logo } from "./Logo";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 function ConfirmResetPasswordForm() {
   const { form, message, isPending, handleSubmit } = useConfirmResetPassword();
 
   return (
     <div className="min-h-[100dvh] flex flex-col items-center p-1 sm:p-2 lg:p-3">
-      {/* Logo with spacing above */}
       <div className="pt-14">
         <Logo />
       </div>
-      {/* Form with adjusted top margin */}
       <div className="w-full max-w-md bg-background rounded-lg p-4 flex flex-col items-center mt-16 sm:mt-20">
         <h1
           className="text-2xl font-bold text-center mb-4"
@@ -32,7 +37,7 @@ function ConfirmResetPasswordForm() {
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) =>
-              handleSubmit(data, () => router.navigate({ to: '/login' }))
+              handleSubmit(data, () => router.navigate({ to: "/login" }))
             )}
             role="form"
             data-testid="confirm-reset-password-form"
@@ -45,10 +50,7 @@ function ConfirmResetPasswordForm() {
                   name="newPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <Label
-                        htmlFor="newPassword"
-                        data-testid="password-label"
-                      >
+                      <Label htmlFor="newPassword" data-testid="password-label">
                         New Password
                       </Label>
                       <FormControl>
@@ -68,15 +70,23 @@ function ConfirmResetPasswordForm() {
                   )}
                 />
               </div>
+              {isPending && (
+                <div className="flex justify-center py-4">
+                  <LoadingSpinner
+                    size="md"
+                    testId="confirm-reset-password-loading"
+                  />
+                </div>
+              )}
               {message && (
                 <p
                   role="alert"
                   data-testid="confirm-reset-password-message"
                   className={cn(
-                    'text-sm text-center',
-                    message.toLowerCase().includes('failed')
-                      ? 'text-red-500'
-                      : 'text-green-500'
+                    "text-sm text-center",
+                    message.toLowerCase().includes("failed")
+                      ? "text-red-500"
+                      : "text-green-500"
                   )}
                 >
                   {message}
@@ -89,7 +99,7 @@ function ConfirmResetPasswordForm() {
                 disabled={isPending}
                 tabIndex={2}
               >
-                {isPending ? 'Resetting...' : 'Reset Password'}
+                {isPending ? "Resetting..." : "Reset Password"}
               </Button>
               <div className="mt-4 text-center text-sm">
                 <a
@@ -97,7 +107,7 @@ function ConfirmResetPasswordForm() {
                   role="link"
                   onClick={(e) => {
                     e.preventDefault();
-                    router.navigate({ to: '/login' });
+                    router.navigate({ to: "/login" });
                   }}
                   className="underline underline-offset-4"
                   data-testid="back-to-login-link"

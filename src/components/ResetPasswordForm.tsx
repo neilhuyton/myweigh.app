@@ -1,12 +1,19 @@
 // src/components/ResetPasswordForm.tsx
-import { cn } from '@/lib/utils';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { useResetPassword } from '../hooks/useResetPassword';
-import { router } from '../router';
-import { Logo } from './Logo';
+import { cn } from "@/lib/utils";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { useResetPassword } from "../hooks/useResetPassword";
+import { router } from "../router";
+import { Logo } from "./Logo";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 interface ResetPasswordFormProps {
   className?: string;
@@ -16,12 +23,15 @@ function ResetPasswordForm({ className }: ResetPasswordFormProps) {
   const { form, message, isPending, handleSubmit } = useResetPassword();
 
   return (
-    <div className={cn('min-h-[100dvh] flex flex-col items-center p-1 sm:p-2 lg:p-3', className)}>
-      {/* Logo with spacing above */}
+    <div
+      className={cn(
+        "min-h-[100dvh] flex flex-col items-center p-1 sm:p-2 lg:p-3",
+        className
+      )}
+    >
       <div className="pt-14">
         <Logo />
       </div>
-      {/* Form with adjusted top margin */}
       <div className="w-full max-w-md bg-background rounded-lg p-4 flex flex-col items-center mt-16 sm:mt-20">
         <h1
           className="text-2xl font-bold text-center mb-4"
@@ -69,12 +79,19 @@ function ResetPasswordForm({ className }: ResetPasswordFormProps) {
                   )}
                 />
               </div>
+              {isPending && (
+                <div className="flex justify-center py-4">
+                  <LoadingSpinner size="md" testId="reset-password-loading" />
+                </div>
+              )}
               {message && (
                 <p
                   role="alert"
                   className={cn(
-                    'text-sm text-center',
-                    message.includes('failed') ? 'text-red-500' : 'text-green-500'
+                    "text-sm text-center",
+                    message.includes("failed")
+                      ? "text-red-500"
+                      : "text-green-500"
                   )}
                   data-testid="reset-password-message"
                 >
@@ -88,7 +105,7 @@ function ResetPasswordForm({ className }: ResetPasswordFormProps) {
                 data-testid="submit-button"
                 tabIndex={2}
               >
-                {isPending ? 'Sending...' : 'Send Reset Link'}
+                {isPending ? "Sending..." : "Send Reset Link"}
               </Button>
               <div className="mt-4 text-center text-sm">
                 <a
@@ -96,7 +113,7 @@ function ResetPasswordForm({ className }: ResetPasswordFormProps) {
                   role="link"
                   onClick={(e) => {
                     e.preventDefault();
-                    router.navigate({ to: '/login' });
+                    router.navigate({ to: "/login" });
                   }}
                   className="underline underline-offset-4"
                   data-testid="back-to-login-link"

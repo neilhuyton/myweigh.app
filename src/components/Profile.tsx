@@ -2,6 +2,7 @@
 import { Link } from "@tanstack/react-router";
 import { MailIcon, LockIcon, LogOutIcon } from "lucide-react";
 import { useProfile } from "../hooks/useProfile";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 function Profile() {
   const {
@@ -43,6 +44,11 @@ function Profile() {
             <p className="text-red-500 text-sm" data-testid="email-error">
               {emailForm.formState.errors.email.message}
             </p>
+          )}
+          {isEmailPending && (
+            <div className="flex justify-center py-4">
+              <LoadingSpinner size="md" testId="email-loading" />
+            </div>
           )}
           {emailMessage && (
             <p
@@ -92,6 +98,11 @@ function Profile() {
             <p className="text-red-500 text-sm" data-testid="password-error">
               {passwordForm.formState.errors.email.message}
             </p>
+          )}
+          {isPasswordPending && (
+            <div className="flex justify-center py-4">
+              <LoadingSpinner size="md" testId="password-loading" />
+            </div>
           )}
           {passwordMessage && (
             <p

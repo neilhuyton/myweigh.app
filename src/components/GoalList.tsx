@@ -1,5 +1,5 @@
 // src/components/GoalList.tsx
-import { useGoalList } from '../hooks/useGoalList';
+import { useGoalList } from "../hooks/useGoalList";
 import {
   Table,
   TableBody,
@@ -8,15 +8,18 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 function GoalList() {
   const { goals, isLoading, isError, error, formatDate } = useGoalList();
 
   if (isLoading) {
     return (
-      <p className="text-center text-sm font-medium">Loading goals...</p>
+      <div className="py-4">
+        <LoadingSpinner size="md" testId="goal-list-loading" />
+      </div>
     );
   }
 
@@ -35,9 +38,13 @@ function GoalList() {
         </TableCaption>
         <TableHeader>
           <TableRow className="hover:bg-muted/50 rounded-t-lg">
-            <TableHead className="font-bold bg-muted/50">Goal Weight (kg)</TableHead>
+            <TableHead className="font-bold bg-muted/50">
+              Goal Weight (kg)
+            </TableHead>
             <TableHead className="font-bold bg-muted/50">Set Date</TableHead>
-            <TableHead className="font-bold bg-muted/50">Reached Date</TableHead>
+            <TableHead className="font-bold bg-muted/50">
+              Reached Date
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -46,13 +53,15 @@ function GoalList() {
               <TableRow
                 key={goal.id}
                 className={cn(
-                  'hover:bg-muted/50',
-                  index === goals.length - 1 && 'rounded-b-lg'
+                  "hover:bg-muted/50",
+                  index === goals.length - 1 && "rounded-b-lg"
                 )}
               >
                 <TableCell>{goal.goalWeightKg}</TableCell>
                 <TableCell>{formatDate(goal.goalSetAt)}</TableCell>
-                <TableCell>{goal.reachedAt ? formatDate(goal.reachedAt) : 'Not Reached'}</TableCell>
+                <TableCell>
+                  {goal.reachedAt ? formatDate(goal.reachedAt) : "Not Reached"}
+                </TableCell>
               </TableRow>
             ))
           ) : (

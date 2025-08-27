@@ -43,7 +43,10 @@ export function useWeightGoal() {
   // Get the most recent goal
   const latestGoal: Goal | null =
     goals.length > 0
-      ? goals.sort((a, b) => new Date(b.goalSetAt).getTime() - new Date(a.goalSetAt).getTime())[0]
+      ? goals.sort(
+          (a, b) =>
+            new Date(b.goalSetAt).getTime() - new Date(a.goalSetAt).getTime()
+        )[0]
       : currentGoal;
   const latestWeight = weights?.[0]?.weightKg ?? null;
   // Ensure latestGoal is defined before accessing properties
