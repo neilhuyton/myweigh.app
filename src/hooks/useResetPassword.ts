@@ -1,11 +1,11 @@
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { trpc } from '../trpc';
-import { useState } from 'react';
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { trpc } from "../trpc";
+import { useState } from "react";
 
 const formSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address' }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -20,8 +20,8 @@ interface UseResetPasswordReturn {
 export const useResetPassword = (): UseResetPasswordReturn => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { email: '' },
-    mode: 'onChange',
+    defaultValues: { email: "" },
+    mode: "onChange",
   });
 
   const [message, setMessage] = useState<string | null>(null);

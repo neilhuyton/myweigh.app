@@ -44,7 +44,13 @@ function Root({
                 <ProfileIcon />
               </header>
             )}
-            <main className={isLoggedIn && !isPublicRoute ? "min-h-[calc(100vh-3.5rem)]" : "min-h-screen"}>
+            <main
+              className={
+                isLoggedIn && !isPublicRoute
+                  ? "min-h-[calc(100vh-3.5rem)]"
+                  : "min-h-screen"
+              }
+            >
               {isLoggedIn && !isPublicRoute && <Navigation />}
               <Outlet />
             </main>

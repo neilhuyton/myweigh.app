@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useRegister } from "../hooks/useRegister";
 import { useRouter } from "@tanstack/react-router";
 import { Logo } from "./Logo";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 interface RegisterProps {
   className?: string;
@@ -102,6 +103,11 @@ function Register({ className }: RegisterProps) {
                   )}
                 />
               </div>
+              {isRegistering && (
+                <div className="flex justify-center py-4">
+                  <LoadingSpinner size="md" testId="register-loading" />
+                </div>
+              )}
               {message && (
                 <p
                   data-testid="register-message"

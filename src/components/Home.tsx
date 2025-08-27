@@ -2,6 +2,7 @@
 import { ScaleIcon, TargetIcon, TrendingUpIcon, ClockIcon } from "lucide-react";
 import { DashboardCard } from "./DashboardCard";
 import { useHome } from "../hooks/useHome";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 function Home() {
   const {
@@ -24,7 +25,11 @@ function Home() {
         >
           Let's Burn!
         </h1>
-        {isLoading && <p data-testid="loading">Loading dashboard...</p>}
+        {isLoading && (
+          <div className="py-4">
+            <LoadingSpinner size="md" testId="home-loading" />
+          </div>
+        )}
         {hasError && (
           <p className="text-red-600" data-testid="error">
             Error loading data. Please try again.

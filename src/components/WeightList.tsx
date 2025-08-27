@@ -1,6 +1,6 @@
 // src/components/WeightList.tsx
-import { useWeightList } from '../hooks/useWeightList';
-import { Button } from '@/components/ui/button';
+import { useWeightList } from "../hooks/useWeightList";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -9,9 +9,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Trash2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/table";
+import { Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 function WeightList() {
   const {
@@ -26,7 +27,9 @@ function WeightList() {
 
   if (isLoading) {
     return (
-      <p className="text-center text-sm font-medium">Loading weights...</p>
+      <div className="py-4">
+        <LoadingSpinner size="md" testId="weight-list-loading" />
+      </div>
     );
   }
 
@@ -48,7 +51,9 @@ function WeightList() {
             <TableHead className="font-bold bg-muted/50">Weight (kg)</TableHead>
             <TableHead className="font-bold bg-muted/50">Note</TableHead>
             <TableHead className="font-bold bg-muted/50">Date</TableHead>
-            <TableHead className="font-bold bg-muted/50 text-right">Action</TableHead>
+            <TableHead className="font-bold bg-muted/50 text-right">
+              Action
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -57,12 +62,12 @@ function WeightList() {
               <TableRow
                 key={weight.id}
                 className={cn(
-                  'hover:bg-muted/50',
-                  index === weights.length - 1 && 'rounded-b-lg'
+                  "hover:bg-muted/50",
+                  index === weights.length - 1 && "rounded-b-lg"
                 )}
               >
                 <TableCell>{weight.weightKg}</TableCell>
-                <TableCell>{weight.note || '-'}</TableCell>
+                <TableCell>{weight.note || "-"}</TableCell>
                 <TableCell>{formatDate(weight.createdAt)}</TableCell>
                 <TableCell className="text-right">
                   <Button
@@ -74,7 +79,10 @@ function WeightList() {
                       weight.createdAt
                     )}`}
                   >
-                    <Trash2 className="h-4 w-4 text-destructive" data-lucide-name="trash-2" />
+                    <Trash2
+                      className="h-4 w-4 text-destructive"
+                      data-lucide-name="trash-2"
+                    />
                   </Button>
                 </TableCell>
               </TableRow>

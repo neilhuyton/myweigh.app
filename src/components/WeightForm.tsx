@@ -1,11 +1,12 @@
 // src/components/WeightForm.tsx
-import { useWeightForm } from '../hooks/useWeightForm';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
-import Confetti from 'react-confetti';
-import { createPortal } from 'react-dom';
+import { useWeightForm } from "../hooks/useWeightForm";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import Confetti from "react-confetti";
+import { createPortal } from "react-dom";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 function WeightForm() {
   const {
@@ -31,20 +32,28 @@ function WeightForm() {
             recycle={false}
             data-testid="confetti"
             style={{
-              position: 'fixed',
+              position: "fixed",
               top: 0,
               left: 0,
               zIndex: 1000,
               opacity: fadeOut ? 0 : 1,
-              transition: 'opacity 1s ease-out',
+              transition: "opacity 1s ease-out",
             }}
           />,
           document.body
         )}
-      <form onSubmit={handleSubmit} className="space-y-4 w-full" data-testid="weight-form">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4 w-full"
+        data-testid="weight-form"
+      >
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="weight" className="text-sm font-medium" data-testid="weight-label">
+            <Label
+              htmlFor="weight"
+              className="text-sm font-medium"
+              data-testid="weight-label"
+            >
               Weight (kg)
             </Label>
             <Input
@@ -62,7 +71,11 @@ function WeightForm() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="note" className="text-sm font-medium" data-testid="note-label">
+            <Label
+              htmlFor="note"
+              className="text-sm font-medium"
+              data-testid="note-label"
+            >
               Optional Note
             </Label>
             <Input
@@ -75,11 +88,16 @@ function WeightForm() {
               data-testid="note-input"
             />
           </div>
+          {isSubmitting && (
+            <div className="flex justify-center">
+              <LoadingSpinner size="md" testId="weight-form-submitting" />
+            </div>
+          )}
           {message && (
             <p
-              className={cn('text-center text-sm font-medium', {
-                'text-green-500': message.toLowerCase().includes('success'),
-                'text-red-500': message.toLowerCase().includes('failed'),
+              className={cn("text-center text-sm font-medium", {
+                "text-green-500": message.toLowerCase().includes("success"),
+                "text-red-500": message.toLowerCase().includes("failed"),
               })}
               id="weight-error"
               data-testid="weight-message"
@@ -94,7 +112,7 @@ function WeightForm() {
             className="w-full font-semibold py-2"
             data-testid="submit-button"
           >
-            {isSubmitting ? 'Submitting...' : 'Submit Weight'}
+            {isSubmitting ? "Submitting..." : "Submit Weight"}
           </Button>
         </div>
       </form>

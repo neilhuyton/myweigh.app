@@ -1,9 +1,9 @@
 // src/components/DashboardCard.tsx
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { TrophyIcon } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
-import { useRouter } from '@tanstack/react-router';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { TrophyIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { useRouter } from "@tanstack/react-router";
 
 type DashboardCardProps = {
   title: string;
@@ -45,8 +45,10 @@ export function DashboardCard({
       <CardContent className="pb-0">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <div className="text-2xl font-bold">{value ?? 'No data'}</div>
-            <p className="text-xs text-muted-foreground">{description ?? 'No description'}</p>
+            <div className="text-2xl font-bold">{value ?? "No data"}</div>
+            <p className="text-xs text-muted-foreground">
+              {description ?? "No description"}
+            </p>
           </div>
           <Button
             variant="outline"
