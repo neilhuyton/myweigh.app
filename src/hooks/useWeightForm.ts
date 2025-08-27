@@ -1,22 +1,22 @@
 // src/hooks/useWeightForm.ts
-import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
-import { trpc } from "../trpc";
-import { useAuthStore } from "../store/authStore";
+import { useEffect, useState } from 'react';
+import { useNavigate } from '@tanstack/react-router';
+import { trpc } from '../trpc';
+import { useAuthStore } from '../store/authStore';
 
 // Define Goal type to match weightRouter.ts and Prisma schema
 type Goal = {
   id: string;
   goalWeightKg: number;
   goalSetAt: string;
-  reachedAt: Date | null;
+  reachedAt: string | null; // Use string to match serialized Date from server
 };
 
 export function useWeightForm() {
   const { isLoggedIn, userId } = useAuthStore();
   const navigate = useNavigate();
-  const [weight, setWeight] = useState("");
-  const [note, setNote] = useState("");
+  const [weight, setWeight] = useState('');
+  const [note, setNote] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
@@ -31,43 +31,44 @@ export function useWeightForm() {
     enabled: !!userId,
   }) as { data: Goal[] };
 
-  // Get the most recent goal
-  const latestGoal: Goal | null =
-    goals.length > 0
-      ? goals.sort((a, b) => new Date(b.goalSetAt).getTime() - new Date(a.goalSetAt).getTime())[0]
-      : currentGoal;
-
   // Redirect to login if not logged in
   useEffect(() => {
     if (!isLoggedIn) {
-      navigate({ to: "/login" });
+      navigate({ to: '/login' });
     }
   }, [isLoggedIn, navigate]);
 
   const queryClient = trpc.useContext();
   const weightMutation = trpc.weight.create.useMutation({
-    onSuccess: (data, variables) => {
-      setMessage("Weight recorded successfully!");
-      setWeight("");
-      setNote("");
-      // Check if the entered weight meets or is below the latest goal
-      if (latestGoal && variables.weightKg <= latestGoal.goalWeightKg) {
-        setShowConfetti(true);
-        setFadeOut(false);
-        // Start fade-out 1 second before the end
-        setTimeout(() => setFadeOut(true), 6000);
-        // Hide confetti after 7 seconds
-        setTimeout(() => setShowConfetti(false), 7000);
+    onSuccess: async (data, variables) => {
+      setMessage('Weight recorded successfully!');
+      setWeight('');
+      setNote('');
+
+      // Check if the current goal exists and was just reached
+      if (currentGoal && variables.weightKg <= currentGoal.goalWeightKg && !currentGoal.reachedAt) {
+        // Verify goal status after submission by refetching
+        const updatedGoal = await queryClient.weight.getCurrentGoal.fetch();
+        if (!updatedGoal) {
+          // If getCurrentGoal returns null, the goal was marked as reached
+          setShowConfetti(true);
+          setFadeOut(false);
+          // Start fade-out 1 second before the end
+          setTimeout(() => setFadeOut(true), 6000);
+          // Hide confetti after 7 seconds
+          setTimeout(() => setShowConfetti(false), 7000);
+        }
       }
+
       // Invalidate queries to refresh goal and weight data
       queryClient.weight.getWeights.invalidate();
       queryClient.weight.getCurrentGoal.invalidate();
       queryClient.weight.getGoals.invalidate();
     },
     onError: (error) => {
-      if (error.data?.code === "UNAUTHORIZED") {
-        setMessage("Please log in to record a weight.");
-        navigate({ to: "/login" });
+      if (error.data?.code === 'UNAUTHORIZED') {
+        setMessage('Please log in to record a weight.');
+        navigate({ to: '/login' });
       } else {
         setMessage(`Failed to record weight: ${error.message}`);
       }
@@ -77,13 +78,13 @@ export function useWeightForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId) {
-      setMessage("User ID not found. Please log in again.");
-      navigate({ to: "/login" });
+      setMessage('User ID not found. Please log in again.');
+      navigate({ to: '/login' });
       return;
     }
     const weightKg = parseFloat(weight);
     if (isNaN(weightKg) || weightKg <= 0) {
-      setMessage("Please enter a valid weight.");
+      setMessage('Please enter a valid weight.');
       return;
     }
     weightMutation.mutate({ weightKg, note: note || undefined });
