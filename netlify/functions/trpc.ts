@@ -1,22 +1,8 @@
+// netlify/functions/trpc.ts
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import type { HandlerEvent, HandlerResponse } from '@netlify/functions';
 import { appRouter } from '../../server/trpc';
-import { PrismaClient } from '@prisma/client';
-
-// Create a single PrismaClient instance with connection pooling optimized
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
-  log: ['error'],
-});
-
-// Handle Prisma client disconnection on process exit
-process.on('SIGTERM', async () => {
-  await prisma.$disconnect();
-});
+import prisma from '../../server/prisma'; // Use singleton PrismaClient
 
 export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => {
   const queryString = event.queryStringParameters
@@ -29,18 +15,18 @@ export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => 
     Object.entries(event.headers || {}).filter(([, value]) => value !== undefined)
   ) as Record<string, string>;
 
-  // Determine the allowed origin dynamically
   const isLocalhost = headers['origin']?.includes('localhost');
-  const allowedOrigin = isLocalhost ? headers['origin'] : (process.env.VITE_APP_URL || 'http://localhost:5173');
+  const allowedOrigin = isLocalhost
+    ? headers['origin']
+    : process.env.VITE_APP_URL || 'http://localhost:5173';
 
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': allowedOrigin,
+  const corsHeaders: Record<string, string> = {
+    'Access-Control-Allow-Origin': allowedOrigin || 'http://localhost:5173',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Credentials': 'true',
   };
 
-  // Handle CORS preflight requests
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 204,
@@ -65,9 +51,12 @@ export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => 
       },
     });
 
+    // Convert response.headers to Record<string, string>
+    const responseHeaders: Record<string, string> = Object.fromEntries(response.headers);
+
     return {
       statusCode: response.status,
-      headers: { ...Object.fromEntries(response.headers), ...corsHeaders },
+      headers: { ...responseHeaders, ...corsHeaders },
       body: await response.text(),
     };
   } catch (error) {
