@@ -3,6 +3,7 @@ import { t } from '../trpc-base';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 import { sendVerificationEmail } from '../email';
 
 export const registerRouter = t.router({
@@ -43,9 +44,17 @@ export const registerRouter = t.router({
         throw new Error('Failed to send verification email');
       }
 
+      // Generate JWT
+      const token = jwt.sign(
+        { userId: user.id, email: user.email },
+        process.env.JWT_SECRET || 'your-secure-jwt-secret-key',
+        { expiresIn: '1h' }
+      );
+
       return {
         id: user.id,
         email: user.email,
+        token, // Return JWT
         message:
           'Registration successful! Please check your email to verify your account.',
       };

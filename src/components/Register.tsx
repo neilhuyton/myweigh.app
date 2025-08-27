@@ -19,10 +19,8 @@ interface RegisterProps {
 }
 
 function Register({ className }: RegisterProps) {
-  const router = useRouter();
-  const { form, message, isRegistering, handleRegister } = useRegister(() =>
-    router.navigate({ to: "/login" })
-  );
+  const { form, message, isRegistering, handleRegister } = useRegister();
+  const router = useRouter(); // Define router
 
   return (
     <div
@@ -31,11 +29,9 @@ function Register({ className }: RegisterProps) {
         className
       )}
     >
-      {/* Logo with spacing above */}
       <div className="pt-14">
         <Logo />
       </div>
-      {/* Form with adjusted top margin */}
       <div className="w-full max-w-md bg-background rounded-lg p-4 flex flex-col items-center mt-16 sm:mt-20">
         <h1
           className="text-2xl font-bold text-center mb-4"

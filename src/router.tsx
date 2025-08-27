@@ -36,10 +36,10 @@ const trpcClient = trpc.createClient({
         import.meta.env.VITE_TRPC_URL ||
         "http://localhost:8888/.netlify/functions/trpc",
       fetch: async (url, options) => {
-        const { userId } = useAuthStore.getState();
+        const { token } = useAuthStore.getState();
         const headers = {
           ...options?.headers,
-          ...(userId ? { Authorization: `Bearer ${userId}` } : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         };
         const fetchOptions = {
           ...options,

@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { trpc } from "../trpc";
 import { useAuthStore } from "../store/authStore";
 import { useEffect, useState } from "react";
-import { useRouter } from "@tanstack/react-router"; // Add this import
+import { useRouter } from "@tanstack/react-router";
 import { type TRPCClientErrorLike } from "@trpc/client";
 import type {
   inferProcedureOutput,
@@ -17,6 +17,7 @@ import type { AppRouter } from "../../server/trpc";
 interface LoginResponse {
   id: string;
   email: string;
+  token: string; // Already updated in Step 1
 }
 
 const formSchema = z.object({
@@ -47,16 +48,16 @@ export const useLogin = (): UseLoginReturn => {
 
   const [message, setMessage] = useState<string | null>(null);
   const { login } = useAuthStore();
-  const router = useRouter(); // Initialize router
+  const router = useRouter();
 
   const loginMutation = trpc.login.useMutation({
     onMutate: () => {
-      setMessage(null); // Clear message before mutation
+      setMessage(null);
     },
     onSuccess: (data: LoginResponse) => {
       setMessage("Login successful!");
-      login(data.id);
-      form.reset(); // Reset form after setting message
+      login(data.id, data.token); // Pass both userId and token
+      form.reset();
       router.navigate({ to: "/" });
     },
     onError: (
@@ -74,7 +75,6 @@ export const useLogin = (): UseLoginReturn => {
   });
 
   useEffect(() => {
-    // Only clear message on user-initiated form changes
     const subscription = form.watch((_, { name }) => {
       if (name === "email" || name === "password") {
         setMessage(null);

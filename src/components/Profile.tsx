@@ -2,8 +2,6 @@
 import { Link } from "@tanstack/react-router";
 import { MailIcon, LockIcon, LogOutIcon } from "lucide-react";
 import { useProfile } from "../hooks/useProfile";
-import { useAuthStore } from "../store/authStore";
-import { useRouter } from "@tanstack/react-router";
 
 function Profile() {
   const {
@@ -15,14 +13,8 @@ function Profile() {
     isPasswordPending,
     handleEmailSubmit,
     handlePasswordSubmit,
+    handleLogout,
   } = useProfile();
-  const { logout } = useAuthStore();
-  const router = useRouter();
-
-  const handleLogout = () => {
-    logout();
-    router.navigate({ to: "/login" });
-  };
 
   return (
     <div className="min-h-screen p-4 sm:p-6 bg-background text-foreground flex flex-col items-center">
