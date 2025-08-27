@@ -1,4 +1,5 @@
 // src/components/Root.tsx
+import { useEffect, useState } from "react";
 import { useLocation, Outlet } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { trpc } from "../trpc";
@@ -28,6 +29,32 @@ function Root({
   const { isLoggedIn } = useAuthStore();
   const location = useLocation();
   const isPublicRoute = publicRoutes.includes(location.pathname);
+  const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
+  const isIOS =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const handleInstallClick = () => {
+    if (installPrompt) {
+      (installPrompt as any).prompt();
+      (installPrompt as any).userChoice.then(
+        (choiceResult: { outcome: string }) => {
+          if (choiceResult.outcome === "accepted") {
+            console.log("User installed the app");
+          }
+          setInstallPrompt(null);
+        }
+      );
+    }
+  };
 
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
@@ -44,10 +71,26 @@ function Root({
                 <ProfileIcon />
               </header>
             )}
+            {(installPrompt || isIOS) && isLoggedIn && !isPublicRoute && (
+              <div className="fixed bottom-26 left-4 right-4 bg-primary text-foreground dark:bg-primary dark:text-foreground p-4 rounded-md shadow-lg z-50">
+                <p className="text-center text-foreground dark:text-foreground">
+                  {isIOS
+                    ? "Tap the Share icon and select 'Add to Home Screen' to install My Weigh"
+                    : "Install My Weigh for quick access!"}
+                </p>
+                <button
+                  className="mt-2 w-full bg-background dark:bg-background text-primary dark:text-primary py-2 rounded hover:bg-accent dark:hover:bg-accent hover:text-accent-foreground dark:hover:text-accent-foreground"
+                  onClick={handleInstallClick}
+                  disabled={isIOS}
+                >
+                  {isIOS ? "Install via Safari" : "Install App"}
+                </button>
+              </div>
+            )}
             <main
               className={
                 isLoggedIn && !isPublicRoute
-                  ? "min-h-[calc(100vh-3.5rem)]"
+                  ? "min-h-[calc(100vh-3.5rem)] pb-16"
                   : "min-h-screen"
               }
             >
