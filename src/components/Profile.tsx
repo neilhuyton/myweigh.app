@@ -18,7 +18,7 @@ function Profile() {
   } = useProfile();
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 bg-background text-foreground flex flex-col items-center">
+    <div className="p-4 sm:p-6 bg-background text-foreground flex flex-col items-center overflow-auto">
       <div className="w-full max-w-md space-y-8">
         <h1 className="text-2xl font-bold text-center">User Profile</h1>
 
