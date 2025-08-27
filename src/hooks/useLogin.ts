@@ -17,6 +17,7 @@ import type { AppRouter } from "../../server/trpc";
 interface LoginResponse {
   id: string;
   email: string;
+  token: string; // Add token to the interface
 }
 
 const formSchema = z.object({
@@ -51,12 +52,13 @@ export const useLogin = (): UseLoginReturn => {
 
   const loginMutation = trpc.login.useMutation({
     onMutate: () => {
-      setMessage(null); // Clear message before mutation
+      setMessage(null);
     },
     onSuccess: (data: LoginResponse) => {
+      console.log('Login response:', data); // Log the response to inspect the token
       setMessage("Login successful!");
       login(data.id);
-      form.reset(); // Reset form after setting message
+      form.reset();
       router.navigate({ to: "/" });
     },
     onError: (

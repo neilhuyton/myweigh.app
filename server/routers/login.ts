@@ -2,6 +2,7 @@
 import { t } from '../trpc-base';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken'; // Add this import
 
 export const loginRouter = t.router({
   login: t.procedure
@@ -33,6 +34,13 @@ export const loginRouter = t.router({
         throw new Error('Invalid email or password');
       }
 
-      return { id: user.id, email: user.email };
+      // Generate JWT
+      const token = jwt.sign(
+        { userId: user.id, email: user.email },
+        process.env.JWT_SECRET || 'your-secret-key', // Use env variable in production
+        { expiresIn: '1h' } // Token expires in 1 hour
+      );
+
+      return { id: user.id, email: user.email, token }; // Return token
     }),
 });
