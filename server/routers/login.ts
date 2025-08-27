@@ -37,7 +37,7 @@ export const loginRouter = t.router({
       // Generate JWT
       const token = jwt.sign(
         { userId: user.id, email: user.email },
-        process.env.JWT_SECRET || 'your-secret-key', // Use env variable in production
+        'c788ff0f1933f20cc5e9fa15646a97c5d13eb9dea525cb83032919e4deeaab37',
         { expiresIn: '1h' } // Token expires in 1 hour
       );
 
