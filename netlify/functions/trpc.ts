@@ -1,9 +1,9 @@
 // netlify/functions/trpc.ts
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import type { HandlerEvent, HandlerResponse } from '@netlify/functions';
-import { appRouter } from '../../server/trpc';
-import prisma from '../../server/prisma';
-import jwt from 'jsonwebtoken'; // Add this import
+import { appRouter } from 'server/trpc';
+import prisma from 'server/prisma';
+import jwt from 'jsonwebtoken';
 
 export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => {
   const queryString = event.queryStringParameters
@@ -63,7 +63,7 @@ export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => 
         body: event.httpMethod !== 'GET' && event.body ? event.body : undefined,
       }),
       router: appRouter,
-      createContext: () => ({ prisma, userId }), // Pass verified userId
+      createContext: () => ({ prisma, userId }),
       onError: ({ error, path }) => {
         console.error(`tRPC error on path "${path}":`, error);
       },
