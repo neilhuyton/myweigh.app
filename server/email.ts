@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const FROM = `${process.env.SITE_NAME} ${process.env.EMAIL_FROM}`
+const FROM = `${process.env.APP_NAME} <${process.env.EMAIL_FROM}>`
 
 export async function sendVerificationEmail(to: string, verificationToken: string) {
   const verificationUrl = `${
