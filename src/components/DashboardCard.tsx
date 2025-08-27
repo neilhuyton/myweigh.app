@@ -1,7 +1,7 @@
 // src/components/DashboardCard.tsx
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { TrophyIcon } from 'lucide-react'; // Import TrophyIcon
+import { TrophyIcon } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useRouter } from '@tanstack/react-router';
 
@@ -13,7 +13,7 @@ type DashboardCardProps = {
   buttonText: string;
   buttonLink: string;
   testId?: string;
-  isGoalAchieved?: boolean; // New prop for goal achievement
+  isGoalAchieved?: boolean;
 };
 
 export function DashboardCard({
@@ -24,7 +24,7 @@ export function DashboardCard({
   buttonText,
   buttonLink,
   testId,
-  isGoalAchieved = false, // Default to false
+  isGoalAchieved = false,
 }: DashboardCardProps) {
   const router = useRouter();
 

@@ -6,28 +6,27 @@ import { trpc } from '../trpc';
 export function useVerifyEmail() {
   const { token } = useSearch({ from: '/verify-email' });
   const [message, setMessage] = useState<string | null>(null);
-  const [isVerifying, setIsVerifying] = useState(false);
 
   const verifyEmailMutation = trpc.verifyEmail.useMutation({
     onSuccess: (data) => {
       setMessage(data.message);
-      setIsVerifying(false);
     },
     onError: (error) => {
       setMessage(`Verification failed: ${error.message}`);
-      setIsVerifying(false);
     },
   });
 
   useEffect(() => {
-    if (token) {
-      setIsVerifying(true);
+    if (token && !verifyEmailMutation.isPending && !message) {
       verifyEmailMutation.mutate({ token });
-    } else {
+    } else if (!token) {
       setMessage('No verification token provided');
-      setIsVerifying(false);
     }
-  }, [token]);
+  }, [token, verifyEmailMutation.isPending, message]);
 
-  return { message, isVerifying };
+  return {
+    message,
+    isVerifying: verifyEmailMutation.isPending,
+    isSuccess: message?.includes('successfully'),
+  };
 }

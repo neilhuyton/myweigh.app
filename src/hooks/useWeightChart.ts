@@ -1,9 +1,12 @@
 // src/hooks/useWeightChart.ts
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { useTheme } from 'next-themes';
 import { trpc } from '../trpc';
 import { startOfWeek, startOfMonth, format } from 'date-fns';
 
-export const useWeightChart = (trendPeriod: 'daily' | 'weekly' | 'monthly' = 'daily') => {
+export const useWeightChart = (initialTrendPeriod: 'daily' | 'weekly' | 'monthly' = 'daily') => {
+  const [trendPeriod, setTrendPeriod] = useState<'daily' | 'weekly' | 'monthly'>(initialTrendPeriod);
+  const { theme } = useTheme();
   const { data, isLoading, isError, error } = trpc.weight.getWeights.useQuery();
 
   const weights = useMemo(() => {
@@ -61,5 +64,43 @@ export const useWeightChart = (trendPeriod: 'daily' | 'weekly' | 'monthly' = 'da
     []
   );
 
-  return { weights, isLoading, isError, error, chartData, chartConfig };
+  // Bar color based on theme
+  const [barColor, setBarColor] = useState<string>(
+    theme === 'dark' ? chartConfig.weight.theme.dark : chartConfig.weight.theme.light
+  );
+
+  useEffect(() => {
+    // Update bar color when theme or chartConfig changes
+    const newColor = theme === 'dark' ? chartConfig.weight.theme.dark : chartConfig.weight.theme.light;
+    setBarColor(newColor);
+
+    // Observe theme changes
+    const observer = new MutationObserver(() => {
+      const newTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      const newColor = newTheme === 'dark' ? chartConfig.weight.theme.dark : chartConfig.weight.theme.light;
+      setBarColor(newColor);
+    });
+
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, [theme, chartConfig]);
+
+  // Handler for trend period change
+  const handleTrendPeriodChange = (value: string) => {
+    if (value === 'daily' || value === 'weekly' || value === 'monthly') {
+      setTrendPeriod(value);
+    }
+  };
+
+  return {
+    weights,
+    isLoading,
+    isError,
+    error,
+    chartData,
+    chartConfig,
+    barColor,
+    trendPeriod,
+    handleTrendPeriodChange,
+  };
 };
