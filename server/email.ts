@@ -10,13 +10,15 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+const FROM = `${process.env.SITE_NAME} ${process.env.EMAIL_FROM}`
+
 export async function sendVerificationEmail(to: string, verificationToken: string) {
   const verificationUrl = `${
     process.env.VITE_APP_URL || 'http://localhost:5173'
   }/verify-email?token=${verificationToken}`;
 
   const mailOptions = {
-    from: process.env.EMAIL_FROM,
+    from: FROM,
     to,
     subject: 'Verify Your Email Address',
     html: `
@@ -42,7 +44,7 @@ export async function sendResetPasswordEmail(to: string, resetToken: string) {
   }/confirm-reset-password?token=${resetToken}`;
 
   const mailOptions = {
-    from: process.env.EMAIL_FROM,
+    from: FROM,
     to,
     subject: 'Reset Your Password',
     html: `
@@ -64,7 +66,7 @@ export async function sendResetPasswordEmail(to: string, resetToken: string) {
 
 export async function sendEmailChangeNotification(oldEmail: string, newEmail: string) {
   const mailOptions = {
-    from: process.env.EMAIL_FROM,
+    from: FROM,
     to: oldEmail,
     subject: 'Your Email Address Has Been Changed',
     html: `
@@ -86,7 +88,7 @@ export async function sendEmailChangeNotification(oldEmail: string, newEmail: st
 
 export async function sendPasswordChangeNotification(to: string) {
   const mailOptions = {
-    from: process.env.EMAIL_FROM,
+    from: FROM,
     to,
     subject: 'Your Password Has Been Changed',
     html: `
