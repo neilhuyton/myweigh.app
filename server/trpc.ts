@@ -6,6 +6,7 @@ import { loginRouter } from './routers/login';
 import { verifyEmailRouter } from './routers/verifyEmail';
 import { weightRouter } from './routers/weight';
 import { resetPasswordRouter } from './routers/resetPassword';
+import { refreshTokenRouter } from './routers/refreshToken';
 
 export const appRouter = t.router({
   user: userRouter,
@@ -14,6 +15,7 @@ export const appRouter = t.router({
   verifyEmail: verifyEmailRouter.verifyEmail,
   weight: weightRouter,
   resetPassword: resetPasswordRouter,
+  refreshToken: refreshTokenRouter,
 });
 
 export type AppRouter = typeof appRouter;

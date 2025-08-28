@@ -44,9 +44,15 @@ export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => 
         body: event.httpMethod !== 'GET' && event.body ? event.body : undefined,
       }),
       router: appRouter,
-      createContext: () => createContext({ req: { headers } as any }), // Cast headers to IncomingMessage
+      createContext: () => createContext({ req: { headers } as any }),
       onError: ({ error, path }) => {
         console.error(`tRPC error on path "${path}":`, error);
+        if (
+          error.message.includes('Unauthorized') ||
+          (error.cause && error.cause.message.includes('jwt expired'))
+        ) {
+          throw new Error('Unauthorized', { cause: error });
+        }
       },
     });
 
@@ -57,12 +63,13 @@ export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => 
       headers: { ...responseHeaders, ...corsHeaders },
       body: await response.text(),
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Handler error:', error);
+    const statusCode = error.message === 'Unauthorized' || error.cause?.message.includes('jwt expired') ? 401 : 500;
     return {
-      statusCode: 500,
+      statusCode,
       headers: { 'content-type': 'application/json', ...corsHeaders },
-      body: JSON.stringify({ error: 'Internal server error' }),
+      body: JSON.stringify({ error: error.message || 'Internal server error' }),
     };
   }
 };

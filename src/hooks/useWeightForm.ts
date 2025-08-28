@@ -26,11 +26,6 @@ export function useWeightForm() {
     enabled: !!userId,
   }) as { data: Goal | null };
 
-  // Fetch all goals to check for recently achieved goals
-  const { data: goals = [] } = trpc.weight.getGoals.useQuery(undefined, {
-    enabled: !!userId,
-  }) as { data: Goal[] };
-
   // Redirect to login if not logged in
   useEffect(() => {
     if (!isLoggedIn) {
@@ -40,7 +35,7 @@ export function useWeightForm() {
 
   const queryClient = trpc.useContext();
   const weightMutation = trpc.weight.create.useMutation({
-    onSuccess: async (data, variables) => {
+    onSuccess: async (_, variables) => {
       setMessage("Weight recorded successfully!");
       setWeight("");
       setNote("");
