@@ -7,7 +7,7 @@ import { ThemeProvider } from "./ThemeProvider";
 import Navigation from "./Navigation";
 import ProfileIcon from "./ProfileIcon";
 import { ThemeToggle } from "./ThemeToggle";
-import { useInstallPrompt } from "../hooks/useInstallPrompt"; // Import the new hook
+import { InstallPrompt } from "./InstallPrompt"; // Import the new component
 import type { TRPCClient } from "@trpc/client";
 import type { AppRouter } from "../../server/trpc";
 
@@ -29,7 +29,6 @@ function Root({
   const { isLoggedIn } = useAuthStore();
   const location = useLocation();
   const isPublicRoute = publicRoutes.includes(location.pathname);
-  const { installPrompt, isIOS, handleInstallClick } = useInstallPrompt(); // Use the hook
 
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
@@ -46,22 +45,7 @@ function Root({
                 <ProfileIcon />
               </header>
             )}
-            {(installPrompt || isIOS) && isLoggedIn && !isPublicRoute && (
-              <div className="fixed bottom-26 left-4 right-4 bg-primary text-foreground dark:bg-primary dark:text-foreground p-4 rounded-md shadow-lg z-50">
-                <p className="text-center text-foreground dark:text-foreground">
-                  {isIOS
-                    ? "Tap the Share icon and select 'Add to Home Screen' to install My Weigh"
-                    : "Install My Weigh for quick access!"}
-                </p>
-                <button
-                  className="mt-2 w-full bg-background dark:bg-background text-primary dark:text-primary py-2 rounded hover:bg-accent dark:hover:bg-accent hover:text-accent-foreground dark:hover:text-accent-foreground"
-                  onClick={handleInstallClick}
-                  disabled={isIOS}
-                >
-                  {isIOS ? "Install via Safari" : "Install App"}
-                </button>
-              </div>
-            )}
+            <InstallPrompt isLoggedIn={isLoggedIn} isPublicRoute={isPublicRoute} />
             <main
               className={
                 isLoggedIn && !isPublicRoute
