@@ -1,17 +1,18 @@
 // server/routers/login.ts
-import { t } from '../trpc-base';
-import { z } from 'zod';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken'; // Add this import
+import { t } from "../trpc-base";
+import { z } from "zod";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import crypto from "crypto"; // Add crypto for refresh token
 
 export const loginRouter = t.router({
   login: t.procedure
     .input(
       z.object({
-        email: z.string().email({ message: 'Invalid email address' }),
+        email: z.string().email({ message: "Invalid email address" }),
         password: z
           .string()
-          .min(8, { message: 'Password must be at least 8 characters' }),
+          .min(8, { message: "Password must be at least 8 characters" }),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -22,25 +23,32 @@ export const loginRouter = t.router({
       });
 
       if (!user) {
-        throw new Error('Invalid email or password');
+        throw new Error("Invalid email or password");
       }
 
       if (!user.isEmailVerified) {
-        throw new Error('Please verify your email before logging in');
+        throw new Error("Please verify your email before logging in");
       }
 
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
-        throw new Error('Invalid email or password');
+        throw new Error("Invalid email or password");
       }
 
-      // Generate JWT
+      // Generate JWT access token
       const token = jwt.sign(
         { userId: user.id, email: user.email },
-        process.env.JWT_SECRET || 'your-secret-key',
-        { expiresIn: '1h' } // Token expires in 1 hour
+        process.env.JWT_SECRET || "your-secret-key",
+        { expiresIn: "1h" }
       );
 
-      return { id: user.id, email: user.email, token }; // Return token
+      // Generate and store refresh token
+      const refreshToken = crypto.randomUUID();
+      await ctx.prisma.user.update({
+        where: { id: user.id },
+        data: { refreshToken },
+      });
+
+      return { id: user.id, email: user.email, token, refreshToken };
     }),
 });

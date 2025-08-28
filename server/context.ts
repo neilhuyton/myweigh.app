@@ -27,8 +27,7 @@ export function createContext({ req }: { req: IncomingMessage }): Context {
       };
       userId = decoded.userId;
     } catch (error) {
-      console.error("JWT verification failed:", error);
-      // Let protected routes handle unauthorized errors
+      console.error("JWT verification failed:", error); // Log but don’t throw
     }
   }
   return { prisma, userId };

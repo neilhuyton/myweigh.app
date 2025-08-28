@@ -1,17 +1,15 @@
 // src/hooks/useRegister.ts
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { trpc } from "../trpc";
-import { useState, useEffect } from "react";
-import { useAuthStore } from "../store/authStore";
-import { useRouter } from "@tanstack/react-router";
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { trpc } from '../trpc';
+import { useState, useEffect } from 'react';
+import { useAuthStore } from '../store/authStore';
+import { useRouter } from '@tanstack/react-router';
 
 const formSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z
-    .string()
-    .min(8, { message: "Password must be at least 8 characters long" }),
+  email: z.string().email({ message: 'Please enter a valid email address' }),
+  password: z.string().min(8, { message: 'Password must be at least 8 characters long' }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -20,6 +18,7 @@ interface RegisterResponse {
   id: string;
   email: string;
   token: string;
+  refreshToken: string; // Add refreshToken
   message: string;
 }
 
@@ -33,11 +32,8 @@ interface UseRegisterReturn {
 export const useRegister = (): UseRegisterReturn => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-    mode: "onChange",
+    defaultValues: { email: '', password: '' },
+    mode: 'onChange',
   });
 
   const [message, setMessage] = useState<string | null>(null);
@@ -47,14 +43,14 @@ export const useRegister = (): UseRegisterReturn => {
   const registerMutation = trpc.register.useMutation({
     onSuccess: (data: RegisterResponse) => {
       setMessage(data.message);
-      login(data.id, data.token);
+      login(data.id, data.token, data.refreshToken); // Store refreshToken
       setTimeout(() => {
         form.reset();
-        router.navigate({ to: "/login" });
+        router.navigate({ to: '/login' });
       }, 3000);
     },
     onError: (error) => {
-      const errorMessage = error.message || "Failed to register";
+      const errorMessage = error.message || 'Failed to register';
       setMessage(`Registration failed: ${errorMessage}`);
     },
   });
@@ -66,10 +62,7 @@ export const useRegister = (): UseRegisterReturn => {
 
   const handleRegister = async (data: FormValues) => {
     const isValid = await form.trigger();
-    if (!isValid) {
-      return;
-    }
-
+    if (!isValid) return;
     await registerMutation.mutateAsync(data);
   };
 
