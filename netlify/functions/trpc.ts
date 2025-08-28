@@ -1,9 +1,8 @@
 // netlify/functions/trpc.ts
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import type { HandlerEvent, HandlerResponse } from '@netlify/functions';
-import { appRouter } from 'server/trpc';
-import prisma from 'server/prisma';
-import jwt from 'jsonwebtoken';
+import { appRouter } from '../../server/trpc';
+import { createContext } from '../../server/context';
 
 export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => {
   const queryString = event.queryStringParameters
@@ -37,24 +36,6 @@ export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => 
   }
 
   try {
-    let userId: string | undefined;
-    const authHeader = headers['authorization'];
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.split('Bearer ')[1];
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as {
-          userId: string;
-          email: string;
-          iat: number;
-          exp: number;
-        };
-        userId = decoded.userId;
-      } catch (error) {
-        console.error('JWT verification failed:', error);
-        // Don't throw here; let protected routes handle unauthorized errors
-      }
-    }
-
     const response = await fetchRequestHandler({
       endpoint: '/trpc',
       req: new Request(url, {
@@ -63,7 +44,7 @@ export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => 
         body: event.httpMethod !== 'GET' && event.body ? event.body : undefined,
       }),
       router: appRouter,
-      createContext: () => ({ prisma, userId }),
+      createContext: () => createContext({ req: { headers } as any }), // Cast headers to IncomingMessage
       onError: ({ error, path }) => {
         console.error(`tRPC error on path "${path}":`, error);
       },
