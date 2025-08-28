@@ -1,5 +1,4 @@
 // src/components/Root.tsx
-import { useEffect, useState } from "react";
 import { useLocation, Outlet } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { trpc } from "../trpc";
@@ -8,6 +7,7 @@ import { ThemeProvider } from "./ThemeProvider";
 import Navigation from "./Navigation";
 import ProfileIcon from "./ProfileIcon";
 import { ThemeToggle } from "./ThemeToggle";
+import { useInstallPrompt } from "../hooks/useInstallPrompt"; // Import the new hook
 import type { TRPCClient } from "@trpc/client";
 import type { AppRouter } from "../../server/trpc";
 
@@ -29,32 +29,7 @@ function Root({
   const { isLoggedIn } = useAuthStore();
   const location = useLocation();
   const isPublicRoute = publicRoutes.includes(location.pathname);
-  const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
-  const isIOS =
-    /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setInstallPrompt(e);
-    };
-    window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
-
-  const handleInstallClick = () => {
-    if (installPrompt) {
-      (installPrompt as any).prompt();
-      (installPrompt as any).userChoice.then(
-        (choiceResult: { outcome: string }) => {
-          if (choiceResult.outcome === "accepted") {
-            console.log("User installed the app");
-          }
-          setInstallPrompt(null);
-        }
-      );
-    }
-  };
+  const { installPrompt, isIOS, handleInstallClick } = useInstallPrompt(); // Use the hook
 
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
