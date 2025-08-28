@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - develop
-      - "feature/**"  # Match feature branches (e.g., feature/login, feature/ui)
+      - "feat/**" # Match feature branches (e.g., feature/login, feature/ui)
   pull_request:
     branches:
       - main
@@ -22,11 +22,16 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'  # Match your Node.js version
-          cache: 'pnpm'
+          node-version: "20" # Match your Node.js version
+          cache: "pnpm"
 
       - name: Install pnpm
-        run: npm install -g pnpm@9  # Install specific pnpm version (match your local version)
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9 # Match your local pnpm version (e.g., 9.12.2)
+
+      - name: Verify pnpm installation
+        run: pnpm --version # Debug: Confirm pnpm is installed
 
       - name: Install dependencies
         run: pnpm install
@@ -44,20 +49,27 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'pnpm'
+          node-version: "20"
+          cache: "pnpm"
 
       - name: Install pnpm
-        run: npm install -g pnpm@9  # Match your local pnpm version
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Verify pnpm installation
+        run: pnpm --version
 
       - name: Install dependencies
         run: pnpm install
 
       - name: Generate Prisma client
-        run: pnpm build  # Runs `npx prisma generate && vite build`
+        run: pnpm build # Runs `npx prisma generate && vite build`
 
       - name: Run Vitest
         run: pnpm test
+        env:
+          VITE_TRPC_URL: "http://localhost:8888/.netlify/functions/trpc"
 
   e2e-tests:
     name: Run E2E Tests
@@ -69,11 +81,16 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'pnpm'
+          node-version: "20"
+          cache: "pnpm"
 
       - name: Install pnpm
-        run: npm install -g pnpm@9  # Match your local pnpm version
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Verify pnpm installation
+        run: pnpm --version
 
       - name: Install dependencies
         run: pnpm install
@@ -87,10 +104,10 @@ jobs:
       - name: Run Playwright tests
         run: pnpm test:e2e
         env:
-          VITE_TRPC_URL: 'http://localhost:8888/.netlify/functions/trpc'
+          VITE_TRPC_URL: "http://localhost:8888/.netlify/functions/trpc"
 
       - name: Upload Playwright report
-        if: failure()  # Upload report on failure for debugging
+        if: failure() # Upload report on failure for debugging
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
