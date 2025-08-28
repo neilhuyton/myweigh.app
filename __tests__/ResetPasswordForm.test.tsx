@@ -20,7 +20,7 @@ import {
   createRouter,
   createMemoryHistory,
 } from "@tanstack/react-router";
-import { router } from "../src/router";
+import { router } from "../src/router/router";
 import { http, HttpResponse } from "msw";
 import { act } from "react";
 

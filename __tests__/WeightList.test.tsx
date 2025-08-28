@@ -6,7 +6,7 @@ import { createMemoryHistory } from "@tanstack/history";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
 import { trpc } from "../src/trpc";
-import { router } from "../src/router";
+import { router } from "../src/router/router";
 import { server } from "../__mocks__/server";
 import "@testing-library/jest-dom";
 import { http, HttpResponse } from "msw";

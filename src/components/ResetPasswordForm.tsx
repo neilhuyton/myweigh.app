@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useResetPassword } from "../hooks/useResetPassword";
-import { router } from "../router";
+import { router } from "../router/router";
 import { Logo } from "./Logo";
 import { LoadingSpinner } from "./LoadingSpinner";
 
