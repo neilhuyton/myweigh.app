@@ -3,6 +3,7 @@ import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import type { HandlerEvent, HandlerResponse } from '@netlify/functions';
 import { appRouter } from '../../server/trpc';
 import { createContext } from '../../server/context';
+import type { IncomingMessage } from 'http';
 
 export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => {
   const queryString = event.queryStringParameters
@@ -44,12 +45,16 @@ export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => 
         body: event.httpMethod !== 'GET' && event.body ? event.body : undefined,
       }),
       router: appRouter,
-      createContext: () => createContext({ req: { headers } as any }),
+      createContext: () => createContext({ req: { headers } as IncomingMessage }),
       onError: ({ error, path }) => {
         console.error(`tRPC error on path "${path}":`, error);
         if (
           error.message.includes('Unauthorized') ||
-          (error.cause && error.cause.message.includes('jwt expired'))
+          (typeof error.cause === 'object' &&
+            error.cause !== null &&
+            'message' in error.cause &&
+            typeof error.cause.message === 'string' &&
+            error.cause.message.includes('jwt expired'))
         ) {
           throw new Error('Unauthorized', { cause: error });
         }
@@ -63,13 +68,22 @@ export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => 
       headers: { ...responseHeaders, ...corsHeaders },
       body: await response.text(),
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Handler error:', error);
-    const statusCode = error.message === 'Unauthorized' || error.cause?.message.includes('jwt expired') ? 401 : 500;
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    const isUnauthorized =
+      error instanceof Error &&
+      (error.message === 'Unauthorized' ||
+        (typeof error.cause === 'object' &&
+          error.cause !== null &&
+          'message' in error.cause &&
+          typeof error.cause.message === 'string' &&
+          error.cause.message.includes('jwt expired')));
+    const statusCode = isUnauthorized ? 401 : 500;
     return {
       statusCode,
       headers: { 'content-type': 'application/json', ...corsHeaders },
-      body: JSON.stringify({ error: error.message || 'Internal server error' }),
+      body: JSON.stringify({ error: errorMessage }),
     };
   }
 };

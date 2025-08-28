@@ -7,12 +7,13 @@ import { useAuthStore } from '../store/authStore';
 import { useEffect, useState } from 'react';
 import { useRouter } from '@tanstack/react-router';
 import type { TRPCClientErrorLike } from '@trpc/client';
+import type { AppRouter } from 'server/trpc';
 
 interface LoginResponse {
   id: string;
   email: string;
   token: string;
-  refreshToken: string; // Define refreshToken as string (UUID)
+  refreshToken: string;
 }
 
 const formSchema = z.object({
@@ -48,8 +49,7 @@ export const useLogin = (): UseLoginReturn => {
       form.reset();
       router.navigate({ to: '/' });
     },
-    onError: (error: TRPCClientErrorLike<any>) => {
-      // Use `any` temporarily to bypass type mismatch
+    onError: (error: TRPCClientErrorLike<AppRouter>) => {
       const errorMessage = error.message || 'Invalid email or password';
       setMessage(`Login failed: ${errorMessage}`);
     },
