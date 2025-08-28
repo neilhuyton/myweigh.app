@@ -27,7 +27,7 @@ export const useHome = () => {
     error: goalError,
   } = trpc.weight.getCurrentGoal.useQuery(undefined, {
     enabled: isLoggedIn,
-  }) as { data: Goal | null; isLoading: boolean; error: any };
+  }) as { data: Goal | null; isLoading: boolean; error: Error | null };
 
   const {
     data: goalsData = [],
@@ -35,7 +35,7 @@ export const useHome = () => {
     error: goalsError,
   } = trpc.weight.getGoals.useQuery(undefined, {
     enabled: isLoggedIn,
-  }) as { data: Goal[]; isLoading: boolean; error: any };
+  }) as { data: Goal[]; isLoading: boolean; error: Error | null };
 
   // Latest weight and goal weight
   const latestWeight = weightsData?.[0]?.weightKg ?? null;

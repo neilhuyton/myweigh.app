@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { trpc } from "../trpc";
 import { useAuthStore } from "../store/authStore";
+import type { TRPCClientErrorLike } from "@trpc/client";
+import type { AppRouter } from 'server/trpc';
 
 // Define Goal type to match weightRouter.ts
 type Goal = {
@@ -11,7 +13,7 @@ type Goal = {
   reachedAt: Date | null;
 };
 
-export function useWeightGoal() {
+ export function useWeightGoal() {
   const [goalWeight, setGoalWeight] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const { userId } = useAuthStore();
@@ -22,7 +24,7 @@ export function useWeightGoal() {
     error: goalError,
   } = trpc.weight.getCurrentGoal.useQuery(undefined, {
     enabled: !!userId,
-  }) as { data: Goal | null; isLoading: boolean; error: any };
+  }) as { data: Goal | null; isLoading: boolean; error: TRPCClientErrorLike<AppRouter> };
 
   const {
     data: goals = [],
@@ -30,7 +32,7 @@ export function useWeightGoal() {
     error: goalsError,
   } = trpc.weight.getGoals.useQuery(undefined, {
     enabled: !!userId,
-  }) as { data: Goal[]; isLoading: boolean; error: any };
+  }) as { data: Goal[]; isLoading: boolean; error: TRPCClientErrorLike<AppRouter> };
 
   const {
     data: weights = [],
@@ -63,7 +65,7 @@ export function useWeightGoal() {
       queryClient.weight.getCurrentGoal.invalidate();
       queryClient.weight.getGoals.invalidate();
     },
-    onError: (error) => {
+    onError: (error: TRPCClientErrorLike<AppRouter>) => {
       setMessage(`Failed to set goal: ${error.message}`);
     },
   });
@@ -75,7 +77,7 @@ export function useWeightGoal() {
       queryClient.weight.getCurrentGoal.invalidate();
       queryClient.weight.getGoals.invalidate();
     },
-    onError: (error) => {
+    onError: (error: TRPCClientErrorLike<AppRouter>) => {
       setMessage(`Failed to update goal: ${error.message}`);
     },
   });
