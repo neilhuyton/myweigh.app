@@ -25,7 +25,7 @@ describe("WeightList Component", () => {
       httpBatchLink({
         url: "http://localhost:8888/.netlify/functions/trpc",
         fetch: async (url, options) => {
-          return fetch(url, { ...options, signal: options?.signal ?? null });
+          return fetch(url, { ...options });
         },
       }),
     ],

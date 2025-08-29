@@ -17,6 +17,11 @@ import {
 // Define root route
 const rootRoute = createRootRoute({
   component: () => <Root queryClient={queryClient} trpcClient={trpcClient} />,
+  errorComponent: (props) => (
+    <div>
+      An error occurred. Please try again. {JSON.stringify(props.error)}
+    </div>
+  ),
 });
 
 // Create route tree

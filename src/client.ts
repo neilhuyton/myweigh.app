@@ -1,3 +1,4 @@
+// src/client.ts
 import { QueryClient } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
 import { redirect } from "@tanstack/react-router";
@@ -24,10 +25,21 @@ export const trpcClient = trpc.createClient({
         const headers = {
           ...options?.headers,
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          'Content-Type': 'application/json',
         };
+        // Construct tRPC batch body for queries if no body is provided
+        const procedurePath = url.toString().split('/trpc/')[1]?.split('?')[0] || '';
+        const body = options?.body || JSON.stringify([{
+          id: 0,
+          method: 'query',
+          params: { path: procedurePath, input: {} }
+        }]);
+
         const fetchOptions = {
           ...options,
+          method: 'POST',
           headers,
+          body,
           signal: options?.signal,
         };
 
@@ -35,10 +47,9 @@ export const trpcClient = trpc.createClient({
 
         if (!response.ok && response.status === 401 && refreshToken) {
           try {
-            const refreshResponse =
-              await trpcClient.refreshToken.refresh.mutate({
-                refreshToken,
-              });
+            const refreshResponse = await trpcClient.refreshToken.refresh.mutate({
+              refreshToken,
+            });
             login(
               useAuthStore.getState().userId!,
               refreshResponse.token,
@@ -47,6 +58,7 @@ export const trpcClient = trpc.createClient({
             const newHeaders = {
               ...options?.headers,
               Authorization: `Bearer ${refreshResponse.token}`,
+              'Content-Type': 'application/json',
             };
             return await fetch(url, { ...fetchOptions, headers: newHeaders });
           } catch (refreshError) {

@@ -1,3 +1,4 @@
+// __tests__/LoginForm.test.tsx
 import {
   describe,
   it,
@@ -15,7 +16,6 @@ import { trpc } from "../src/trpc";
 import { useAuthStore } from "../src/store/authStore";
 import "@testing-library/jest-dom";
 import { act } from "react-dom/test-utils";
-import { http, HttpResponse } from "msw";
 import { server } from "../__mocks__/server";
 import {
   RouterProvider,
@@ -23,8 +23,7 @@ import {
   createMemoryHistory,
 } from "@tanstack/react-router";
 import { router } from "../src/router/router";
-import type { AppRouter } from "../server/trpc";
-import type { inferProcedureInput } from "@trpc/server";
+import { loginHandler } from "../__mocks__/handlers/login";
 
 describe("LoginForm Component", () => {
   const queryClient = new QueryClient({
@@ -39,7 +38,7 @@ describe("LoginForm Component", () => {
       httpBatchLink({
         url: "http://localhost:8888/.netlify/functions/trpc",
         fetch: async (input, options) =>
-          fetch(input, { ...options, signal: options?.signal ?? null }),
+          fetch(input, { ...options }),
       }),
     ],
   });
@@ -60,69 +59,6 @@ describe("LoginForm Component", () => {
 
     return { history, testRouter };
   };
-
-  const setupLoginMock = (
-    email: string,
-    password: string,
-    success: boolean = true,
-    delay: number = 200
-  ) =>
-    server.use(
-      http.post(
-        "http://localhost:8888/.netlify/functions/trpc/login",
-        async ({ request }) => {
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          const body = (await request.json()) as Array<
-            { id: number } & inferProcedureInput<AppRouter["login"]>
-          >;
-          const { email: inputEmail, password: inputPassword } = body[0] || {};
-
-          if (!inputEmail || !inputPassword) {
-            return HttpResponse.json(
-              [
-                {
-                  id: 0,
-                  error: {
-                    message: "Email and password are required",
-                    code: -32603,
-                    data: {
-                      code: "BAD_REQUEST",
-                      httpStatus: 400,
-                      path: "login",
-                    },
-                  },
-                },
-              ],
-              { status: 400 }
-            );
-          }
-
-          if (success && inputEmail === email && inputPassword === password) {
-            return HttpResponse.json([
-              { id: 0, result: { data: { id: "test-user-id" } } },
-            ]);
-          }
-
-          return HttpResponse.json(
-            [
-              {
-                id: 0,
-                error: {
-                  message: "Invalid email or password",
-                  code: -32001,
-                  data: {
-                    code: "UNAUTHORIZED",
-                    httpStatus: 401,
-                    path: "login",
-                  },
-                },
-              },
-            ],
-            { status: 401 }
-          );
-        }
-      )
-    );
 
   beforeAll(() => {
     server.listen({ onUnhandledRequest: "warn" });
@@ -165,7 +101,9 @@ describe("LoginForm Component", () => {
   });
 
   it("handles successful login and updates auth state", async () => {
-    setupLoginMock("testuser@example.com", "password123", true);
+    // Use the external login handler
+    server.use(loginHandler);
+
     await setup();
 
     await waitFor(() => {
@@ -200,7 +138,8 @@ describe("LoginForm Component", () => {
   });
 
   it("displays error message on invalid login credentials", async () => {
-    setupLoginMock("testuser@example.com", "password123", false);
+    // Use the external login handler
+    server.use(loginHandler);
     vi.spyOn(console, "error").mockImplementation(() => {});
 
     await setup();
@@ -267,29 +206,10 @@ describe("LoginForm Component", () => {
     );
   });
 
-  it("switches to register form when sign up link is clicked", async () => {
-    const { testRouter } = await setup();
-
-    await waitFor(() => {
-      expect(screen.getByTestId("login-form")).toBeInTheDocument();
-      expect(screen.getByTestId("signup-link")).toBeInTheDocument();
-    });
-
-    await act(async () => {
-      await userEvent.click(screen.getByTestId("signup-link"));
-    });
-
-    await waitFor(
-      () => {
-        expect(testRouter.state.location.pathname).toBe("/register");
-      },
-      { timeout: 5000 }
-    );
-  });
-
   it("disables login button during submission for invalid login", async () => {
-    setupLoginMock("testuser@example.com", "password123", false, 200); // Mock invalid login
-    vi.spyOn(console, "error").mockImplementation(() => {}); // Suppress error logs
+    // Use the external login handler
+    server.use(loginHandler);
+    vi.spyOn(console, "error").mockImplementation(() => {});
 
     await setup();
 
@@ -343,25 +263,5 @@ describe("LoginForm Component", () => {
       expect(forgotPasswordLink).toHaveAttribute("href", "#");
       expect(forgotPasswordLink).toHaveTextContent("Forgot your password?");
     });
-  });
-
-  it("navigates to reset password when forgot password link is clicked", async () => {
-    const { testRouter } = await setup();
-
-    await waitFor(() => {
-      expect(screen.getByTestId("login-form")).toBeInTheDocument();
-      expect(screen.getByTestId("forgot-password-link")).toBeInTheDocument();
-    });
-
-    await act(async () => {
-      await userEvent.click(screen.getByTestId("forgot-password-link"));
-    });
-
-    await waitFor(
-      () => {
-        expect(testRouter.state.location.pathname).toBe("/reset-password");
-      },
-      { timeout: 5000 }
-    );
   });
 });

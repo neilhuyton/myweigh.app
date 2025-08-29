@@ -1,16 +1,14 @@
 // src/hooks/useWeightChart.ts
-import { useMemo, useState, useEffect } from "react";
-import { useTheme } from "next-themes";
-import { trpc } from "../trpc";
-import { startOfWeek, startOfMonth, format } from "date-fns";
+import { useMemo, useState } from 'react';
+import { trpc } from '../trpc';
+import { startOfWeek, startOfMonth, format } from 'date-fns';
 
 export const useWeightChart = (
-  initialTrendPeriod: "daily" | "weekly" | "monthly" = "daily"
+  initialTrendPeriod: 'daily' | 'weekly' | 'monthly' = 'daily'
 ) => {
-  const [trendPeriod, setTrendPeriod] = useState<
-    "daily" | "weekly" | "monthly"
-  >(initialTrendPeriod);
-  const { theme } = useTheme();
+  const [trendPeriod, setTrendPeriod] = useState<'daily' | 'weekly' | 'monthly'>(
+    initialTrendPeriod
+  );
   const { data, isLoading, isError, error } = trpc.weight.getWeights.useQuery();
 
   const weights = useMemo(() => {
@@ -26,7 +24,7 @@ export const useWeightChart = (
 
   const chartData = useMemo(() => {
     if (!weights.length) return [];
-    if (trendPeriod === "daily") {
+    if (trendPeriod === 'daily') {
       return weights.map((weight) => ({
         date: isNaN(new Date(weight.createdAt).getTime())
           ? null
@@ -40,10 +38,10 @@ export const useWeightChart = (
       const date = new Date(weight.createdAt);
       if (isNaN(date.getTime())) return acc;
       let key: string;
-      if (trendPeriod === "weekly") {
-        key = format(startOfWeek(date, { weekStartsOn: 0 }), "yyyy-MM-dd");
+      if (trendPeriod === 'weekly') {
+        key = format(startOfWeek(date, { weekStartsOn: 0 }), 'yyyy-MM-dd');
       } else {
-        key = format(startOfMonth(date), "yyyy-MM");
+        key = format(startOfMonth(date), 'yyyy-MM');
       }
       if (!acc[key]) acc[key] = { weights: [], note: weight.note };
       acc[key].weights.push(weight.weightKg);
@@ -60,53 +58,17 @@ export const useWeightChart = (
   const chartConfig = useMemo(
     () => ({
       weight: {
-        label: "Weight (kg)",
-        theme: {
-          light: "oklch(0.6 0.15 190)", // Teal, ~#26c6b3
-          dark: "oklch(0.75 0.15 180)", // Bright cyan, ~#33e6cc
-        },
+        label: 'Weight (kg)',
+        color: 'oklch(0.6 0.15 190)', // Hardcoded teal
       },
     }),
     []
   );
 
-  // Bar color based on theme
-  const [barColor, setBarColor] = useState<string>(
-    theme === "dark"
-      ? chartConfig.weight.theme.dark
-      : chartConfig.weight.theme.light
-  );
+  const barColor = chartConfig.weight.color; // Static color
 
-  useEffect(() => {
-    // Update bar color when theme or chartConfig changes
-    const newColor =
-      theme === "dark"
-        ? chartConfig.weight.theme.dark
-        : chartConfig.weight.theme.light;
-    setBarColor(newColor);
-
-    // Observe theme changes
-    const observer = new MutationObserver(() => {
-      const newTheme = document.documentElement.classList.contains("dark")
-        ? "dark"
-        : "light";
-      const newColor =
-        newTheme === "dark"
-          ? chartConfig.weight.theme.dark
-          : chartConfig.weight.theme.light;
-      setBarColor(newColor);
-    });
-
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-    return () => observer.disconnect();
-  }, [theme, chartConfig]);
-
-  // Handler for trend period change
   const handleTrendPeriodChange = (value: string) => {
-    if (value === "daily" || value === "weekly" || value === "monthly") {
+    if (value === 'daily' || value === 'weekly' || value === 'monthly') {
       setTrendPeriod(value);
     }
   };

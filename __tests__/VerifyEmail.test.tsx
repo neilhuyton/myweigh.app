@@ -3,7 +3,6 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
-import { http, HttpResponse } from "msw";
 import { server } from "../__mocks__/server";
 import { trpc } from "../src/trpc";
 import { useAuthStore } from "../src/store/authStore";
@@ -12,7 +11,9 @@ import { createMemoryHistory } from "@tanstack/history";
 import { router } from "../src/router/router";
 import "@testing-library/jest-dom";
 import { vi } from "vitest";
-import { act } from "react";
+import { act } from "react-dom/test-utils";
+import { verifyEmailHandler } from "../__mocks__/handlers/verifyEmail";
+import { mockUsers, type MockUser } from "../__mocks__/mockUsers"; // Import mockUsers
 
 describe("Email Verification", () => {
   const queryClient = new QueryClient({
@@ -26,18 +27,21 @@ describe("Email Verification", () => {
     links: [
       httpBatchLink({
         url: "http://localhost:8888/.netlify/functions/trpc",
-        fetch: async (url, options) => {
+        fetch: async (input, options) => {
           const headers = {
             ...options?.headers,
             ...(useAuthStore.getState().userId
               ? { Authorization: `Bearer ${useAuthStore.getState().userId}` }
               : {}),
           };
-          return fetch(url, { ...options, headers, signal: undefined });
+          return fetch(input, { ...options, headers });
         },
       }),
     ],
   });
+
+  // Create a deep copy of initial mockUsers
+  const initialMockUsers: MockUser[] = JSON.parse(JSON.stringify(mockUsers));
 
   const setup = async (initialPath: string, token: string) => {
     const history = createMemoryHistory({
@@ -64,6 +68,17 @@ describe("Email Verification", () => {
 
   beforeAll(() => {
     server.listen({ onUnhandledRequest: "error" });
+    server.use(verifyEmailHandler); // Use the external handler
+    process.on("unhandledRejection", (reason) => {
+      if (
+        reason instanceof Error &&
+        (reason.message.includes("Invalid or expired verification token") ||
+          reason.message.includes("Email already verified"))
+      ) {
+        return;
+      }
+      throw reason;
+    });
   });
 
   afterEach(() => {
@@ -71,32 +86,19 @@ describe("Email Verification", () => {
     useAuthStore.setState({ isLoggedIn: false, userId: null });
     queryClient.clear();
     vi.clearAllMocks();
+    // Reset mockUsers to initial state
+    mockUsers.length = 0;
+    mockUsers.push(...JSON.parse(JSON.stringify(initialMockUsers)));
   });
 
   afterAll(() => {
     vi.restoreAllMocks();
     server.close();
+    process.removeAllListeners("unhandledRejection");
   });
 
   it("successfully verifies email with valid token", async () => {
-    const validToken = "123e4567-e89b-12d3-a456-426614174000";
-    server.use(
-      http.post(
-        "http://localhost:8888/.netlify/functions/trpc/verifyEmail",
-        async () => {
-          return HttpResponse.json([
-            {
-              result: {
-                data: {
-                  message: "Email verified successfully!",
-                },
-              },
-            },
-          ]);
-        }
-      )
-    );
-
+    const validToken = "42c6b154-c097-4a71-9b34-5b28669ea467"; // Matches unverified user
     await setup("/verify-email", validToken);
 
     await waitFor(
@@ -116,30 +118,6 @@ describe("Email Verification", () => {
 
   it("displays error message for invalid or expired verification token", async () => {
     const invalidToken = "00000000-0000-0000-0000-000000000000";
-    server.use(
-      http.post(
-        "http://localhost:8888/.netlify/functions/trpc/verifyEmail",
-        async () => {
-          return HttpResponse.json(
-            [
-              {
-                error: {
-                  message: "Invalid or expired verification token",
-                  code: -32001,
-                  data: {
-                    code: "UNAUTHORIZED",
-                    httpStatus: 401,
-                    path: "verifyEmail",
-                  },
-                },
-              },
-            ],
-            { status: 401 }
-          );
-        }
-      )
-    );
-
     await setup("/verify-email", invalidToken);
 
     await waitFor(
@@ -157,31 +135,7 @@ describe("Email Verification", () => {
   });
 
   it("displays error message for already verified email", async () => {
-    const token = "123e4567-e89b-12d3-a456-426614174000";
-    server.use(
-      http.post(
-        "http://localhost:8888/.netlify/functions/trpc/verifyEmail",
-        async () => {
-          return HttpResponse.json(
-            [
-              {
-                error: {
-                  message: "Email already verified",
-                  code: -32001,
-                  data: {
-                    code: "BAD_REQUEST",
-                    httpStatus: 400,
-                    path: "verifyEmail",
-                  },
-                },
-              },
-            ],
-            { status: 400 }
-          );
-        }
-      )
-    );
-
+    const token = "987fcdeb-12d3-4e5a-9876-426614174000"; // Matches verified user
     await setup("/verify-email", token);
 
     await waitFor(
@@ -199,29 +153,11 @@ describe("Email Verification", () => {
   });
 
   it("displays verifying message during verification process", async () => {
-    const token = "123e4567-e89b-12d3-a456-426614174000";
-    server.use(
-      http.post(
-        "http://localhost:8888/.netlify/functions/trpc/verifyEmail",
-        async () => {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          return HttpResponse.json([
-            {
-              result: {
-                data: {
-                  message: "Email verified successfully!",
-                },
-              },
-            },
-          ]);
-        }
-      )
-    );
-
+    const token = "42c6b154-c097-4a71-9b34-5b28669ea467"; // Matches unverified user
     await setup("/verify-email", token);
 
     await waitFor(() => {
-      expect(screen.getByText("Verifying your email...")).toBeInTheDocument();
+      expect(screen.getByTestId("verify-email-loading")).toBeInTheDocument();
     });
 
     await waitFor(

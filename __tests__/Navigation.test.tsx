@@ -32,7 +32,6 @@ describe("Navigation Component - Theme Toggle", () => {
               ...options?.headers,
               ...(userId ? { Authorization: `Bearer ${userId}` } : {}),
             },
-            signal: options?.signal ?? null,
           });
         },
       }),

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { trpc } from "../trpc";
 import { useAuthStore } from "../store/authStore";
 import type { TRPCClientErrorLike } from "@trpc/client";
-import type { AppRouter } from 'server/trpc';
+import type { AppRouter } from "server/trpc";
 
 // Define Goal type to match weightRouter.ts
 type Goal = {
@@ -13,10 +13,12 @@ type Goal = {
   reachedAt: Date | null;
 };
 
- export function useWeightGoal() {
+export function useWeightGoal() {
   const [goalWeight, setGoalWeight] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const { userId } = useAuthStore();
+
+  console.log("USER ID", userId);
 
   const {
     data: currentGoal = null,
@@ -24,38 +26,42 @@ type Goal = {
     error: goalError,
   } = trpc.weight.getCurrentGoal.useQuery(undefined, {
     enabled: !!userId,
-  }) as { data: Goal | null; isLoading: boolean; error: TRPCClientErrorLike<AppRouter> };
+  }) as {
+    data: Goal | null;
+    isLoading: boolean;
+    error: TRPCClientErrorLike<AppRouter>;
+  };
 
-  const {
-    data: goals = [],
-    isLoading: isGoalsLoading,
-    error: goalsError,
-  } = trpc.weight.getGoals.useQuery(undefined, {
-    enabled: !!userId,
-  }) as { data: Goal[]; isLoading: boolean; error: TRPCClientErrorLike<AppRouter> };
+  // const {
+  //   data: goals = [],
+  //   isLoading: isGoalsLoading,
+  //   error: goalsError,
+  // } = trpc.weight.getGoals.useQuery(undefined, {
+  //   enabled: !!userId,
+  // }) as { data: Goal[]; isLoading: boolean; error: TRPCClientErrorLike<AppRouter> };
 
-  const {
-    data: weights = [],
-    isLoading: isWeightsLoading,
-    error: weightsError,
-  } = trpc.weight.getWeights.useQuery(undefined, {
-    enabled: !!userId,
-  });
+  // const {
+  //   data: weights = [],
+  //   isLoading: isWeightsLoading,
+  //   error: weightsError,
+  // } = trpc.weight.getWeights.useQuery(undefined, {
+  //   enabled: !!userId,
+  // });
 
   // Get the most recent goal
-  const latestGoal: Goal | null =
-    goals.length > 0
-      ? goals.sort(
-          (a, b) =>
-            new Date(b.goalSetAt).getTime() - new Date(a.goalSetAt).getTime()
-        )[0]
-      : currentGoal;
-  const latestWeight = weights?.[0]?.weightKg ?? null;
+  // const latestGoal: Goal | null =
+  //   goals.length > 0
+  //     ? goals.sort(
+  //         (a, b) =>
+  //           new Date(b.goalSetAt).getTime() - new Date(a.goalSetAt).getTime()
+  //       )[0]
+  //     : currentGoal;
+  // const latestWeight = weights?.[0]?.weightKg ?? null;
   // Ensure latestGoal is defined before accessing properties
-  const isGoalAchieved =
-    latestGoal &&
-    latestWeight !== null &&
-    (latestGoal.reachedAt !== null || latestWeight <= latestGoal.goalWeightKg);
+  // const isGoalAchieved =
+  //   latestGoal &&
+  //   latestWeight !== null &&
+  //   (latestGoal.reachedAt !== null || latestWeight <= latestGoal.goalWeightKg);
 
   const queryClient = trpc.useContext();
   const setGoalMutation = trpc.weight.setGoal.useMutation({
@@ -108,13 +114,13 @@ type Goal = {
 
   return {
     currentGoal,
-    goals,
-    isLoading: isGoalLoading || isGoalsLoading || isWeightsLoading,
-    error: goalError || goalsError || weightsError,
+    // goals,
+    isLoading: isGoalLoading,
+    error: goalError,
     goalWeight,
     message,
     isSettingGoal: setGoalMutation.isPending || updateGoalMutation.isPending,
-    isGoalAchieved: isGoalAchieved || false, // Ensure boolean return
+    isGoalAchieved: false, // Ensure boolean return
     handleSubmit,
     handleGoalWeightChange,
   };

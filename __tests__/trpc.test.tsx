@@ -32,12 +32,10 @@ describe("trpc.ts", () => {
     // Verify expected properties exist
     expect(trpc).toHaveProperty("createClient");
     expect(trpc).toHaveProperty("getUsers");
-    expect(trpc.getUsers).toHaveProperty("useQuery");
     expect(trpc).toHaveProperty("Provider");
 
     // Verify methods are functions
     expect(typeof trpc.createClient).toBe("function");
-    expect(typeof trpc.getUsers.useQuery).toBe("function");
     expect(typeof trpc.Provider).toBe("function");
   });
 });

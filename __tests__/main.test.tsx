@@ -25,7 +25,7 @@ describe("main.tsx", () => {
       httpBatchLink({
         url: "http://localhost:8888/.netlify/functions/trpc",
         fetch: async (input: RequestInfo | URL, options?: RequestInit) => {
-          return fetch(input, { ...options, signal: options?.signal ?? null });
+          return fetch(input, { ...options });
         },
       }),
     ],

@@ -1,44 +1,81 @@
 // __mocks__/handlers/weightGetWeights.ts
 import { http, HttpResponse } from 'msw';
+import jwt from 'jsonwebtoken';
 
-export const weightGetWeightsHandler = http.get(
-  'http://localhost:8888/.netlify/functions/trpc/weight.getWeights',
+export const weightGetWeightsHandler = http.post(
+  /http:\/\/localhost:8888\/\.netlify\/functions\/trpc\/weight\.getWeights/,
   async ({ request }) => {
-    const headers = Object.fromEntries(request.headers.entries());
-    const userId = headers['authorization']?.split('Bearer ')[1];
-    if (!userId) {
+    console.log('MSW: Intercepted weight.getWeights request:', request.url, request.method);
+    const body = await request.json();
+    console.log('MSW: Request body:', JSON.stringify(body, null, 2));
+
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return HttpResponse.json(
-        [
-          {
-            error: {
-              message: 'Unauthorized: User must be logged in',
-              code: -32001,
-              data: { code: 'UNAUTHORIZED', httpStatus: 401, path: 'weight.getWeights' },
-            },
-          },
-        ],
-        { status: 401 }
+        [{
+          id: 0,
+          error: {
+            message: 'Unauthorized',
+            code: -32001,
+            data: { code: 'UNAUTHORIZED', httpStatus: 401, path: 'weight.getWeights' }
+          }
+        }],
+        { status: 200 }
       );
     }
-    return HttpResponse.json([
-      {
-        result: {
-          data: [
-            {
-              id: '1',
-              weightKg: 70.5,
-              note: 'Morning weigh-in',
-              createdAt: '2025-08-20T10:00:00Z',
-            },
-            {
-              id: '2',
-              weightKg: 71.0,
-              note: 'Evening weigh-in',
-              createdAt: '2025-08-19T18:00:00Z',
-            },
-          ],
-        },
-      },
-    ]);
+
+    const token = authHeader.split(' ')[1];
+    let userId: string | null = null;
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { userId: string };
+      userId = decoded.userId;
+    } catch (error) {
+      console.error('MSW: Invalid token:', error);
+      return HttpResponse.json(
+        [{
+          id: 0,
+          error: {
+            message: 'Invalid token',
+            code: -32001,
+            data: { code: 'UNAUTHORIZED', httpStatus: 401, path: 'weight.getWeights' }
+          }
+        }],
+        { status: 200 }
+      );
+    }
+
+    console.log('MSW: Handling request for userId:', userId);
+
+    if (userId === 'error-user-id') {
+      return HttpResponse.json(
+        [{
+          id: 0,
+          error: {
+            message: 'Failed to fetch weights',
+            code: -32002,
+            data: { code: 'INTERNAL_SERVER_ERROR', httpStatus: 500, path: 'weight.getWeights' }
+          }
+        }],
+        { status: 200 }
+      );
+    }
+
+    if (userId === 'empty-user-id') {
+      console.log('MSW: Returning empty weights for empty-user-id');
+      return HttpResponse.json(
+        [{ id: 0, result: { data: [] } }],
+        { status: 200 }
+      );
+    }
+
+    // Default case for test-user-id
+    const mockWeights = [
+      { id: '1', weightKg: 70, createdAt: '2023-10-01T00:00:00Z', note: 'Morning weigh-in' },
+      { id: '2', weightKg: 69.5, createdAt: '2023-10-02T00:00:00Z', note: 'Evening weigh-in' },
+    ];
+    return HttpResponse.json(
+      [{ id: 0, result: { data: mockWeights } }],
+      { status: 200 }
+    );
   }
 );
