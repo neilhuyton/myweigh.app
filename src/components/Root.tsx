@@ -3,6 +3,11 @@ import { useLocation, Outlet } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { trpc } from "../trpc";
 import { useAuthStore } from "../store/authStore";
+import { ThemeProvider } from "./ThemeProvider";
+import Navigation from "./Navigation";
+import ProfileIcon from "./ProfileIcon";
+import { ThemeToggle } from "./ThemeToggle";
+import { InstallPrompt } from "./InstallPrompt"; // Import the new component
 import type { TRPCClient } from "@trpc/client";
 import type { AppRouter } from "../../server/trpc";
 
@@ -28,8 +33,22 @@ function Root({
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-
+        <ThemeProvider
+          defaultTheme="dark"
+          storageKey="vite-ui-theme"
+          enableSystem={true}
+        >
           <div className="flex flex-col">
+            {isLoggedIn && !isPublicRoute && (
+              <header className="sticky top-0 left-0 right-0 z-50 bg-background flex items-center justify-between px-4 py-2">
+                <ThemeToggle />
+                <ProfileIcon />
+              </header>
+            )}
+            <InstallPrompt
+              isLoggedIn={isLoggedIn}
+              isPublicRoute={isPublicRoute}
+            />
             <main
               className={
                 isLoggedIn && !isPublicRoute
@@ -37,9 +56,11 @@ function Root({
                   : "min-h-screen"
               }
             >
+              {isLoggedIn && !isPublicRoute && <Navigation />}
               <Outlet />
             </main>
           </div>
+        </ThemeProvider>
       </QueryClientProvider>
     </trpc.Provider>
   );

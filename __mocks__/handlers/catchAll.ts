@@ -30,12 +30,6 @@ export const catchAllHandler = http.post(
     const path = query?.path || procedure;
     const id = (body as { [key: string]: { id?: number } })['0']?.id ?? 0;
 
-    // Skip weight-related procedures
-    if (path.startsWith('weight.')) {
-      console.log('Mock: Skipping weight procedure in catchAll:', path);
-      return;
-    }
-
     // Handle invalid batched procedure paths
     if (procedure.includes(',')) {
       console.error('Invalid batched procedure path:', procedure);
