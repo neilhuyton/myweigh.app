@@ -4,10 +4,11 @@ import { http, HttpResponse } from 'msw';
 export const catchAllHandler = http.post(
   'http://localhost:8888/.netlify/functions/trpc/:procedure',
   async ({ request, params }) => {
+    const clonedRequest = request.clone(); // Clone request
     const procedure = params.procedure as string;
     let body;
     try {
-      body = await request.json();
+      body = await clonedRequest.json();
     } catch (error) {
       console.error('Error reading catch-all request body:', error);
       return HttpResponse.json(
@@ -25,10 +26,17 @@ export const catchAllHandler = http.post(
       );
     }
 
-    const input = (body as { [key: string]: { id?: number } })['0'];
-    const id = input?.id ?? 0;
+    const query = (body as { [key: string]: { path: string } })['0'];
+    const path = query?.path || procedure;
+    const id = (body as { [key: string]: { id?: number } })['0']?.id ?? 0;
 
-    // Handle invalid batched procedure paths (e.g., resetPassword,resetPassword)
+    // Skip weight-related procedures
+    if (path.startsWith('weight.')) {
+      console.log('Mock: Skipping weight procedure in catchAll:', path);
+      return;
+    }
+
+    // Handle invalid batched procedure paths
     if (procedure.includes(',')) {
       console.error('Invalid batched procedure path:', procedure);
       return HttpResponse.json(
@@ -46,7 +54,7 @@ export const catchAllHandler = http.post(
       );
     }
 
-    console.error('Unhandled procedure:', procedure);
+    console.error('Unhandled procedure:', path);
     return HttpResponse.json(
       [
         {
@@ -54,7 +62,7 @@ export const catchAllHandler = http.post(
           error: {
             message: 'Procedure not found',
             code: -32601,
-            data: { code: 'NOT_FOUND', httpStatus: 404, path: procedure },
+            data: { code: 'NOT_FOUND', httpStatus: 404, path },
           },
         },
       ],

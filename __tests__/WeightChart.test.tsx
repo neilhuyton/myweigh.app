@@ -14,7 +14,7 @@ import { trpc } from "../src/trpc";
 import { trpcClient, queryClient } from "../src/client";
 import { server } from "../__mocks__/server";
 import "@testing-library/jest-dom";
-import { act } from "react"; // Updated import
+import { act } from "react";
 import {
   RouterProvider,
   createRouter,
@@ -24,7 +24,6 @@ import { router } from "../src/router/router";
 import { useAuthStore } from "../src/store/authStore";
 import { weightGetWeightsHandler } from "../__mocks__/handlers/weightGetWeights";
 import jwt from "jsonwebtoken";
-import { Component, type ErrorInfo } from "react";
 import { http, HttpResponse } from "msw";
 
 // Mock refreshToken handler
@@ -78,26 +77,6 @@ const refreshTokenHandler = http.post(
   }
 );
 
-// Error boundary for debugging
-class ErrorBoundary extends Component<
-  { children: React.ReactNode },
-  { error: string | null }
-> {
-  state = { error: null };
-  static getDerivedStateFromError(error: Error) {
-    return { error: error.message };
-  }
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.warn("ErrorBoundary caught:", error.message, errorInfo);
-  }
-  render() {
-    if (this.state.error) {
-      return <div>An error occurred. Please try again. {this.state.error}</div>;
-    }
-    return this.props.children;
-  }
-}
-
 // Mock JWT tokens
 const generateToken = (userId: string) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET || "your-secret-key", {
@@ -123,13 +102,11 @@ describe("WeightChart Component", () => {
 
     await act(async () => {
       render(
-        <ErrorBoundary>
-          <trpc.Provider client={trpcClient} queryClient={queryClient}>
-            <QueryClientProvider client={queryClient}>
-              <RouterProvider router={testRouter} />
-            </QueryClientProvider>
-          </trpc.Provider>
-        </ErrorBoundary>
+        <trpc.Provider client={trpcClient} queryClient={queryClient}>
+          <QueryClientProvider client={queryClient}>
+            <RouterProvider router={testRouter} />
+          </QueryClientProvider>
+        </trpc.Provider>
       );
     });
 
@@ -166,9 +143,6 @@ describe("WeightChart Component", () => {
       await waitFor(
         () => {
           expect(
-            screen.queryByText(/An error occurred/)
-          ).not.toBeInTheDocument();
-          expect(
             screen.getByRole("heading", { name: "Total Weight" })
           ).toBeInTheDocument();
           expect(screen.getByTestId("unit-select")).toHaveTextContent("Daily");
@@ -184,9 +158,6 @@ describe("WeightChart Component", () => {
     await act(async () => {
       await waitFor(
         () => {
-          expect(
-            screen.queryByText(/An error occurred/)
-          ).not.toBeInTheDocument();
           expect(screen.getByTestId("error")).toBeInTheDocument();
           expect(screen.getByTestId("error")).toHaveTextContent(
             "Error: Failed to fetch weights"
@@ -203,9 +174,6 @@ describe("WeightChart Component", () => {
     await act(async () => {
       await waitFor(
         () => {
-          expect(
-            screen.queryByText(/An error occurred/)
-          ).not.toBeInTheDocument();
           expect(screen.getByTestId("unit-select")).toHaveTextContent("Daily");
           expect(screen.getByTestId("no-data")).toBeInTheDocument();
           expect(screen.getByTestId("no-data")).toHaveTextContent(
@@ -223,9 +191,6 @@ describe("WeightChart Component", () => {
     await act(async () => {
       await waitFor(
         () => {
-          expect(
-            screen.queryByText(/An error occurred/)
-          ).not.toBeInTheDocument();
           expect(screen.getByTestId("unit-select")).toHaveTextContent("Daily");
           expect(screen.getByTestId("chart-mock")).toBeInTheDocument();
         },

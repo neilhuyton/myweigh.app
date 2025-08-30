@@ -33,7 +33,6 @@ export const verifyEmailHandler = http.post(
       );
     }
 
-    // Check if body is an object with a "0" key
     if (!body || typeof body !== 'object' || !('0' in body)) {
       console.error('Invalid body format: not an object with "0" key');
       return HttpResponse.json(
@@ -61,9 +60,9 @@ export const verifyEmailHandler = http.post(
           {
             id: 0,
             error: {
-              message: 'Invalid or expired verification token',
+              message: 'No verification token provided',
               code: -32001,
-              data: { code: 'UNAUTHORIZED', httpStatus: 401, path: 'verifyEmail' },
+              data: { code: 'BAD_REQUEST', httpStatus: 400, path: 'verifyEmail' },
             },
           },
         ],
@@ -71,7 +70,6 @@ export const verifyEmailHandler = http.post(
       );
     }
 
-    // Simulate delay for verifying message test (only for valid token)
     if (token === '42c6b154-c097-4a71-9b34-5b28669ea467') {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
@@ -111,7 +109,6 @@ export const verifyEmailHandler = http.post(
       );
     }
 
-    // Update user to mark email as verified
     user.isEmailVerified = true;
     user.verificationToken = null;
     user.updatedAt = new Date().toISOString();

@@ -1,12 +1,7 @@
 // src/hooks/useWeightList.ts
-import { useEffect } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { trpc } from "../trpc";
-import { useAuthStore } from "../store/authStore";
 
 export function useWeightList() {
-  const { isLoggedIn } = useAuthStore();
-  const navigate = useNavigate();
   const {
     data: weights,
     isLoading,
@@ -16,19 +11,13 @@ export function useWeightList() {
   const utils = trpc.useUtils();
   const deleteMutation = trpc.weight.delete.useMutation({
     onSuccess: () => {
+      console.log('MSW: deleteMutation onSuccess called, invalidating weight.getWeights');
       utils.weight.getWeights.invalidate();
     },
     onError: (error) => {
-      alert(`Failed to delete weight: ${error.message}`);
+      console.error(`Failed to delete weight: ${error.message}`);
     },
   });
-
-  // Redirect to home if not logged in
-  useEffect(() => {
-    if (!isLoggedIn) {
-      navigate({ to: "/" });
-    }
-  }, [isLoggedIn, navigate]);
 
   // Format date as DD/MM/YYYY
   const formatDate = (dateString: string) => {

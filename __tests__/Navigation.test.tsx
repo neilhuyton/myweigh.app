@@ -1,242 +1,129 @@
 // __tests__/Navigation.test.tsx
-import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
-import { createMemoryHistory } from "@tanstack/history";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { httpBatchLink } from "@trpc/client";
-import { trpc } from "../src/trpc";
-import { router } from "../src/router/router";
-import { server } from "../__mocks__/server";
-import { useAuthStore } from "../src/store/authStore";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import Navigation from "../src/components/Navigation";
+import {
+  RouterProvider,
+  createRouter,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+} from "@tanstack/react-router";
 import { act } from "react";
-import { vi } from "vitest";
 
-describe("Navigation Component - Theme Toggle", () => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-      mutations: { retry: false },
-    },
-  });
+// Mock lucide-react icons
+vi.mock("lucide-react", () => ({
+  HomeIcon: () => <div data-testid="home-icon" />,
+  ScaleIcon: () => <div data-testid="scale-icon" />,
+  LineChartIcon: () => <div data-testid="line-chart-icon" />,
+  TargetIcon: () => <div data-testid="target-icon" />,
+}));
 
-  const trpcClient = trpc.createClient({
-    links: [
-      httpBatchLink({
-        url: "http://localhost:8888/.netlify/functions/trpc",
-        fetch: async (url, options) => {
-          const { userId } = useAuthStore.getState();
-          return fetch(url, {
-            ...options,
-            headers: {
-              ...options?.headers,
-              ...(userId ? { Authorization: `Bearer ${userId}` } : {}),
-            },
-          });
-        },
-      }),
-    ],
-  });
+describe("Navigation Component", () => {
+  const setup = async (initialPath = "/") => {
+    // Define a minimal route tree
+    const rootRoute = createRootRoute({
+      component: () => <Navigation />,
+    });
 
-  const setup = async (initialPath: string = "/") => {
+    const homeRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: "/",
+    });
+
+    const weightRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: "/weight",
+    });
+
+    const chartRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: "/weight-chart",
+    });
+
+    const goalsRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: "/weight-goal",
+    });
+
+    const routeTree = rootRoute.addChildren([
+      homeRoute,
+      weightRoute,
+      chartRoute,
+      goalsRoute,
+    ]);
+
     const history = createMemoryHistory({ initialEntries: [initialPath] });
     const testRouter = createRouter({
-      ...router.options,
+      routeTree,
       history,
-      routeTree: router.routeTree,
     });
 
     await act(async () => {
-      render(
-        <trpc.Provider client={trpcClient} queryClient={queryClient}>
-          <QueryClientProvider client={queryClient}>
-            <RouterProvider router={testRouter} />
-          </QueryClientProvider>
-        </trpc.Provider>
-      );
+      render(<RouterProvider router={testRouter} />);
     });
 
-    return { history, queryClient };
+    return { history, testRouter };
   };
 
-  beforeAll(() => {
-    server.listen({ onUnhandledRequest: "warn" });
-  });
-
   afterEach(() => {
-    server.resetHandlers();
-    useAuthStore.setState({ isLoggedIn: false, userId: null });
-    queryClient.clear();
-    window.localStorage.clear();
-    vi.restoreAllMocks(); // Reset mocks to default
+    vi.restoreAllMocks();
+    document.body.innerHTML = "";
   });
 
-  afterAll(() => {
-    server.close();
+  it("renders all navigation links correctly", async () => {
+    await setup("/");
+
+    // Check that all links are rendered using aria-label
+    expect(screen.getByRole("link", { name: "Navigate to Home" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Navigate to Weight" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Navigate to Chart" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Navigate to Goals" })).toBeInTheDocument();
+
+    // Check href attributes
+    expect(screen.getByRole("link", { name: "Navigate to Home" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "Navigate to Weight" })).toHaveAttribute("href", "/weight");
+    expect(screen.getByRole("link", { name: "Navigate to Chart" })).toHaveAttribute("href", "/weight-chart");
+    expect(screen.getByRole("link", { name: "Navigate to Goals" })).toHaveAttribute("href", "/weight-goal");
+
+    // Check text content of links
+    expect(screen.getByRole("link", { name: "Navigate to Home" })).toHaveTextContent("Home");
+    expect(screen.getByRole("link", { name: "Navigate to Weight" })).toHaveTextContent("Weight");
+    expect(screen.getByRole("link", { name: "Navigate to Chart" })).toHaveTextContent("Chart");
+    expect(screen.getByRole("link", { name: "Navigate to Goals" })).toHaveTextContent("Goals");
+
+    // Check icons are rendered
+    expect(screen.getByTestId("home-icon")).toBeInTheDocument();
+    expect(screen.getByTestId("scale-icon")).toBeInTheDocument();
+    expect(screen.getByTestId("line-chart-icon")).toBeInTheDocument();
+    expect(screen.getByTestId("target-icon")).toBeInTheDocument();
   });
 
-  it.skip("should toggle between light and dark themes when theme toggle button is clicked", async () => {
-    // Mock prefers-color-scheme: light
-    vi.spyOn(window, "matchMedia").mockImplementation(
-      (query: string) =>
-        ({
-          matches: query === "(prefers-color-scheme: dark)" ? false : false,
-          media: query,
-          onchange: null,
-          addListener: vi.fn(),
-          removeListener: vi.fn(),
-          addEventListener: vi.fn(),
-          removeEventListener: vi.fn(),
-          dispatchEvent: vi.fn(() => true),
-        } as MediaQueryList)
-    );
+  it("applies active styles to the current route", async () => {
+    await setup("/weight");
 
-    // Mock a logged-in user
-    useAuthStore.setState({ isLoggedIn: true, userId: "test-user-id" });
-
-    // Render the Navigation component
     await act(async () => {
-      await setup("/");
-    });
+      const weightLink = screen.getByRole("link", { name: "Navigate to Weight" });
+      expect(weightLink).toHaveClass("font-semibold");
+      expect(weightLink).toHaveClass("bg-muted");
 
-    // Wait for the Navigation component to render
-    await waitFor(
-      () => {
-        expect(
-          screen.getByRole("link", { name: "Weight Tracker" })
-        ).toBeInTheDocument();
-      },
-      { timeout: 2000 }
-    );
-
-    // Find the theme toggle button
-    const themeToggleButton = screen.getByRole("button", {
-      name: /toggle theme/i,
-    });
-    expect(themeToggleButton).toBeInTheDocument();
-
-    // Check initial theme (light)
-    expect(document.documentElement.classList.contains("dark")).toBe(false);
-
-    // Simulate clicking the toggle button
-    await act(async () => {
-      fireEvent.click(themeToggleButton);
-    });
-
-    // Expect the dark theme to be applied
-    await waitFor(() => {
-      expect(document.documentElement.classList.contains("dark")).toBe(true);
-    });
-
-    // Click again to toggle back to light
-    await act(async () => {
-      fireEvent.click(themeToggleButton);
-    });
-
-    // Expect the light theme to be restored
-    await waitFor(() => {
-      expect(document.documentElement.classList.contains("dark")).toBe(false);
+      // Verify other links do not have active styles
+      const homeLink = screen.getByRole("link", { name: "Navigate to Home" });
+      expect(homeLink).not.toHaveClass("font-semibold");
+      expect(homeLink).not.toHaveClass("bg-muted");
     });
   });
 
-  it.skip("should persist theme in localStorage and apply it on mount", async () => {
-    // Set dark theme in localStorage before rendering
-    window.localStorage.setItem("theme", "dark");
+  it("triggers navigation when a link is clicked", async () => {
+    const { history } = await setup("/");
 
-    // Render the Navigation component
+    const weightLink = screen.getByRole("link", { name: "Navigate to Weight" });
     await act(async () => {
-      await setup("/");
+      fireEvent.click(weightLink);
     });
 
-    // Wait for the Navigation component to render
-    await waitFor(
-      () => {
-        expect(
-          screen.getByRole("link", { name: "Weight Tracker" })
-        ).toBeInTheDocument();
-      },
-      { timeout: 2000 }
-    );
-
-    // Expect the dark theme to be applied on mount
-    expect(document.documentElement.classList.contains("dark")).toBe(true);
-
-    // Find the theme toggle button
-    const themeToggleButton = screen.getByRole("button", {
-      name: /toggle theme/i,
-    });
-    expect(themeToggleButton).toBeInTheDocument();
-
-    // Expect localStorage to still have the dark theme
-    expect(window.localStorage.getItem("theme")).toBe("dark");
-
-    // Simulate clicking the toggle button to switch to light
-    await act(async () => {
-      fireEvent.click(themeToggleButton);
-    });
-
-    // Expect the light theme to be applied
-    await waitFor(() => {
-      expect(document.documentElement.classList.contains("dark")).toBe(false);
-    });
-
-    // Expect localStorage to be updated to light
-    expect(window.localStorage.getItem("theme")).toBe("light");
-  });
-
-  it("should initialize theme based on prefers-color-scheme when no localStorage value exists", async () => {
-    // Mock prefers-color-scheme: dark
-    vi.spyOn(window, "matchMedia").mockImplementation(
-      (query: string) =>
-        ({
-          matches: query === "(prefers-color-scheme: dark)" ? true : false,
-          media: query,
-          onchange: null,
-          addListener: vi.fn(),
-          removeListener: vi.fn(),
-          addEventListener: vi.fn(),
-          removeEventListener: vi.fn(),
-          dispatchEvent: vi.fn(() => true),
-        } as MediaQueryList)
-    );
-
-    // Ensure localStorage is empty
-    window.localStorage.clear();
-
-    // Render the Navigation component
-    await act(async () => {
-      await setup("/");
-    });
-
-    // Wait for the Navigation component to render
-    // await waitFor(
-    //   () => {
-    //     expect(screen.getByRole('link', { name: 'Weight Tracker' })).toBeInTheDocument();
-    //   },
-    //   { timeout: 2000 }
-    // );
-
-    // Expect the dark theme to be applied on mount based on prefers-color-scheme
-    expect(document.documentElement.classList.contains("dark")).toBe(true);
-
-    // Expect localStorage to have no theme set initially
-    expect(window.localStorage.getItem("theme")).toBe(null);
-
-    // Find the theme toggle button
-    // const themeToggleButton = screen.getByRole('button', { name: /toggle theme/i });
-    // expect(themeToggleButton).toBeInTheDocument();
-
-    // Simulate clicking the toggle button to switch to light
-    // await act(async () => {
-    //   fireEvent.click(themeToggleButton);
-    // });
-
-    // Expect the light theme to be applied
-    // await waitFor(() => {
-    //   expect(document.documentElement.classList.contains('dark')).toBe(false);
-    // });
-
-    // Expect localStorage to be updated to light
-    // expect(window.localStorage.getItem('theme')).toBe('light');
+    // Check that the router navigated to the correct route
+    expect(history.location.pathname).toBe("/weight");
+    expect(weightLink).toHaveAttribute("href", "/weight");
   });
 });

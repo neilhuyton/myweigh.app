@@ -1,7 +1,7 @@
 // __mocks__/handlers/weightGetGoal.ts
 import { http, HttpResponse } from 'msw';
 
-export const weightGetGoalHandler = http.get(
+export const weightGetGoalHandler = http.post(
   'http://localhost:8888/.netlify/functions/trpc/weight.getGoal',
   async ({ request }) => {
     const headers = Object.fromEntries(request.headers.entries());

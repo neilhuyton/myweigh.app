@@ -2,50 +2,151 @@
 import { http, HttpResponse } from 'msw';
 import jwt from 'jsonwebtoken';
 
+let weights = [
+  {
+    id: '1',
+    weightKg: 70,
+    note: 'Morning weigh-in',
+    createdAt: '2023-10-01T00:00:00Z',
+  },
+  {
+    id: '2',
+    weightKg: 69.5,
+    note: 'Evening weigh-in',
+    createdAt: '2023-10-02T00:00:00Z',
+  },
+];
+
 export const weightDeleteHandler = http.post(
   'http://localhost:8888/.netlify/functions/trpc/weight.delete',
   async ({ request }) => {
-    console.log("weightDeleteHandler called", {
-      headers: Object.fromEntries(request.headers.entries()),
-      url: request.url,
-    });
-    const headers = Object.fromEntries(request.headers.entries());
-    const authHeader = headers['authorization'];
-    let userId: string | null = null;
+    console.log('MSW: Intercepted weight.delete request:', request.url, request.method);
+    // Define the expected TRPC batched request body type
+    type TrpcRequestBody = { [key: string]: { weightId: string; id?: number } };
+    const body = (await request.json()) as TrpcRequestBody | null;
+    console.log('MSW: Request body:', JSON.stringify(body, null, 2));
 
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.split('Bearer ')[1];
-      try {
-        const decoded = jwt.verify(token, 'your-secret-key') as { userId: string };
-        userId = decoded.userId;
-      } catch (error) {
-        console.error("JWT verification failed:", error);
-      }
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return HttpResponse.json(
+        [
+          {
+            id: 0,
+            error: {
+              message: 'Unauthorized',
+              code: -32001,
+              data: { code: 'UNAUTHORIZED', httpStatus: 401, path: 'weight.delete' },
+            },
+          },
+        ],
+        { status: 200 }
+      );
     }
 
-    // Allow requests without auth for testing, as in WeightChart.test.tsx
-    // if (!userId) {
-    //   return HttpResponse.json(
-    //     [
-    //       {
-    //         error: {
-    //           message: 'Unauthorized: User must be logged in',
-    //           code: -32001,
-    //           data: { code: 'UNAUTHORIZED', httpStatus: 401, path: 'weight.delete' },
-    //         },
-    //       },
-    //     ],
-    //     { status: 401 }
-    //   );
-    // }
+    const token = authHeader.split(' ')[1];
+    let userId: string | null = null;
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { userId: string };
+      userId = decoded.userId;
+    } catch (error) {
+      console.error('MSW: Invalid token:', error);
+      return HttpResponse.json(
+        [
+          {
+            id: 0,
+            error: {
+              message: 'Invalid token',
+              code: -32001,
+              data: { code: 'UNAUTHORIZED', httpStatus: 401, path: 'weight.delete' },
+            },
+          },
+        ],
+        { status: 200 }
+      );
+    }
 
-    console.log("Returning delete success");
-    return HttpResponse.json([
-      {
-        result: {
-          data: { success: true },
+    console.log('MSW: Handling request for userId:', userId);
+
+    if (userId === 'error-user-id') {
+      return HttpResponse.json(
+        [
+          {
+            id: 0,
+            error: {
+              message: 'Failed to delete weight',
+              code: -32002,
+              data: { code: 'INTERNAL_SERVER_ERROR', httpStatus: 500, path: 'weight.delete' },
+            },
+          },
+        ],
+        { status: 200 }
+      );
+    }
+
+    // Extract input from the TRPC batched request body
+    const input = body?.['0'];
+    if (!input || !input.weightId) {
+      return HttpResponse.json(
+        [
+          {
+            id: 0,
+            error: {
+              message: 'Invalid input',
+              code: -32001,
+              data: { code: 'BAD_REQUEST', httpStatus: 400, path: 'weight.delete' },
+            },
+          },
+        ],
+        { status: 200 }
+      );
+    }
+
+    if (input.weightId === '1') {
+      weights = weights.filter((w) => w.id !== '1');
+      console.log('MSW: Updated weights:', weights);
+      return HttpResponse.json([
+        {
+          id: input?.id ?? 0,
+          result: {
+            data: { id: '1' },
+          },
         },
-      },
-    ]);
+      ]);
+    }
+
+    return HttpResponse.json(
+      [
+        {
+          id: input?.id ?? 0,
+          error: {
+            message: 'Weight measurement not found',
+            code: -32001,
+            data: {
+              code: 'NOT_FOUND',
+              httpStatus: 404,
+              path: 'weight.delete',
+            },
+          },
+        },
+      ],
+      { status: 200 }
+    );
   }
 );
+
+export const resetWeights = () => {
+  weights = [
+    {
+      id: '1',
+      weightKg: 70,
+      note: 'Morning weigh-in',
+      createdAt: '2023-10-01T00:00:00Z',
+    },
+    {
+      id: '2',
+      weightKg: 69.5,
+      note: 'Evening weigh-in',
+      createdAt: '2023-10-02T00:00:00Z',
+    },
+  ];
+};

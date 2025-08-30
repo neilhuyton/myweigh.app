@@ -6,9 +6,6 @@ export const weightGetWeightsHandler = http.post(
   /http:\/\/localhost:8888\/\.netlify\/functions\/trpc\/weight\.getWeights/,
   async ({ request }) => {
     console.log('MSW: Intercepted weight.getWeights request:', request.url, request.method);
-    const body = await request.json();
-    console.log('MSW: Request body:', JSON.stringify(body, null, 2));
-
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return HttpResponse.json(
