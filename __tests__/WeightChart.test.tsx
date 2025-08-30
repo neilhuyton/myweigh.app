@@ -23,66 +23,7 @@ import {
 import { router } from "../src/router/router";
 import { useAuthStore } from "../src/store/authStore";
 import { weightGetWeightsHandler } from "../__mocks__/handlers/weightGetWeights";
-import jwt from "jsonwebtoken";
-import { http, HttpResponse } from "msw";
-
-// Mock refreshToken handler
-const refreshTokenHandler = http.post(
-  /http:\/\/localhost:8888\/\.netlify\/functions\/trpc\/refreshToken\.refresh/,
-  async ({ request }) => {
-    console.log(
-      "MSW: Intercepted refreshToken.refresh request:",
-      request.url,
-      request.method
-    );
-    const body = await request.json();
-    const { refreshToken } = (body as any)[0].params.input;
-
-    if (refreshToken === "valid-refresh-token") {
-      const newToken = jwt.sign(
-        { userId: "empty-user-id" },
-        process.env.JWT_SECRET || "your-secret-key",
-        { expiresIn: "1h" }
-      );
-      return HttpResponse.json(
-        [
-          {
-            id: 0,
-            result: {
-              data: { token: newToken, refreshToken: "new-refresh-token" },
-            },
-          },
-        ],
-        { status: 200 }
-      );
-    }
-
-    return HttpResponse.json(
-      [
-        {
-          id: 0,
-          error: {
-            message: "Invalid refresh token",
-            code: -32001,
-            data: {
-              code: "UNAUTHORIZED",
-              httpStatus: 401,
-              path: "refreshToken.refresh",
-            },
-          },
-        },
-      ],
-      { status: 200 }
-    );
-  }
-);
-
-// Mock JWT tokens
-const generateToken = (userId: string) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET || "your-secret-key", {
-    expiresIn: "1h",
-  });
-};
+import { generateToken } from './utils/token'; // Import from utility
 
 describe("WeightChart Component", () => {
   const setup = async (initialPath = "/weight-chart", userId?: string) => {
@@ -116,7 +57,7 @@ describe("WeightChart Component", () => {
   beforeAll(() => {
     console.log("MSW: Starting server");
     server.listen({ onUnhandledRequest: "warn" });
-    server.use(weightGetWeightsHandler, refreshTokenHandler);
+    server.use(weightGetWeightsHandler);
   });
 
   afterEach(() => {
