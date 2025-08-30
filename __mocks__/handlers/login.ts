@@ -16,7 +16,7 @@ export const loginHandler = http.post(
     let body: unknown;
     try {
       body = await request.json();
-      console.log("Request body:", JSON.stringify(body, null, 2));
+      console.log("Mock Server Request Body:", JSON.stringify(body, null, 2));
     } catch (error) {
       console.error("Error parsing request body:", error);
       return HttpResponse.json(
@@ -39,7 +39,7 @@ export const loginHandler = http.post(
     if (Array.isArray(body) && body.length > 0) {
       const first = body[0];
       if (first?.input) {
-        // Correct format: [{ input: { email, password } }]
+        // Standard tRPC batch format: [{ input: { email, password } }]
         input = first.input as TrpcRequestBody;
       } else if (first && "email" in first && "password" in first) {
         // Fallback for batch without input wrapper: [{ email, password }]
@@ -60,9 +60,35 @@ export const loginHandler = http.post(
           { status: 200 }
         );
       }
-    } else if (body && typeof body === "object" && "email" in body && "password" in body) {
-      // Direct object: { email, password }
-      input = body as TrpcRequestBody;
+    } else if (typeof body === "object" && body !== null) {
+      if ("email" in body && "password" in body) {
+        // Non-batched: { email, password }
+        input = body as TrpcRequestBody;
+      } else if (
+        "0" in body &&
+        typeof body["0"] === "object" &&
+        body["0"] !== null &&
+        "email" in body["0"] &&
+        "password" in body["0"]
+      ) {
+        // Custom batch format: { 0: { email, password } }
+        input = body["0"] as TrpcRequestBody;
+      } else {
+        console.error("Invalid object body format:", body);
+        return HttpResponse.json(
+          [
+            {
+              id: 0,
+              error: {
+                message: "Invalid request body",
+                code: -32600,
+                data: { code: "BAD_REQUEST", httpStatus: 400, path: "login" },
+              },
+            },
+          ],
+          { status: 200 }
+        );
+      }
     } else {
       console.error("Invalid body format:", body);
       return HttpResponse.json(
