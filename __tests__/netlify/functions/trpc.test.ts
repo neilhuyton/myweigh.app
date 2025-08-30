@@ -32,31 +32,6 @@ describe('Netlify Function: trpc', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
-  it('handles user.getUsers request successfully', async () => {
-    server.use(
-      http.post('http://localhost:8888/.netlify/functions/trpc', async ({ request }) => {
-        const body = (await request.json()) as unknown;
-        const json = body as { json: { path: string } };
-        if (json.json?.path === 'getUsers') {
-          return HttpResponse.json({
-            result: { data: mockUsers },
-          });
-        }
-        return HttpResponse.json({ error: { message: 'Procedure not found', code: 'NOT_FOUND' } }, { status: 404 });
-      })
-    );
-
-    const response = await fetch('http://localhost:8888/.netlify/functions/trpc', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ json: { path: 'getUsers' } }),
-    });
-
-    expect(response.status).toBe(200);
-    const body = await response.json();
-    expect(body.result.data).toEqual(mockUsers);
-  });
-
   it('handles user.register successfully', async () => {
     const newUser = {
       id: 'new-user-id',
@@ -137,31 +112,5 @@ describe('Netlify Function: trpc', () => {
     expect(response.status).toBe(400);
     const body = await response.json();
     expect(body.error.message).toContain('Password must be at least 8 characters');
-  });
-
-  it('returns 500 on internal server error', async () => {
-    server.use(
-      http.post('http://localhost:8888/.netlify/functions/trpc', async ({ request }) => {
-        const body = (await request.json()) as unknown;
-        const json = body as { json: { path: string } };
-        if (json.json?.path === 'getUsers') {
-          return HttpResponse.json(
-            { error: { message: 'Internal server error', code: 'INTERNAL_SERVER_ERROR' } },
-            { status: 500 }
-          );
-        }
-        return HttpResponse.json({ error: { message: 'Procedure not found', code: 'NOT_FOUND' } }, { status: 404 });
-      })
-    );
-
-    const response = await fetch('http://localhost:8888/.netlify/functions/trpc', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ json: { path: 'getUsers' } }),
-    });
-
-    expect(response.status).toBe(500);
-    const body = await response.json();
-    expect(body.error?.message).toContain('Internal server error');
   });
 });

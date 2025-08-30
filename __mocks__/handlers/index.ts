@@ -1,5 +1,4 @@
 // __mocks__/handlers/index.ts
-import { getUsersHandler } from './getUsers';
 import { verifyEmailHandler } from './verifyEmail';
 import { forgotPasswordHandler } from './forgotPassword';
 import { resetPasswordConfirmHandler } from './resetPasswordConfirm';
@@ -16,7 +15,6 @@ import { weightSetGoalHandler } from './weightSetGoal';
 import { weightUpdateGoalHandler } from './weightUpdateGoal';
 
 export const handlers = [
-  getUsersHandler,
   verifyEmailHandler,
   forgotPasswordHandler,
   resetPasswordConfirmHandler,

@@ -11,11 +11,11 @@ import {
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { httpBatchLink } from "@trpc/client";
+import { trpcClient } from "../src/client"; // Import trpcClient from src/client.ts
 import { trpc } from "../src/trpc";
 import { useAuthStore } from "../src/store/authStore";
 import "@testing-library/jest-dom";
-import { act } from "react-dom/test-utils";
+import { act } from "react"; // Import act from react
 import { server } from "../__mocks__/server";
 import {
   RouterProvider,
@@ -33,29 +33,17 @@ describe("LoginForm Component", () => {
     },
   });
 
-  const trpcClient = trpc.createClient({
-    links: [
-      httpBatchLink({
-        url: "http://localhost:8888/.netlify/functions/trpc",
-        fetch: async (input, options) =>
-          fetch(input, { ...options }),
-      }),
-    ],
-  });
-
   const setup = async (initialPath = "/login") => {
     const history = createMemoryHistory({ initialEntries: [initialPath] });
     const testRouter = createRouter({ routeTree: router.routeTree, history });
 
-    await act(async () => {
-      render(
-        <trpc.Provider client={trpcClient} queryClient={queryClient}>
-          <QueryClientProvider client={queryClient}>
-            <RouterProvider router={testRouter} />
-          </QueryClientProvider>
-        </trpc.Provider>
-      );
-    });
+    render(
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={testRouter} />
+        </QueryClientProvider>
+      </trpc.Provider>
+    );
 
     return { history, testRouter };
   };
@@ -101,7 +89,6 @@ describe("LoginForm Component", () => {
   });
 
   it("handles successful login and updates auth state", async () => {
-    // Use the external login handler
     server.use(loginHandler);
 
     await setup();
@@ -138,7 +125,6 @@ describe("LoginForm Component", () => {
   });
 
   it("displays error message on invalid login credentials", async () => {
-    // Use the external login handler
     server.use(loginHandler);
     vi.spyOn(console, "error").mockImplementation(() => {});
 
@@ -207,7 +193,6 @@ describe("LoginForm Component", () => {
   });
 
   it("disables login button during submission for invalid login", async () => {
-    // Use the external login handler
     server.use(loginHandler);
     vi.spyOn(console, "error").mockImplementation(() => {});
 
@@ -221,7 +206,6 @@ describe("LoginForm Component", () => {
     expect(loginButton).not.toHaveAttribute("disabled");
     expect(loginButton).toHaveTextContent("Login");
 
-    // Perform form submission
     await act(async () => {
       const emailInput = screen.getByTestId("email-input");
       const passwordInput = screen.getByTestId("password-input");
@@ -231,7 +215,6 @@ describe("LoginForm Component", () => {
       await form.dispatchEvent(new Event("submit", { bubbles: true }));
     });
 
-    // Wait for button to be disabled during submission
     await waitFor(
       () => {
         expect(loginButton).toHaveAttribute("disabled");
@@ -240,7 +223,6 @@ describe("LoginForm Component", () => {
       { timeout: 3000, interval: 100 }
     );
 
-    // Wait for mutation to fail and button to re-enable
     await waitFor(
       () => {
         expect(loginButton).not.toHaveAttribute("disabled");

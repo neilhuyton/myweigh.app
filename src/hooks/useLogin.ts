@@ -9,7 +9,6 @@ import { useRouter } from "@tanstack/react-router";
 import type { TRPCClientErrorLike } from "@trpc/client";
 import type { AppRouter } from "server/trpc";
 
-// Define the expected error shape for AppRouter
 type TRPCErrorData = {
   code: string;
   httpStatus: number;
@@ -51,7 +50,10 @@ export const useLogin = (): UseLoginReturn => {
   const router = useRouter();
 
   const loginMutation = trpc.login.useMutation({
-    onMutate: () => setMessage(null),
+    onMutate: (data) => {
+      console.log("Mutation Input:", data); // Log the mutation input
+      setMessage(null);
+    },
     onSuccess: (data: LoginResponse) => {
       setMessage("Login successful!");
       login(data.id, data.token, data.refreshToken);
@@ -59,7 +61,6 @@ export const useLogin = (): UseLoginReturn => {
       router.navigate({ to: "/" });
     },
     onError: (error: TRPCClientErrorLike<AppRouter>) => {
-      // Use error.message directly, as the mock places the message here
       const errorMessage = error.message || "Unknown error";
       setMessage(`Login failed: ${errorMessage}`);
     },
@@ -75,6 +76,7 @@ export const useLogin = (): UseLoginReturn => {
   }, [form]);
 
   const handleSubmit = async (data: FormValues) => {
+    console.log("Form Data Submitted:", data); // Log form data
     const isValid = await form.trigger();
     if (!isValid) return;
     await loginMutation.mutateAsync(data);

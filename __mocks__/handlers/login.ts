@@ -1,4 +1,3 @@
-// __mocks__/handlers/login.ts
 import { http, HttpResponse } from "msw";
 import { mockUsers } from "../mockUsers";
 import bcrypt from "bcryptjs";
@@ -6,7 +5,8 @@ import type { inferProcedureInput } from "@trpc/server";
 import type { AppRouter } from "../../server/trpc";
 
 interface TrpcRequestBody {
-  "0": inferProcedureInput<AppRouter["login"]>; // { email: string; password: string }
+  email: string;
+  password: string;
 }
 
 export const loginHandler = http.post(
@@ -16,6 +16,7 @@ export const loginHandler = http.post(
     let body: unknown;
     try {
       body = await request.json();
+      console.log("Request body:", JSON.stringify(body, null, 2));
     } catch (error) {
       console.error("Error parsing request body:", error);
       return HttpResponse.json(
@@ -33,9 +34,37 @@ export const loginHandler = http.post(
       );
     }
 
-    // Check if body is an object with a "0" key
-    if (!body || typeof body !== "object" || !("0" in body)) {
-      console.error('Invalid body format: not an object with "0" key');
+    let input: TrpcRequestBody;
+
+    if (Array.isArray(body) && body.length > 0) {
+      const first = body[0];
+      if (first?.input) {
+        // Correct format: [{ input: { email, password } }]
+        input = first.input as TrpcRequestBody;
+      } else if (first && "email" in first && "password" in first) {
+        // Fallback for batch without input wrapper: [{ email, password }]
+        input = first as TrpcRequestBody;
+      } else {
+        console.error("Invalid array body format:", body);
+        return HttpResponse.json(
+          [
+            {
+              id: 0,
+              error: {
+                message: "Invalid request body",
+                code: -32600,
+                data: { code: "BAD_REQUEST", httpStatus: 400, path: "login" },
+              },
+            },
+          ],
+          { status: 200 }
+        );
+      }
+    } else if (body && typeof body === "object" && "email" in body && "password" in body) {
+      // Direct object: { email, password }
+      input = body as TrpcRequestBody;
+    } else {
+      console.error("Invalid body format:", body);
       return HttpResponse.json(
         [
           {
@@ -51,8 +80,7 @@ export const loginHandler = http.post(
       );
     }
 
-    const input = (body as TrpcRequestBody)["0"];
-    const { email, password } = input || {};
+    const { email, password } = input;
 
     if (!email || !password) {
       return HttpResponse.json(
