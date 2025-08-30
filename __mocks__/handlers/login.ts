@@ -1,8 +1,6 @@
 import { http, HttpResponse } from "msw";
 import { mockUsers } from "../mockUsers";
 import bcrypt from "bcryptjs";
-import type { inferProcedureInput } from "@trpc/server";
-import type { AppRouter } from "../../server/trpc";
 
 interface TrpcRequestBody {
   email: string;

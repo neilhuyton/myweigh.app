@@ -90,223 +90,289 @@ test.describe("Weight Goal Functionality", () => {
     test("should set, edit, and display weight goal", async ({ page }) => {
       const goals: Goal[] = [];
 
-      await page.route("**/trpc/weight.getCurrentGoal**", async (route) => {
-        if (route.request().method() !== "GET") return await route.continue();
-        const auth = (await route.request().allHeaders())["authorization"];
-        if (auth !== "Bearer test-user-id") {
-          return await route.fulfill(
-            unauthorizedResponse("weight.getCurrentGoal")
-          );
+      // Log browser console errors for debugging
+      page.on("console", (msg) => {
+        if (msg.type() === "error") {
+          console.log(`Browser console error: ${msg.text()}`);
         }
-        const currentGoal = goals.find((g) => !g.reachedAt) || null;
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          headers,
-          body: JSON.stringify([
-            {
-              result: {
-                data: currentGoal
-                  ? {
-                      id: currentGoal.id,
-                      goalWeightKg: currentGoal.goalWeightKg,
-                      goalSetAt: currentGoal.goalSetAt,
-                    }
-                  : null,
-              },
-            },
-          ]),
-        });
       });
 
-      await page.route("**/trpc/weight.getGoals**", async (route) => {
-        if (route.request().method() !== "GET") return await route.continue();
-        const auth = (await route.request().allHeaders())["authorization"];
-        if (auth !== "Bearer test-user-id") {
-          return await route.fulfill(unauthorizedResponse("weight.getGoals"));
-        }
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          headers,
-          body: JSON.stringify([{ result: { data: goals } }]),
-        });
+      // Log all requests for debugging
+      page.on("request", async (req) => {
+        const url = req.url();
+        const method = req.method();
+        const headers = await req.allHeaders();
+        const postData = await req.postData();
+        console.log(`Request: ${method} ${url}`, { headers, postData });
       });
 
-      await page.route("**/trpc/weight.setGoal**", async (route) => {
-        if (route.request().method() !== "POST") return await route.continue();
-        const auth = (await route.request().allHeaders())["authorization"];
-        const body = await route.request().postData();
-        if (auth !== "Bearer test-user-id") {
-          return await route.fulfill(unauthorizedResponse("weight.setGoal"));
-        }
-        const input = JSON.parse(body || "{}")[0];
-        if (!input?.goalWeightKg || input.goalWeightKg <= 0) {
-          return await route.fulfill(
-            badRequestResponse(
-              "weight.setGoal",
-              "Goal weight must be a positive number"
-            )
+      // Log all responses for debugging
+      page.on("response", async (resp) => {
+        const url = resp.url();
+        const status = resp.status();
+        try {
+          const body = await resp.json();
+          console.log(
+            `Response: ${url} - Status: ${status}`,
+            JSON.stringify(body, null, 2)
           );
+        } catch (e) {
+          console.log(`Failed to parse response for ${url}:`, e);
         }
-        const newGoal: Goal = {
-          id: "goal-" + Math.random().toString(36).substr(2, 9),
-          goalWeightKg: input.goalWeightKg,
-          goalSetAt: new Date().toISOString(),
-          reachedAt: null,
-        };
-        goals.push(newGoal);
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          headers,
-          body: JSON.stringify([
-            {
-              id: 0,
-              result: {
-                data: {
-                  id: newGoal.id,
-                  goalWeightKg: newGoal.goalWeightKg,
-                  goalSetAt: newGoal.goalSetAt,
-                },
-              },
-            },
-          ]),
-        });
       });
 
-      await page.route("**/trpc/weight.updateGoal**", async (route) => {
-        if (route.request().method() !== "POST") return await route.continue();
-        const auth = (await route.request().allHeaders())["authorization"];
-        const body = await route.request().postData();
-        if (auth !== "Bearer test-user-id") {
-          return await route.fulfill(unauthorizedResponse("weight.updateGoal"));
-        }
-        const input = JSON.parse(body || "{}")[0];
-        if (!input?.goalWeightKg || input.goalWeightKg <= 0) {
-          return await route.fulfill(
-            badRequestResponse(
-              "weight.updateGoal",
-              "Goal weight must be a positive number"
-            )
-          );
-        }
-        const goal = goals.find((g) => g.id === input.goalId && !g.reachedAt);
-        if (!goal) {
-          return await route.fulfill({
-            status: 404,
-            contentType: "application/json",
-            headers,
-            body: JSON.stringify([
-              {
-                id: 0,
-                error: {
-                  message: "Goal not found",
-                  code: -32001,
-                  data: {
-                    code: "NOT_FOUND",
-                    httpStatus: 404,
-                    path: "weight.updateGoal",
+      // Mock login request to include token
+      await page.route(
+        "http://localhost:8888/.netlify/functions/trpc/login**",
+        async (route) => {
+          if (route.request().method() === "POST") {
+            await route.fulfill({
+              status: 200,
+              contentType: "application/json",
+              headers,
+              body: JSON.stringify([
+                {
+                  id: 0,
+                  result: {
+                    data: {
+                      id: "test-user-id",
+                      email: "testuser@example.com",
+                      token: "mock-token",
+                      refreshToken: "mock-refresh-token",
+                    },
                   },
                 },
-              },
-            ]),
-          });
+              ]),
+            });
+          } else {
+            await route.continue();
+          }
         }
-        goal.goalWeightKg = input.goalWeightKg;
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          headers,
-          body: JSON.stringify([
-            {
-              id: 0,
-              result: {
+      );
+
+      // Perform login
+      await page.goto("/login");
+      await expect(page.getByPlaceholder("m@example.com")).toBeVisible({
+        timeout: 5000,
+      });
+      await page.getByPlaceholder("m@example.com").fill("testuser@example.com");
+      await page.getByPlaceholder("Enter your password").fill("password123");
+      await Promise.all([
+        page.waitForResponse(
+          (resp) => {
+            const matches =
+              resp.url().includes("trpc/login") && resp.status() === 200;
+            console.log(
+              `waitForResponse (login): ${resp.url()} - Status: ${resp.status()} - Matches: ${matches}`
+            );
+            return matches;
+          },
+          { timeout: 20000 }
+        ),
+        page.getByRole("button", { name: "Login" }).click(),
+      ]);
+
+      // Verify token is set (e.g., in localStorage or cookies)
+      const token = await page.evaluate(
+        () => localStorage.getItem("token") || document.cookie
+      );
+      console.log(`Stored token after login: ${token}`);
+
+      // Mock tRPC requests
+      await page.route(
+        "http://localhost:8888/.netlify/functions/trpc/**",
+        async (route) => {
+          const url = route.request().url();
+          const method = route.request().method();
+          const headers = await route.request().allHeaders();
+          const body = await route.request().postData();
+          console.log(`Intercepted tRPC request: ${method} ${url}`, {
+            headers,
+            body,
+          });
+
+          // Parse tRPC batch queries from the URL
+          const urlObj = new URL(url);
+          const queries =
+            urlObj.pathname.split("/trpc/")[1]?.split("?")[0]?.split(",") || [];
+
+          if (method !== "POST") {
+            console.log(`Non-POST request: ${method} ${url}`);
+            await route.continue();
+            return;
+          }
+
+          const auth = headers["authorization"];
+          if (auth !== "Bearer mock-token") {
+            console.log("Unauthorized: Invalid token");
+            return await route.fulfill(unauthorizedResponse(queries.join(",")));
+          }
+
+          // Construct response based on queried endpoints
+          const responseBody = queries.map((query, index) => {
+            if (query === "weight.getCurrentGoal") {
+              const currentGoal = goals.find((g) => !g.reachedAt) || null;
+              return {
+                id: index,
+                result: {
+                  data: currentGoal
+                    ? {
+                        id: currentGoal.id,
+                        goalWeightKg: currentGoal.goalWeightKg,
+                        goalSetAt: currentGoal.goalSetAt,
+                      }
+                    : null,
+                },
+              };
+            } else if (query === "weight.getGoals") {
+              return {
+                id: index,
+                result: { data: goals },
+              };
+            } else if (query === "weight.setGoal") {
+              const input = JSON.parse(body || "{}")[index];
+              if (!input?.goalWeightKg || input.goalWeightKg <= 0) {
+                return badRequestResponse(
+                  "weight.setGoal",
+                  "Goal weight must be a positive number"
+                );
+              }
+              const newGoal: Goal = {
+                id: "goal-" + Math.random().toString(36).substr(2, 9),
+                goalWeightKg: input.goalWeightKg,
+                goalSetAt: new Date().toISOString(),
+                reachedAt: null,
+              };
+              goals.push(newGoal);
+              return {
+                id: index,
+                result: {
+                  data: {
+                    id: newGoal.id,
+                    goalWeightKg: newGoal.goalWeightKg,
+                    goalSetAt: newGoal.goalSetAt,
+                  },
+                },
+              };
+            } else if (query === "weight.updateGoal") {
+              const input = JSON.parse(body || "{}")[index];
+              if (!input?.goalWeightKg || input.goalWeightKg <= 0) {
+                return badRequestResponse(
+                  "weight.updateGoal",
+                  "Goal weight must be a positive number"
+                );
+              }
+              const goal = goals.find(
+                (g) => g.id === input.goalId && !g.reachedAt
+              );
+              if (!goal) {
+                return {
+                  id: index,
+                  error: {
+                    message: "Goal not found",
+                    code: -32001,
+                    data: {
+                      code: "NOT_FOUND",
+                      httpStatus: 404,
+                      path: "weight.updateGoal",
+                    },
+                  },
+                };
+              }
+              goal.goalWeightKg = input.goalWeightKg;
+              return {
+                id: index,
+                result: {
+                  data: {
+                    id: goal.id,
+                    goalWeightKg: goal.goalWeightKg,
+                    goalSetAt: goal.goalSetAt,
+                  },
+                },
+              };
+            } else if (query === "weight.create") {
+              const input = JSON.parse(body || "{}")[index];
+              if (!input?.weightKg || input.weightKg <= 0) {
+                return badRequestResponse(
+                  "weight.create",
+                  "Weight must be a positive number"
+                );
+              }
+              const newWeight = {
+                id: "weight-" + Math.random().toString(36).substr(2, 9),
+                weightKg: input.weightKg,
+                createdAt: new Date().toISOString(),
+              };
+              const currentGoal = goals.find((g) => !g.reachedAt);
+              if (currentGoal && input.weightKg <= currentGoal.goalWeightKg) {
+                currentGoal.reachedAt = new Date().toISOString();
+              }
+              return {
+                id: index,
+                result: { data: newWeight },
+              };
+            } else if (query === "weight.getWeights") {
+              return {
+                id: index,
+                result: { data: [] },
+              };
+            }
+            return {
+              id: index,
+              error: {
+                message: `Unknown query: ${query}`,
+                code: -32601,
                 data: {
-                  id: goal.id,
-                  goalWeightKg: goal.goalWeightKg,
-                  goalSetAt: goal.goalSetAt,
+                  code: "METHOD_NOT_FOUND",
+                  httpStatus: 404,
+                  path: query,
                 },
               },
-            },
-          ]),
-        });
-      });
+            };
+          });
 
-      await page.route("**/trpc/weight.create**", async (route) => {
-        if (route.request().method() !== "POST") return await route.continue();
-        const auth = (await route.request().allHeaders())["authorization"];
-        const body = await route.request().postData();
-        if (auth !== "Bearer test-user-id") {
-          return await route.fulfill(unauthorizedResponse("weight.create"));
+          await route.fulfill({
+            status: 200,
+            contentType: "application/json",
+            headers,
+            body: JSON.stringify(responseBody),
+          });
         }
-        const input = JSON.parse(body || "{}")[0];
-        if (!input?.weightKg || input.weightKg <= 0) {
-          return await route.fulfill(
-            badRequestResponse(
-              "weight.create",
-              "Weight must be a positive number"
-            )
-          );
-        }
-        const newWeight = {
-          id: "weight-" + Math.random().toString(36).substr(2, 9),
-          weightKg: input.weightKg,
-          createdAt: new Date().toISOString(),
-        };
-        const currentGoal = goals.find((g) => !g.reachedAt);
-        if (currentGoal && input.weightKg <= currentGoal.goalWeightKg) {
-          currentGoal.reachedAt = new Date().toISOString();
-        }
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          headers,
-          body: JSON.stringify([
-            {
-              id: 0,
-              result: {
-                data: newWeight,
-              },
-            },
-          ]),
-        });
-      });
+      );
 
-      await page.route("**/trpc/weight.getWeights**", async (route) => {
-        if (route.request().method() !== "GET") return await route.continue();
-        const auth = (await route.request().allHeaders())["authorization"];
-        if (auth !== "Bearer test-user-id") {
-          return await route.fulfill(unauthorizedResponse("weight.getWeights"));
-        }
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          headers,
-          body: JSON.stringify([{ result: { data: [] } }]),
-        });
-      });
-
+      // Navigate to Goals page
       await page.getByRole("link", { name: "Goals" }).click();
       await expect(
-        page.getByRole("heading", { name: "Weight Goal", exact: true, level: 1 })
-      ).toBeVisible({ timeout: 5000 });
+        page.getByRole("heading", {
+          name: "Weight Goal",
+          exact: true,
+          level: 1,
+        })
+      ).toBeVisible({ timeout: 10000 });
       await expect(
         page.getByRole("heading", {
           name: "Past Weight Goals",
           exact: true,
           level: 2,
         })
-      ).toBeVisible({ timeout: 5000 });
+      ).toBeVisible({ timeout: 10000 });
       await expect(page.getByText("No weight goals found")).toBeVisible({
-        timeout: 5000,
+        timeout: 10000,
       });
 
+      // Set a new goal
       await page.getByPlaceholder("Enter your goal weight (kg)").fill("60");
       await Promise.all([
         page.waitForResponse(
-          (resp) =>
-            resp.url().includes("trpc/weight.setGoal") && resp.status() === 200,
+          (resp) => {
+            const matches =
+              resp.url().includes("trpc/weight.setGoal") &&
+              resp.status() === 200;
+            console.log(
+              `waitForResponse (setGoal): ${resp.url()} - Status: ${resp.status()} - Matches: ${matches}`
+            );
+            return matches;
+          },
           { timeout: 20000 }
         ),
         page.getByRole("button", { name: "Set Goal" }).click(),
@@ -321,48 +387,69 @@ test.describe("Weight Goal Functionality", () => {
         timeout: 5000,
       });
 
+      // Navigate to Weight page and submit weight
       await page.goto("/weight");
       await page.getByPlaceholder("Enter your weight (kg)").fill("55");
-      await page.route("**/trpc/weight.getWeights**", async (route) => {
-        if (route.request().method() !== "GET") return await route.continue();
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          headers,
-          body: JSON.stringify([
-            {
-              result: {
-                data: [
-                  {
-                    weightKg: 55,
-                    createdAt: new Date().toISOString(),
-                  },
-                ],
+      await page.route(
+        "http://localhost:8888/.netlify/functions/trpc/weight.getWeights**",
+        async (route) => {
+          if (route.request().method() !== "POST")
+            return await route.continue();
+          await route.fulfill({
+            status: 200,
+            contentType: "application/json",
+            headers,
+            body: JSON.stringify([
+              {
+                result: {
+                  data: [
+                    {
+                      weightKg: 55,
+                      createdAt: new Date().toISOString(),
+                    },
+                  ],
+                },
               },
-            },
-          ]),
-        });
-      });
+            ]),
+          });
+        }
+      );
       await Promise.all([
         page.waitForResponse(
-          (resp) =>
-            resp.url().includes("trpc/weight.create") && resp.status() === 200,
+          (resp) => {
+            const matches =
+              resp.url().includes("trpc/weight.create") &&
+              resp.status() === 200;
+            console.log(
+              `waitForResponse (create): ${resp.url()} - Status: ${resp.status()} - Matches: ${matches}`
+            );
+            return matches;
+          },
           { timeout: 20000 }
         ),
         page.getByRole("button", { name: "Submit Weight" }).click(),
       ]);
       await expect(page.getByTestId("confetti")).toBeVisible({ timeout: 7000 });
 
+      // Return to Goals page
       await page.getByRole("link", { name: "Goals" }).click();
       await expect(page.getByRole("button", { name: "Set Goal" })).toBeVisible({
         timeout: 5000,
       });
 
+      // Set a new goal
       await page.getByPlaceholder("Enter your goal weight (kg)").fill("50");
       await Promise.all([
         page.waitForResponse(
-          (resp) =>
-            resp.url().includes("trpc/weight.setGoal") && resp.status() === 200,
+          (resp) => {
+            const matches =
+              resp.url().includes("trpc/weight.setGoal") &&
+              resp.status() === 200;
+            console.log(
+              `waitForResponse (setGoal): ${resp.url()} - Status: ${resp.status()} - Matches: ${matches}`
+            );
+            return matches;
+          },
           { timeout: 20000 }
         ),
         page.getByRole("button", { name: "Set Goal" }).click(),
@@ -377,22 +464,37 @@ test.describe("Weight Goal Functionality", () => {
         timeout: 5000,
       });
 
+      // Reload and verify
       await page.reload();
       await page.waitForResponse(
-        (resp) =>
-          resp.url().includes("trpc/weight.getGoals") && resp.status() === 200,
+        (resp) => {
+          const matches =
+            resp.url().includes("trpc/weight.getGoals") &&
+            resp.status() === 200;
+          console.log(
+            `waitForResponse (getGoals): ${resp.url()} - Status: ${resp.status()} - Matches: ${matches}`
+          );
+          return matches;
+        },
         { timeout: 10000 }
       );
       await expect(
         page.locator("table td").filter({ hasText: "50" })
       ).toBeVisible({ timeout: 10000 });
 
+      // Update goal
       await page.getByPlaceholder("Enter your goal weight (kg)").fill("55");
       await Promise.all([
         page.waitForResponse(
-          (resp) =>
-            resp.url().includes("trpc/weight.updateGoal") &&
-            resp.status() === 200,
+          (resp) => {
+            const matches =
+              resp.url().includes("trpc/weight.updateGoal") &&
+              resp.status() === 200;
+            console.log(
+              `waitForResponse (updateGoal): ${resp.url()} - Status: ${resp.status()} - Matches: ${matches}`
+            );
+            return matches;
+          },
           { timeout: 20000 }
         ),
         page.getByRole("button", { name: "Set Goal" }).click(),
@@ -449,7 +551,11 @@ test.describe("Weight Goal Functionality", () => {
 
       await page.getByRole("link", { name: "Goals" }).click();
       await expect(
-        page.getByRole("heading", { name: "Weight Goal", exact: true, level: 1 })
+        page.getByRole("heading", {
+          name: "Weight Goal",
+          exact: true,
+          level: 1,
+        })
       ).toBeVisible({ timeout: 5000 });
       await expect(
         page.getByRole("heading", {

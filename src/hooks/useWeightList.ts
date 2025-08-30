@@ -1,5 +1,13 @@
-// src/hooks/useWeightList.ts
-import { trpc } from "../trpc";
+import { useEffect } from 'react';
+import { trpc } from '../trpc';
+
+interface Weight {
+  userId: string;
+  id: string;
+  createdAt: string;
+  weightKg: number;
+  note: string | null;
+}
 
 export function useWeightList() {
   const {
@@ -7,7 +15,20 @@ export function useWeightList() {
     isLoading,
     isError,
     error,
-  } = trpc.weight.getWeights.useQuery();
+  } = trpc.weight.getWeights.useQuery(undefined, {
+    // Removed onSuccess and onError
+  });
+
+  // Log query state
+  useEffect(() => {
+    if (weights) {
+      console.log('useWeightList: weights data:', JSON.stringify(weights, null, 2));
+    }
+    if (isError && error) {
+      console.error('useWeightList: weights error:', error.message);
+    }
+  }, [weights, isError, error]);
+
   const utils = trpc.useUtils();
   const deleteMutation = trpc.weight.delete.useMutation({
     onSuccess: () => {
@@ -19,25 +40,23 @@ export function useWeightList() {
     },
   });
 
-  // Format date as DD/MM/YYYY
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   };
 
   const handleDelete = (weightId: string) => {
-    if (
-      window.confirm("Are you sure you want to delete this weight measurement?")
-    ) {
+    if (window.confirm('Are you sure you want to delete this weight measurement?')) {
+      console.log('useWeightList: deleting weightId:', weightId);
       deleteMutation.mutate({ weightId });
     }
   };
 
   return {
-    weights,
+    weights: weights as Weight[] | undefined,
     isLoading,
     isError,
     error,
