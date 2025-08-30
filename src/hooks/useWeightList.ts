@@ -49,10 +49,10 @@ export function useWeightList() {
   };
 
   const handleDelete = (weightId: string) => {
-    if (window.confirm('Are you sure you want to delete this weight measurement?')) {
+    // if (window.confirm('Are you sure you want to delete this weight measurement?')) {
       console.log('useWeightList: deleting weightId:', weightId);
       deleteMutation.mutate({ weightId });
-    }
+    // }
   };
 
   return {

@@ -49,9 +49,10 @@ const badRequestResponse = (path: string, message: string) => ({
 test.describe('Weight List Functionality', () => {
   test.describe('Authenticated', () => {
     test.beforeEach(async ({ page }) => {
-      // Mock login request to include token
-      await page.route('**/trpc/login**', async (route) => {
+      // Mock login request to match exact URL
+      await page.route('http://localhost:8888/.netlify/functions/trpc/login?batch=1', async (route) => {
         if (route.request().method() === 'POST') {
+          console.log('Mocking login request:', route.request().url(), 'Method:', route.request().method());
           await route.fulfill({
             status: 200,
             contentType: 'application/json',
@@ -95,16 +96,22 @@ test.describe('Weight List Functionality', () => {
       page.on('response', async (resp) => {
         const url = resp.url();
         const status = resp.status();
-        try {
-          const body = await resp.json();
-          console.log(`Response: ${url} - Status: ${status}`, JSON.stringify(body, null, 2));
-        } catch (e) {
-          console.log(`Failed to parse response for ${url}:`, e);
+        const contentType = resp.headers()['content-type'] || '';
+        const isJson = contentType.includes('application/json');
+        if (isJson) {
+          try {
+            const body = await resp.json();
+            console.log(`Response: ${url} - Status: ${status}`, JSON.stringify(body, null, 2));
+          } catch (e) {
+            console.log(`Failed to parse response for ${url}:`, e);
+          }
+        } else {
+          console.log(`Non-JSON response: ${url} - Status: ${status}`);
         }
       });
 
       // Perform login
-      await page.goto('/login');
+      await page.goto('http://localhost:5173/login');
       await expect(page.getByPlaceholder('m@example.com')).toBeVisible({ timeout: 5000 });
       await page.getByPlaceholder('m@example.com').fill('testuser@example.com');
       await page.getByPlaceholder('Enter your password').fill('password123');
@@ -152,6 +159,13 @@ test.describe('Weight List Functionality', () => {
         const headers = await route.request().allHeaders();
         const body = await route.request().postData();
         console.log(`Intercepted tRPC request: ${method} ${url}`, { headers, body });
+
+        // Skip login route
+        if (url.includes('trpc/login')) {
+          console.log('Skipping login route in general handler');
+          await route.continue();
+          return;
+        }
 
         // Parse tRPC batch queries from the URL
         const urlObj = new URL(url);
@@ -244,6 +258,13 @@ test.describe('Weight List Functionality', () => {
         const body = await route.request().postData();
         console.log(`Intercepted tRPC request: ${method} ${url}`, { headers, body });
 
+        // Skip login route
+        if (url.includes('trpc/login')) {
+          console.log('Skipping login route in general handler');
+          await route.continue();
+          return;
+        }
+
         // Parse tRPC batch queries from the URL
         const urlObj = new URL(url);
         const queries = urlObj.pathname.split('/trpc/')[1]?.split('?')[0]?.split(',') || [];
@@ -279,13 +300,14 @@ test.describe('Weight List Functionality', () => {
             };
           } else if (query === 'weight.delete') {
             const input = JSON.parse(body || '{}')[index];
-            if (!input?.id) {
+            console.log('weight.delete input:', input);
+            if (!input?.weightId) {
               return badRequestResponse('weight.delete', 'Weight ID is required');
             }
-            weights = weights.filter((w) => w.id !== input.id);
+            weights = weights.filter((w) => w.id !== input.weightId);
             return {
               id: index,
-              result: { data: { id: input.id } },
+              result: { data: { id: input.weightId } },
             };
           }
           return {
@@ -321,11 +343,25 @@ test.describe('Weight List Functionality', () => {
         page.locator('table td').filter({ hasText: /20\/08\/2025/ }).filter({ hasNot: page.getByRole('button') })
       ).toBeVisible({ timeout: 10000 });
 
-      // Delete weight measurement
+      // Debug delete button
       const deleteButton = page.getByRole('button', { name: 'Delete weight measurement from 20/08/2025' });
       await expect(deleteButton).toBeVisible({ timeout: 10000 });
       await expect(deleteButton).toBeEnabled({ timeout: 10000 });
+      console.log('Delete button found and enabled');
 
+      // Check for dropdown menu
+      const dropdownTrigger = page.locator('[data-testid="dropdown-trigger"]');
+      if (await dropdownTrigger.isVisible()) {
+        console.log('Dropdown trigger found, clicking to open');
+        await dropdownTrigger.click();
+        const deleteMenuItem = page.getByRole('menuitem', { name: 'Delete' });
+        await expect(deleteMenuItem).toBeVisible({ timeout: 5000 });
+        await deleteMenuItem.click();
+      } else {
+        await deleteButton.click();
+      }
+
+      // Trigger delete action
       await Promise.all([
         page.waitForResponse(
           (resp) => {
@@ -335,8 +371,11 @@ test.describe('Weight List Functionality', () => {
           },
           { timeout: 20000 }
         ),
-        deleteButton.click(),
+        // Click is handled above based on dropdown presence
       ]);
+
+      // Wait for UI to update
+      await page.waitForTimeout(500);
 
       // Verify weight is deleted
       await expect(page.getByText('No weight measurements found')).toBeVisible({ timeout: 10000 });
@@ -350,7 +389,7 @@ test.describe('Weight List Functionality', () => {
 
   test.describe('Unauthenticated', () => {
     test('should redirect to login when not logged in', async ({ page }) => {
-      await page.goto('/logout');
+      await page.goto('http://localhost:5173/logout');
       await page.route('**/trpc/weight.getWeights**', async (route) => {
         if (route.request().method() !== 'POST') return await route.continue();
         await route.fulfill(unauthorizedResponse('weight.getWeights'));
@@ -363,7 +402,7 @@ test.describe('Weight List Functionality', () => {
         if (route.request().method() !== 'POST') return await route.continue();
         await route.fulfill(unauthorizedResponse('weight.getGoals'));
       });
-      await page.goto('/weight');
+      await page.goto('http://localhost:5173/weight');
       await expect(page).toHaveURL(/.*\/login/, { timeout: 5000 });
       await expect(page.getByPlaceholder('m@example.com')).toBeVisible({ timeout: 5000 });
     });
