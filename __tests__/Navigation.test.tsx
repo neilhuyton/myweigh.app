@@ -78,18 +78,18 @@ describe("Navigation Component", () => {
 
     // Check that all links are rendered using aria-label
     expect(screen.getByRole("link", { name: "Navigate to Weight" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Navigate to Chart" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Navigate to Goals" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Navigate to Stats" })).toBeInTheDocument();
 
     // Check href attributes
     expect(screen.getByRole("link", { name: "Navigate to Weight" })).toHaveAttribute("href", "/weight");
-    expect(screen.getByRole("link", { name: "Navigate to Chart" })).toHaveAttribute("href", "/weight-chart");
-    expect(screen.getByRole("link", { name: "Navigate to Goals" })).toHaveAttribute("href", "/weight-goal");
+    expect(screen.getByRole("link", { name: "Navigate to Goals" })).toHaveAttribute("href", "/goals");
+    expect(screen.getByRole("link", { name: "Navigate to Stats" })).toHaveAttribute("href", "/stats");
 
     // Check text content of links
     expect(screen.getByRole("link", { name: "Navigate to Weight" })).toHaveTextContent("Weight");
-    expect(screen.getByRole("link", { name: "Navigate to Chart" })).toHaveTextContent("Chart");
     expect(screen.getByRole("link", { name: "Navigate to Goals" })).toHaveTextContent("Goals");
+    expect(screen.getByRole("link", { name: "Navigate to Stats" })).toHaveTextContent("Stats");
 
     // Check icons are rendered
     expect(screen.getByTestId("scale-icon")).toBeInTheDocument();

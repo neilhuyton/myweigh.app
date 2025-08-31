@@ -38,8 +38,8 @@ function Navigation() {
         <div className="flex flex-row w-full items-center">
           <NavItem to="/weight" label="Weight" Icon={ScaleIcon} />
           {/* <NavItem to="/" label="Home" Icon={HomeIcon} /> */}
-          <NavItem to="/weight-goal" label="Goals" Icon={TargetIcon} />
-          <NavItem to="/weight-chart" label="Chart" Icon={LineChartIcon} />
+          <NavItem to="/goals" label="Goals" Icon={TargetIcon} />
+          <NavItem to="/stats" label="Stats" Icon={LineChartIcon} />
         </div>
       </div>
     </nav>
