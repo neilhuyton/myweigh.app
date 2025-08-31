@@ -9,7 +9,6 @@ import {
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { useWeightChart } from "../hooks/useWeightChart";
-import { cn } from "@/lib/utils";
 
 function WeightChart() {
   const {
