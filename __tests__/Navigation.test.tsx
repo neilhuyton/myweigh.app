@@ -26,30 +26,22 @@ describe("Navigation Component", () => {
       component: () => <Navigation />,
     });
 
-    // const homeRoute = createRoute({
-    //   getParentRoute: () => rootRoute,
-    //   path: "/",
-    // });
-
     const weightRoute = createRoute({
       getParentRoute: () => rootRoute,
       path: "/weight",
     });
 
-        const goalsRoute = createRoute({
+    const goalsRoute = createRoute({
       getParentRoute: () => rootRoute,
-      path: "/weight-goal",
+      path: "/goals",
     });
 
     const chartRoute = createRoute({
       getParentRoute: () => rootRoute,
-      path: "/weight-chart",
+      path: "/stats",
     });
 
-
-
     const routeTree = rootRoute.addChildren([
-      // homeRoute,
       weightRoute,
       goalsRoute,
       chartRoute,
@@ -77,19 +69,37 @@ describe("Navigation Component", () => {
     await setup("/");
 
     // Check that all links are rendered using aria-label
-    expect(screen.getByRole("link", { name: "Navigate to Weight" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Navigate to Goals" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Navigate to Stats" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Navigate to Weight" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Navigate to Goals" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Navigate to Stats" })
+    ).toBeInTheDocument();
 
     // Check href attributes
-    expect(screen.getByRole("link", { name: "Navigate to Weight" })).toHaveAttribute("href", "/weight");
-    expect(screen.getByRole("link", { name: "Navigate to Goals" })).toHaveAttribute("href", "/goals");
-    expect(screen.getByRole("link", { name: "Navigate to Stats" })).toHaveAttribute("href", "/stats");
+    expect(
+      screen.getByRole("link", { name: "Navigate to Weight" })
+    ).toHaveAttribute("href", "/weight");
+    expect(
+      screen.getByRole("link", { name: "Navigate to Goals" })
+    ).toHaveAttribute("href", "/goals");
+    expect(
+      screen.getByRole("link", { name: "Navigate to Stats" })
+    ).toHaveAttribute("href", "/stats");
 
     // Check text content of links
-    expect(screen.getByRole("link", { name: "Navigate to Weight" })).toHaveTextContent("Weight");
-    expect(screen.getByRole("link", { name: "Navigate to Goals" })).toHaveTextContent("Goals");
-    expect(screen.getByRole("link", { name: "Navigate to Stats" })).toHaveTextContent("Stats");
+    expect(
+      screen.getByRole("link", { name: "Navigate to Weight" })
+    ).toHaveTextContent("Weight");
+    expect(
+      screen.getByRole("link", { name: "Navigate to Goals" })
+    ).toHaveTextContent("Goals");
+    expect(
+      screen.getByRole("link", { name: "Navigate to Stats" })
+    ).toHaveTextContent("Stats");
 
     // Check icons are rendered
     expect(screen.getByTestId("scale-icon")).toBeInTheDocument();
@@ -101,7 +111,9 @@ describe("Navigation Component", () => {
     await setup("/weight");
 
     await act(async () => {
-      const weightLink = screen.getByRole("link", { name: "Navigate to Weight" });
+      const weightLink = screen.getByRole("link", {
+        name: "Navigate to Weight",
+      });
       expect(weightLink).toHaveClass("font-semibold");
       expect(weightLink).toHaveClass("bg-muted");
 
