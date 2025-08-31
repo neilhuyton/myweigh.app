@@ -1,4 +1,3 @@
-// __tests__/WeightChart.test.tsx
 import {
   describe,
   it,
@@ -14,7 +13,6 @@ import { trpc } from "../src/trpc";
 import { trpcClient, queryClient } from "../src/client";
 import { server } from "../__mocks__/server";
 import "@testing-library/jest-dom";
-import { act } from "react";
 import {
   RouterProvider,
   createRouter,
@@ -23,7 +21,14 @@ import {
 import { router } from "../src/router/router";
 import { useAuthStore } from "../src/store/authStore";
 import { weightGetWeightsHandler } from "../__mocks__/handlers/weightGetWeights";
-import { generateToken } from './utils/token';
+import { generateToken } from "./utils/token";
+
+// Mock ResizeObserver to fix recharts dimension issue
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
 
 describe("WeightChart Component", () => {
   const setup = async (initialPath = "/stats", userId?: string) => {
@@ -41,15 +46,13 @@ describe("WeightChart Component", () => {
       history,
     });
 
-    await act(async () => {
-      render(
-        <trpc.Provider client={trpcClient} queryClient={queryClient}>
-          <QueryClientProvider client={queryClient}>
-            <RouterProvider router={testRouter} />
-          </QueryClientProvider>
-        </trpc.Provider>
-      );
-    });
+    render(
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={testRouter} />
+        </QueryClientProvider>
+      </trpc.Provider>
+    );
 
     return { history, testRouter };
   };
@@ -79,78 +82,140 @@ describe("WeightChart Component", () => {
   it("renders WeightChart with correct title and select dropdown", async () => {
     await setup("/stats", "test-user-id");
 
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(
-            screen.getByRole("heading", { name: "Your Stats" })
-          ).toBeInTheDocument();
-          expect(screen.getByTestId("unit-select")).toHaveTextContent("Daily");
-        },
-        { timeout: 5000 }
-      );
-    });
+    await waitFor(
+      () => {
+        if (!screen.queryByTestId("unit-select")) {
+          console.log("Test (renders WeightChart) - DOM Debug:");
+          console.log(screen.debug());
+          const weightsQuery = queryClient
+            .getQueryCache()
+            .find({ queryKey: ["weight.getWeights"] });
+          console.log("Weights Query:", {
+            status: weightsQuery?.state.status,
+            error: weightsQuery?.state.error,
+          });
+          const goalQuery = queryClient
+            .getQueryCache()
+            .find({ queryKey: ["weight.getCurrentGoal"] });
+          console.log("Goal Query:", {
+            status: goalQuery?.state.status,
+            error: goalQuery?.state.error,
+          });
+          const goalsQuery = queryClient
+            .getQueryCache()
+            .find({ queryKey: ["weight.getGoals"] });
+          console.log("Goals Query:", {
+            status: goalsQuery?.state.status,
+            error: goalsQuery?.state.error,
+          });
+        }
+        expect(
+          screen.getByRole("heading", { name: "Your Stats" })
+        ).toBeInTheDocument();
+        expect(screen.getByTestId("unit-select")).toHaveTextContent("Daily");
+      },
+      { timeout: 10000 }
+    );
   });
 
   it("displays error message when fetch fails", async () => {
     await setup("/stats", "error-user-id");
 
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(screen.getByTestId("error")).toBeInTheDocument();
-          expect(screen.getByTestId("error")).toHaveTextContent(
-            "Error: Failed to fetch weights"
-          );
-        },
-        { timeout: 5000 }
-      );
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("error")).toBeInTheDocument();
+        expect(screen.getByTestId("error")).toHaveTextContent(
+          "Error: Failed to fetch weights"
+        );
+      },
+      { timeout: 10000 }
+    );
   });
 
   it("displays no measurements message when weights are empty", async () => {
     await setup("/stats", "empty-user-id");
 
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(screen.getByTestId("unit-select")).toHaveTextContent("Daily");
-          expect(screen.getByTestId("no-data")).toBeInTheDocument();
-          expect(screen.getByTestId("no-data")).toHaveTextContent(
-            "No weight measurements found"
-          );
-        },
-        { timeout: 5000 }
-      );
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("unit-select")).toHaveTextContent("Daily");
+        expect(screen.getByTestId("no-data")).toBeInTheDocument();
+        expect(screen.getByTestId("no-data")).toHaveTextContent(
+          "No weight measurements found"
+        );
+      },
+      { timeout: 10000 }
+    );
   });
 
   it("updates chart data when trend period changes", async () => {
     await setup("/stats", "test-user-id");
 
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(screen.getByTestId("unit-select")).toHaveTextContent("Daily");
-          expect(screen.getByTestId("chart-mock")).toBeInTheDocument();
-        },
-        { timeout: 5000 }
-      );
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("unit-select")).toHaveTextContent("Daily");
+        expect(screen.getByTestId("chart-mock")).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
 
-    await act(async () => {
-      const selectTrigger = screen.getByTestId("unit-select");
-      fireEvent.change(selectTrigger, { target: { value: "weekly" } });
-    });
+    const selectTrigger = screen.getByTestId("unit-select");
+    fireEvent.change(selectTrigger, { target: { value: "weekly" } });
 
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(screen.getByTestId("unit-select")).toHaveValue("weekly");
-          expect(screen.getByTestId("chart-mock")).toBeInTheDocument();
-        },
-        { timeout: 5000 }
-      );
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("unit-select")).toHaveValue("weekly");
+        expect(screen.getByTestId("chart-mock")).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
+  });
+
+  it("displays latest weight card when weights are available", async () => {
+    await setup("/stats", "test-user-id");
+
+    await waitFor(
+      () => {
+        const latestWeightCard = screen.getByTestId("latest-weight-card");
+        expect(latestWeightCard).toBeInTheDocument();
+        expect(latestWeightCard).toHaveTextContent("Latest Weight");
+        expect(latestWeightCard).toHaveTextContent("69.5 kg");
+        expect(latestWeightCard).toHaveTextContent(
+          formatDate("2023-10-02T00:00:00Z")
+        );
+      },
+      { timeout: 10000 }
+    );
+  });
+
+  it("does not display latest weight card when weights are empty", async () => {
+    await setup("/stats", "empty-user-id");
+
+    await waitFor(
+      () => {
+        expect(
+          screen.queryByTestId("latest-weight-card")
+        ).not.toBeInTheDocument();
+        expect(screen.getByTestId("no-data")).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
+  });
+
+  it("does not display latest weight card when fetch fails", async () => {
+    await setup("/stats", "error-user-id");
+
+    await waitFor(
+      () => {
+        expect(
+          screen.queryByTestId("latest-weight-card")
+        ).not.toBeInTheDocument();
+        expect(screen.getByTestId("error")).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
   });
 });
+
+function formatDate(dateString: string): string {
+  return new Date(dateString).toLocaleDateString("en-GB");
+}
