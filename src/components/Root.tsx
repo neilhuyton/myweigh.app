@@ -45,7 +45,10 @@ function Root({
                 <ProfileIcon />
               </header>
             )}
-            <InstallPrompt isLoggedIn={isLoggedIn} isPublicRoute={isPublicRoute} />
+            <InstallPrompt
+              isLoggedIn={isLoggedIn}
+              isPublicRoute={isPublicRoute}
+            />
             <main
               className={
                 isLoggedIn && !isPublicRoute

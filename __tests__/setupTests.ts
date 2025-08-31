@@ -1,15 +1,39 @@
 // __tests__/setupTests.ts
-import { configure } from '@testing-library/dom';
+// import { configure } from '@testing-library/dom';
 import '@testing-library/jest-dom';
 import { vi, beforeAll, afterEach, afterAll } from 'vitest';
 import { server } from '../__mocks__/server';
+import fetch, { Request } from 'node-fetch';
+
+// Polyfill fetch and Request globals
+Object.defineProperty(global, 'fetch', {
+  writable: true,
+  value: fetch,
+});
+
+Object.defineProperty(global, 'Request', {
+  writable: false,
+  value: Request,
+});
+
+// Mock ResizeObserver
+global.ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+
+// Mock console methods for cleaner test output (optional)
+// vi.spyOn(console, 'log').mockImplementation(() => {});
+// vi.spyOn(console, 'error').mockImplementation(() => {});
+// vi.spyOn(console, 'warn').mockImplementation(() => {});
 
 // Suppress HTML output in @testing-library error messages
-configure({
-  getElementError: (message: string | null) => {
-    return new Error(message ?? undefined); // Convert null to undefined
-  },
-});
+// configure({
+//   getElementError: (message: string | null) => {
+//     return new Error(message ?? undefined);
+//   },
+// });
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -17,10 +41,14 @@ const localStorageMock = (() => {
   return {
     getItem: (key: string) => store[key] || null,
     setItem: (key: string, value: string) => (store[key] = value),
+    removeItem: (key: string) => delete store[key],
     clear: () => (store = {}),
   };
 })();
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+
+// Mock sessionStorage (optional, include if used in your app)
+Object.defineProperty(window, 'sessionStorage', { value: localStorageMock });
 
 // Mock matchMedia
 const matchMediaMock = (matchesDark: boolean) =>

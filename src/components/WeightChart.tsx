@@ -1,4 +1,3 @@
-// src/components/WeightChart.tsx
 import {
   Select,
   SelectTrigger,
@@ -9,7 +8,6 @@ import {
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { useWeightChart } from "../hooks/useWeightChart";
-import { LoadingSpinner } from "./LoadingSpinner";
 
 function WeightChart() {
   const {
@@ -61,7 +59,6 @@ function WeightChart() {
         </div>
         {isLoading ? (
           <div className="py-4">
-            <LoadingSpinner size="md" testId="weight-chart-loading" />
           </div>
         ) : isError ? (
           <p
@@ -69,7 +66,7 @@ function WeightChart() {
             className="text-center text-sm font-medium text-destructive"
             role="alert"
           >
-            Error: {error?.message}
+            Error: {error?.message || 'Failed to fetch weights'}
           </p>
         ) : !weights.length ? (
           <p
@@ -85,6 +82,7 @@ function WeightChart() {
               config={chartConfig}
               id="weight-chart"
               className="h-full w-full"
+              data-testid="chart-mock"
             >
               <BarChart
                 data={chartData}
@@ -101,8 +99,7 @@ function WeightChart() {
                       ? new Date(value).toLocaleDateString("en-US", {
                           month: "short",
                           day: trendPeriod === "daily" ? "numeric" : undefined,
-                          year:
-                            trendPeriod === "monthly" ? "numeric" : undefined,
+                          year: trendPeriod === "monthly" ? "numeric" : undefined,
                         })
                       : ""
                   }
@@ -121,9 +118,7 @@ function WeightChart() {
                     <ChartTooltipContent
                       indicator="dot"
                       formatter={(value, name, props) => [
-                        `${value} kg${
-                          props.payload.note ? ` (${props.payload.note})` : ""
-                        }`,
+                        `${value} kg${props.payload.note ? ` (${props.payload.note})` : ""}`,
                         "Weight",
                       ]}
                     />
@@ -134,6 +129,7 @@ function WeightChart() {
                   fill={barColor}
                   fillOpacity={0.8}
                   radius={4}
+                  data-testid="bar-mock"
                 />
               </BarChart>
             </ChartContainer>

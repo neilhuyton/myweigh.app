@@ -20,6 +20,9 @@ function WeightGoal() {
     handleGoalWeightChange,
   } = useWeightGoal();
 
+  console.log("IS LOADING", isLoading);
+  console.log("CURRENT GOAL", currentGoal);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center bg-background min-h-[calc(100vh-3.5rem)]">

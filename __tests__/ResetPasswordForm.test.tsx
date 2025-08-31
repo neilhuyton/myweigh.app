@@ -1,13 +1,5 @@
 // __tests__/ResetPasswordForm.test.tsx
-import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-  afterEach,
-  vi,
-} from "vitest";
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -21,8 +13,8 @@ import {
   createMemoryHistory,
 } from "@tanstack/react-router";
 import { router } from "../src/router/router";
-import { http, HttpResponse } from "msw";
-import { act } from "react";
+import { act } from "react-dom/test-utils";
+import { resetPasswordRequestHandler } from "../__mocks__/handlers/resetPasswordRequest"; // Import the external handler
 
 describe("ResetPasswordForm Component", () => {
   const queryClient = new QueryClient({
@@ -36,9 +28,8 @@ describe("ResetPasswordForm Component", () => {
     links: [
       httpBatchLink({
         url: "http://localhost:8888/.netlify/functions/trpc",
-        fetch: async (url, options) => {
-          return fetch(url, { ...options, signal: undefined });
-        },
+        fetch: async (input, options) =>
+          fetch(input, { ...options }),
       }),
     ],
   });
@@ -60,18 +51,30 @@ describe("ResetPasswordForm Component", () => {
       ),
     }));
 
-    render(
-      <trpc.Provider client={trpcClient} queryClient={queryClient}>
-        <QueryClientProvider client={queryClient}>
-          <RouterProvider router={testRouter} />
-        </QueryClientProvider>
-      </trpc.Provider>
-    );
+    act(() => {
+      render(
+        <trpc.Provider client={trpcClient} queryClient={queryClient}>
+          <QueryClientProvider client={queryClient}>
+            <RouterProvider router={testRouter} />
+          </QueryClientProvider>
+        </trpc.Provider>
+      );
+    });
     return { history, testRouter };
   };
 
   beforeAll(() => {
     server.listen({ onUnhandledRequest: "error" });
+    server.use(resetPasswordRequestHandler); // Use the external handler
+    process.on("unhandledRejection", (reason) => {
+      if (
+        reason instanceof Error &&
+        reason.message.includes("Invalid email")
+      ) {
+        return;
+      }
+      throw reason;
+    });
   });
 
   afterEach(() => {
@@ -82,6 +85,7 @@ describe("ResetPasswordForm Component", () => {
 
   afterAll(() => {
     server.close();
+    process.removeAllListeners("unhandledRejection");
   });
 
   it("renders password reset form with email input, submit button, and back to login link", async () => {
@@ -97,23 +101,6 @@ describe("ResetPasswordForm Component", () => {
   });
 
   it("submits email and displays neutral success message", async () => {
-    server.use(
-      http.post(
-        "http://localhost:8888/.netlify/functions/trpc/resetPassword.request",
-        async () => {
-          return HttpResponse.json([
-            {
-              result: {
-                data: {
-                  message: "If the email exists, a reset link has been sent.",
-                },
-              },
-            },
-          ]);
-        }
-      )
-    );
-
     setup();
 
     await waitFor(

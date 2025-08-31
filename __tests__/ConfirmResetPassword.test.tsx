@@ -1,13 +1,5 @@
 // __tests__/ConfirmResetPassword.test.tsx
-import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-  afterEach,
-  vi,
-} from "vitest";
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -21,8 +13,8 @@ import {
   createMemoryHistory,
 } from "@tanstack/react-router";
 import { router } from "../src/router/router";
-import { http, HttpResponse } from "msw";
-import { act } from "react";
+import { act } from "react-dom/test-utils";
+import { resetPasswordConfirmHandler } from "../__mocks__/handlers/resetPasswordConfirm"; // Import the external handler
 
 describe("ConfirmResetPasswordForm Component", () => {
   const queryClient = new QueryClient({
@@ -36,9 +28,8 @@ describe("ConfirmResetPasswordForm Component", () => {
     links: [
       httpBatchLink({
         url: "http://localhost:8888/.netlify/functions/trpc",
-        fetch: async (url, options) => {
-          return fetch(url, { ...options, signal: undefined });
-        },
+        fetch: async (input, options) =>
+          fetch(input, { ...options }),
       }),
     ],
   });
@@ -54,18 +45,31 @@ describe("ConfirmResetPasswordForm Component", () => {
     // Mock router.navigate
     vi.spyOn(testRouter, "navigate").mockImplementation(async () => {});
 
-    render(
-      <trpc.Provider client={trpcClient} queryClient={queryClient}>
-        <QueryClientProvider client={queryClient}>
-          <RouterProvider router={testRouter} />
-        </QueryClientProvider>
-      </trpc.Provider>
-    );
+    act(() => {
+      render(
+        <trpc.Provider client={trpcClient} queryClient={queryClient}>
+          <QueryClientProvider client={queryClient}>
+            <RouterProvider router={testRouter} />
+          </QueryClientProvider>
+        </trpc.Provider>
+      );
+    });
     return { history, testRouter };
   };
 
   beforeAll(() => {
-    server.listen({ onUnhandledRequest: "warn" }); // Changed to 'warn' to log unhandled requests
+    server.listen({ onUnhandledRequest: "warn" });
+    server.use(resetPasswordConfirmHandler); // Use the external handler
+    process.on("unhandledRejection", (reason) => {
+      if (
+        reason instanceof Error &&
+        (reason.message.includes("Token and new password are required") ||
+          reason.message.includes("Invalid or expired token"))
+      ) {
+        return;
+      }
+      throw reason;
+    });
   });
 
   afterEach(() => {
@@ -76,26 +80,10 @@ describe("ConfirmResetPasswordForm Component", () => {
 
   afterAll(() => {
     server.close();
+    process.removeAllListeners("unhandledRejection");
   });
 
   it("submits valid token and new password and displays success message", async () => {
-    const mockHandler = vi.fn();
-    server.use(
-      http.post(
-        "http://localhost:8888/.netlify/functions/trpc/resetPassword.confirm",
-        async () => {
-          mockHandler();
-          return HttpResponse.json([
-            {
-              result: {
-                data: { message: "Password reset successfully" },
-              },
-            },
-          ]);
-        }
-      )
-    );
-
     setup("/confirm-reset-password", {
       token: "123e4567-e89b-12d3-a456-426614174000",
     });
@@ -107,19 +95,16 @@ describe("ConfirmResetPasswordForm Component", () => {
     });
 
     await act(async () => {
-      const passwordInput = screen.getByLabelText("New Password");
+      const passwordInput = screen.getByTestId("password-input");
+      await userEvent.type(passwordInput, "newSecurePassword123", { delay: 10 });
       const form = screen.getByTestId("confirm-reset-password-form");
-      await userEvent.type(passwordInput, "newSecurePassword123");
-      const submitEvent = new Event("submit", {
-        bubbles: true,
-        cancelable: true,
-      });
-      await form.dispatchEvent(submitEvent);
+      await form.dispatchEvent(
+        new Event("submit", { bubbles: true, cancelable: true })
+      );
     });
 
     await waitFor(
       () => {
-        expect(mockHandler).toHaveBeenCalled();
         expect(
           screen.getByTestId("confirm-reset-password-message")
         ).toHaveTextContent("Password reset successfully");

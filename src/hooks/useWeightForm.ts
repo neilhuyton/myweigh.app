@@ -1,5 +1,5 @@
 // src/hooks/useWeightForm.ts
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { trpc } from "../trpc";
 import { useAuthStore } from "../store/authStore";
@@ -13,7 +13,7 @@ type Goal = {
 };
 
 export function useWeightForm() {
-  const { isLoggedIn, userId } = useAuthStore();
+  const { userId } = useAuthStore();
   const navigate = useNavigate();
   const [weight, setWeight] = useState("");
   const [note, setNote] = useState("");
@@ -27,11 +27,6 @@ export function useWeightForm() {
   }) as { data: Goal | null };
 
   // Redirect to login if not logged in
-  useEffect(() => {
-    if (!isLoggedIn) {
-      navigate({ to: "/login" });
-    }
-  }, [isLoggedIn, navigate]);
 
   const queryClient = trpc.useContext();
   const weightMutation = trpc.weight.create.useMutation({

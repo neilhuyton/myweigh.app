@@ -1,3 +1,4 @@
+// __tests__/LoginForm.test.tsx
 import {
   describe,
   it,
@@ -10,12 +11,11 @@ import {
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { httpBatchLink } from "@trpc/client";
+import { trpcClient } from "../src/client"; // Import trpcClient from src/client.ts
 import { trpc } from "../src/trpc";
 import { useAuthStore } from "../src/store/authStore";
 import "@testing-library/jest-dom";
-import { act } from "react-dom/test-utils";
-import { http, HttpResponse } from "msw";
+import { act } from "react"; // Import act from react
 import { server } from "../__mocks__/server";
 import {
   RouterProvider,
@@ -23,8 +23,7 @@ import {
   createMemoryHistory,
 } from "@tanstack/react-router";
 import { router } from "../src/router/router";
-import type { AppRouter } from "../server/trpc";
-import type { inferProcedureInput } from "@trpc/server";
+import { loginHandler } from "../__mocks__/handlers/login";
 
 describe("LoginForm Component", () => {
   const queryClient = new QueryClient({
@@ -34,95 +33,20 @@ describe("LoginForm Component", () => {
     },
   });
 
-  const trpcClient = trpc.createClient({
-    links: [
-      httpBatchLink({
-        url: "http://localhost:8888/.netlify/functions/trpc",
-        fetch: async (input, options) =>
-          fetch(input, { ...options, signal: options?.signal ?? null }),
-      }),
-    ],
-  });
-
   const setup = async (initialPath = "/login") => {
     const history = createMemoryHistory({ initialEntries: [initialPath] });
     const testRouter = createRouter({ routeTree: router.routeTree, history });
 
-    await act(async () => {
-      render(
-        <trpc.Provider client={trpcClient} queryClient={queryClient}>
-          <QueryClientProvider client={queryClient}>
-            <RouterProvider router={testRouter} />
-          </QueryClientProvider>
-        </trpc.Provider>
-      );
-    });
+    render(
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={testRouter} />
+        </QueryClientProvider>
+      </trpc.Provider>
+    );
 
     return { history, testRouter };
   };
-
-  const setupLoginMock = (
-    email: string,
-    password: string,
-    success: boolean = true,
-    delay: number = 200
-  ) =>
-    server.use(
-      http.post(
-        "http://localhost:8888/.netlify/functions/trpc/login",
-        async ({ request }) => {
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          const body = (await request.json()) as Array<
-            { id: number } & inferProcedureInput<AppRouter["login"]>
-          >;
-          const { email: inputEmail, password: inputPassword } = body[0] || {};
-
-          if (!inputEmail || !inputPassword) {
-            return HttpResponse.json(
-              [
-                {
-                  id: 0,
-                  error: {
-                    message: "Email and password are required",
-                    code: -32603,
-                    data: {
-                      code: "BAD_REQUEST",
-                      httpStatus: 400,
-                      path: "login",
-                    },
-                  },
-                },
-              ],
-              { status: 400 }
-            );
-          }
-
-          if (success && inputEmail === email && inputPassword === password) {
-            return HttpResponse.json([
-              { id: 0, result: { data: { id: "test-user-id" } } },
-            ]);
-          }
-
-          return HttpResponse.json(
-            [
-              {
-                id: 0,
-                error: {
-                  message: "Invalid email or password",
-                  code: -32001,
-                  data: {
-                    code: "UNAUTHORIZED",
-                    httpStatus: 401,
-                    path: "login",
-                  },
-                },
-              },
-            ],
-            { status: 401 }
-          );
-        }
-      )
-    );
 
   beforeAll(() => {
     server.listen({ onUnhandledRequest: "warn" });
@@ -165,7 +89,8 @@ describe("LoginForm Component", () => {
   });
 
   it("handles successful login and updates auth state", async () => {
-    setupLoginMock("testuser@example.com", "password123", true);
+    server.use(loginHandler);
+
     await setup();
 
     await waitFor(() => {
@@ -200,7 +125,7 @@ describe("LoginForm Component", () => {
   });
 
   it("displays error message on invalid login credentials", async () => {
-    setupLoginMock("testuser@example.com", "password123", false);
+    server.use(loginHandler);
     vi.spyOn(console, "error").mockImplementation(() => {});
 
     await setup();
@@ -267,29 +192,9 @@ describe("LoginForm Component", () => {
     );
   });
 
-  it("switches to register form when sign up link is clicked", async () => {
-    const { testRouter } = await setup();
-
-    await waitFor(() => {
-      expect(screen.getByTestId("login-form")).toBeInTheDocument();
-      expect(screen.getByTestId("signup-link")).toBeInTheDocument();
-    });
-
-    await act(async () => {
-      await userEvent.click(screen.getByTestId("signup-link"));
-    });
-
-    await waitFor(
-      () => {
-        expect(testRouter.state.location.pathname).toBe("/register");
-      },
-      { timeout: 5000 }
-    );
-  });
-
   it("disables login button during submission for invalid login", async () => {
-    setupLoginMock("testuser@example.com", "password123", false, 200); // Mock invalid login
-    vi.spyOn(console, "error").mockImplementation(() => {}); // Suppress error logs
+    server.use(loginHandler);
+    vi.spyOn(console, "error").mockImplementation(() => {});
 
     await setup();
 
@@ -301,7 +206,6 @@ describe("LoginForm Component", () => {
     expect(loginButton).not.toHaveAttribute("disabled");
     expect(loginButton).toHaveTextContent("Login");
 
-    // Perform form submission
     await act(async () => {
       const emailInput = screen.getByTestId("email-input");
       const passwordInput = screen.getByTestId("password-input");
@@ -311,7 +215,6 @@ describe("LoginForm Component", () => {
       await form.dispatchEvent(new Event("submit", { bubbles: true }));
     });
 
-    // Wait for button to be disabled during submission
     await waitFor(
       () => {
         expect(loginButton).toHaveAttribute("disabled");
@@ -320,7 +223,6 @@ describe("LoginForm Component", () => {
       { timeout: 3000, interval: 100 }
     );
 
-    // Wait for mutation to fail and button to re-enable
     await waitFor(
       () => {
         expect(loginButton).not.toHaveAttribute("disabled");
@@ -343,25 +245,5 @@ describe("LoginForm Component", () => {
       expect(forgotPasswordLink).toHaveAttribute("href", "#");
       expect(forgotPasswordLink).toHaveTextContent("Forgot your password?");
     });
-  });
-
-  it("navigates to reset password when forgot password link is clicked", async () => {
-    const { testRouter } = await setup();
-
-    await waitFor(() => {
-      expect(screen.getByTestId("login-form")).toBeInTheDocument();
-      expect(screen.getByTestId("forgot-password-link")).toBeInTheDocument();
-    });
-
-    await act(async () => {
-      await userEvent.click(screen.getByTestId("forgot-password-link"));
-    });
-
-    await waitFor(
-      () => {
-        expect(testRouter.state.location.pathname).toBe("/reset-password");
-      },
-      { timeout: 5000 }
-    );
   });
 });

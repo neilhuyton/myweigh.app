@@ -16,7 +16,7 @@ export default defineConfig({
     strictPort: false,
   },
   test: {
-    silent : true,
+    // silent: false,
     environment: "jsdom",
     setupFiles: ["./__tests__/setupTests.ts"],
     env: {

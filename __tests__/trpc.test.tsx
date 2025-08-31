@@ -4,9 +4,6 @@ import { describe, it, expect, vi } from "vitest";
 // Create a mock function for createTRPCReact
 const mockCreateTRPCReact = vi.fn().mockReturnValue({
   createClient: vi.fn(),
-  getUsers: {
-    useQuery: vi.fn(),
-  },
   Provider: vi.fn(),
 });
 
@@ -31,13 +28,10 @@ describe("trpc.ts", () => {
 
     // Verify expected properties exist
     expect(trpc).toHaveProperty("createClient");
-    expect(trpc).toHaveProperty("getUsers");
-    expect(trpc.getUsers).toHaveProperty("useQuery");
     expect(trpc).toHaveProperty("Provider");
 
     // Verify methods are functions
     expect(typeof trpc.createClient).toBe("function");
-    expect(typeof trpc.getUsers.useQuery).toBe("function");
     expect(typeof trpc.Provider).toBe("function");
   });
 });
