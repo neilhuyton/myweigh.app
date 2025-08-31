@@ -13,13 +13,10 @@ interface TrpcRequestBody {
 export const registerHandler = http.post(
   'http://localhost:8888/.netlify/functions/trpc/register',
   async ({ request }) => {
-    console.log('MSW intercepting register request');
     let body: unknown;
     try {
       body = await request.json();
-      console.log('Received body:', JSON.stringify(body, null, 2));
-    } catch (error) {
-      console.error('Error reading register request body:', error);
+    } catch {
       return HttpResponse.json(
         [
           {
@@ -35,9 +32,7 @@ export const registerHandler = http.post(
       );
     }
 
-    // Check if body is an object with a "0" key
     if (!body || typeof body !== 'object' || !('0' in body)) {
-      console.error('Invalid body format: not an object with "0" key');
       return HttpResponse.json(
         [
           {
@@ -57,7 +52,6 @@ export const registerHandler = http.post(
     const { email, password } = input || {};
 
     if (!email || !password) {
-      console.log('Missing email or password');
       return HttpResponse.json(
         [
           {
@@ -74,7 +68,6 @@ export const registerHandler = http.post(
     }
 
     if (!email.includes('@')) {
-      console.log('Invalid email address:', email);
       return HttpResponse.json(
         [
           {
@@ -91,7 +84,6 @@ export const registerHandler = http.post(
     }
 
     if (password.length < 8) {
-      console.log('Password too short:', password.length);
       return HttpResponse.json(
         [
           {
@@ -108,7 +100,6 @@ export const registerHandler = http.post(
     }
 
     if (mockUsers.find((u) => u.email === email)) {
-      console.log('Email already exists:', email);
       return HttpResponse.json(
         [
           {
@@ -138,7 +129,6 @@ export const registerHandler = http.post(
     };
     mockUsers.push(newUser);
 
-    console.log('Registration successful for user:', email);
     return HttpResponse.json(
       [
         {

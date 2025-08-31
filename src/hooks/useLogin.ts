@@ -44,8 +44,7 @@ export const useLogin = (): UseLoginReturn => {
   const router = useRouter();
 
   const loginMutation = trpc.login.useMutation({
-    onMutate: (data) => {
-      console.log("Mutation Input:", data); // Log the mutation input
+    onMutate: () => {
       setMessage(null);
     },
     onSuccess: (data: LoginResponse) => {
@@ -70,7 +69,6 @@ export const useLogin = (): UseLoginReturn => {
   }, [form]);
 
   const handleSubmit = async (data: FormValues) => {
-    console.log("Form Data Submitted:", data); // Log form data
     const isValid = await form.trigger();
     if (!isValid) return;
     await loginMutation.mutateAsync(data);

@@ -168,7 +168,6 @@ export const weightRouter = t.router({
       };
     }),
   getCurrentGoal: t.procedure.query(async ({ ctx }) => {
-    console.log("WOO HOO");
     if (!ctx.userId) {
       throw new Error("Unauthorized: User must be logged in");
     }

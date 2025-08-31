@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { trpc } from '../trpc';
 
 interface Weight {
@@ -15,28 +14,12 @@ export function useWeightList() {
     isLoading,
     isError,
     error,
-  } = trpc.weight.getWeights.useQuery(undefined, {
-    // Removed onSuccess and onError
-  });
-
-  // Log query state
-  useEffect(() => {
-    if (weights) {
-      console.log('useWeightList: weights data:', JSON.stringify(weights, null, 2));
-    }
-    if (isError && error) {
-      console.error('useWeightList: weights error:', error.message);
-    }
-  }, [weights, isError, error]);
+  } = trpc.weight.getWeights.useQuery(undefined, {});
 
   const utils = trpc.useUtils();
   const deleteMutation = trpc.weight.delete.useMutation({
     onSuccess: () => {
-      console.log('MSW: deleteMutation onSuccess called, invalidating weight.getWeights');
       utils.weight.getWeights.invalidate();
-    },
-    onError: (error) => {
-      console.error(`Failed to delete weight: ${error.message}`);
     },
   });
 
@@ -50,7 +33,6 @@ export function useWeightList() {
 
   const handleDelete = (weightId: string) => {
     // if (window.confirm('Are you sure you want to delete this weight measurement?')) {
-      console.log('useWeightList: deleting weightId:', weightId);
       deleteMutation.mutate({ weightId });
     // }
   };

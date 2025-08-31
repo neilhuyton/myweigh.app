@@ -1,4 +1,3 @@
-// __mocks__/handlers/verifyEmail.ts
 import { http, HttpResponse } from 'msw';
 import { mockUsers, type MockUser } from '../mockUsers';
 import type { inferProcedureInput } from '@trpc/server';
@@ -11,13 +10,10 @@ interface TrpcRequestBody {
 export const verifyEmailHandler = http.post(
   'http://localhost:8888/.netlify/functions/trpc/verifyEmail',
   async ({ request }) => {
-    console.log('MSW intercepting verifyEmail request');
     let body: unknown;
     try {
       body = await request.json();
-      console.log('Received body:', JSON.stringify(body, null, 2));
-    } catch (error) {
-      console.error('Error reading verifyEmail request body:', error);
+    } catch {
       return HttpResponse.json(
         [
           {
@@ -34,7 +30,6 @@ export const verifyEmailHandler = http.post(
     }
 
     if (!body || typeof body !== 'object' || !('0' in body)) {
-      console.error('Invalid body format: not an object with "0" key');
       return HttpResponse.json(
         [
           {
@@ -54,7 +49,6 @@ export const verifyEmailHandler = http.post(
     const { token } = input || {};
 
     if (!token) {
-      console.log('Missing token');
       return HttpResponse.json(
         [
           {
@@ -76,7 +70,6 @@ export const verifyEmailHandler = http.post(
 
     const user = mockUsers.find((u: MockUser) => u.verificationToken === token);
     if (!user) {
-      console.log('Invalid token:', token);
       return HttpResponse.json(
         [
           {
@@ -93,7 +86,6 @@ export const verifyEmailHandler = http.post(
     }
 
     if (user.isEmailVerified) {
-      console.log('Email already verified for user:', user.email);
       return HttpResponse.json(
         [
           {
@@ -113,7 +105,6 @@ export const verifyEmailHandler = http.post(
     user.verificationToken = null;
     user.updatedAt = new Date().toISOString();
 
-    console.log('Email verified successfully for user:', user.email);
     return HttpResponse.json(
       [
         {

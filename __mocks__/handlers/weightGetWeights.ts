@@ -5,7 +5,6 @@ import jwt from 'jsonwebtoken';
 export const weightGetWeightsHandler = http.post(
   /http:\/\/localhost:8888\/\.netlify\/functions\/trpc\/weight\.getWeights/,
   async ({ request }) => {
-    console.log('MSW: Intercepted weight.getWeights request:', request.url, request.method);
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return HttpResponse.json(
@@ -26,8 +25,7 @@ export const weightGetWeightsHandler = http.post(
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { userId: string };
       userId = decoded.userId;
-    } catch (error) {
-      console.error('MSW: Invalid token:', error);
+    } catch {
       return HttpResponse.json(
         [{
           id: 0,
@@ -40,8 +38,6 @@ export const weightGetWeightsHandler = http.post(
         { status: 200 }
       );
     }
-
-    console.log('MSW: Handling request for userId:', userId);
 
     if (userId === 'error-user-id') {
       return HttpResponse.json(
@@ -58,14 +54,12 @@ export const weightGetWeightsHandler = http.post(
     }
 
     if (userId === 'empty-user-id') {
-      console.log('MSW: Returning empty weights for empty-user-id');
       return HttpResponse.json(
         [{ id: 0, result: { data: [] } }],
         { status: 200 }
       );
     }
 
-    // Default case for test-user-id
     const mockWeights = [
       { id: '1', weightKg: 70, createdAt: '2023-10-01T00:00:00Z', note: 'Morning weigh-in' },
       { id: '2', weightKg: 69.5, createdAt: '2023-10-02T00:00:00Z', note: 'Evening weigh-in' },

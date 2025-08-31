@@ -23,7 +23,7 @@ import {
 import { router } from "../src/router/router";
 import { useAuthStore } from "../src/store/authStore";
 import { weightGetWeightsHandler } from "../__mocks__/handlers/weightGetWeights";
-import { generateToken } from './utils/token'; // Import from utility
+import { generateToken } from './utils/token';
 
 describe("WeightChart Component", () => {
   const setup = async (initialPath = "/weight-chart", userId?: string) => {
@@ -55,7 +55,6 @@ describe("WeightChart Component", () => {
   };
 
   beforeAll(() => {
-    console.log("MSW: Starting server");
     server.listen({ onUnhandledRequest: "warn" });
     server.use(weightGetWeightsHandler);
   });

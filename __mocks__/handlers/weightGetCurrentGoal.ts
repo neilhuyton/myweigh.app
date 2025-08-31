@@ -5,7 +5,6 @@ import jwt from 'jsonwebtoken';
 export const weightGetCurrentGoalHandler = http.post(
   /http:\/\/localhost:8888\/\.netlify\/functions\/trpc\/weight\.getCurrentGoal/,
   async ({ request }) => {
-    console.log('MSW: Intercepted weight.getCurrentGoal request:', request.url, request.method);
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return HttpResponse.json(
@@ -28,8 +27,7 @@ export const weightGetCurrentGoalHandler = http.post(
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { userId: string };
       userId = decoded.userId;
-    } catch (error) {
-      console.error('MSW: Invalid token:', error);
+    } catch {
       return HttpResponse.json(
         [
           {
@@ -44,8 +42,6 @@ export const weightGetCurrentGoalHandler = http.post(
         { status: 200 }
       );
     }
-
-    console.log('MSW: Handling request for userId:', userId);
 
     if (userId === 'error-user-id') {
       return HttpResponse.json(
@@ -64,14 +60,12 @@ export const weightGetCurrentGoalHandler = http.post(
     }
 
     if (userId === 'empty-user-id') {
-      console.log('MSW: Returning null goal for empty-user-id');
       return HttpResponse.json(
         [{ id: 0, result: { data: null } }],
         { status: 200 }
       );
     }
 
-    // Default case for test-user-id
     const mockGoal = {
       id: 'goal-1',
       goalWeightKg: 65.0,

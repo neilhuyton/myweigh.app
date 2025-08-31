@@ -24,11 +24,6 @@ export const trpcClient = trpc.createClient({
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         };
 
-        console.log("Client Request URL:", url.toString());
-        console.log("Client Request Method:", options?.method || "POST");
-        console.log("Client Raw Request Body:", options?.body || "No body provided");
-
-        // Transform body for batched requests
         let body: string;
         if (url.toString().includes("batch=1")) {
           try {
@@ -39,40 +34,31 @@ export const trpcClient = trpc.createClient({
                 parsedBody = [parsedBody];
               }
             }
-            // Handle incorrect {0: {email, password}} input by unwrapping
             const correctedBody = parsedBody.map((item) => {
               if (item && typeof item === "object" && "0" in item) {
-                console.warn("Correcting invalid input format:", item);
                 return item["0"];
               }
               return item;
             });
-            // Transform to {0: {email, password}, 1: {...}, ...} for batched calls
             const transformedBody: Record<number, unknown> = {};
             correctedBody.forEach((item, index) => {
               transformedBody[index] = item;
             });
             body = JSON.stringify(transformedBody);
-            console.log("Client Transformed Request Body:", body);
-          } catch (error) {
-            console.error("Failed to parse or transform request body:", error);
+          } catch {
             throw new Error("Invalid request body format");
           }
         } else {
-          // Non-batch requests: use body as-is, with similar unwrapping
           try {
             let parsedBody: unknown = {};
             if (options?.body && typeof options.body === "string") {
               parsedBody = JSON.parse(options.body);
               if (parsedBody && typeof parsedBody === "object" && "0" in parsedBody) {
-                console.warn("Correcting invalid non-batch input format:", parsedBody);
                 parsedBody = parsedBody["0"];
               }
             }
             body = JSON.stringify(parsedBody);
-            console.log("Client Default Request Body:", body);
-          } catch (error) {
-            console.error("Failed to parse or transform non-batch request body:", error);
+          } catch {
             throw new Error("Invalid request body format");
           }
         }
@@ -84,13 +70,6 @@ export const trpcClient = trpc.createClient({
           body,
           signal: options?.signal,
         };
-
-        console.log("Final Fetch Options:", {
-          url: url.toString(),
-          method: fetchOptions.method,
-          headers: fetchOptions.headers,
-          body: fetchOptions.body,
-        });
 
         const response = await fetch(url, fetchOptions);
 
@@ -109,15 +88,13 @@ export const trpcClient = trpc.createClient({
               Authorization: `Bearer ${refreshResponse.token}`,
             };
             return await fetch(url, { ...fetchOptions, headers: newHeaders });
-          } catch (refreshError) {
-            console.error("Token refresh failed:", refreshError);
+          } catch {
             logout();
             throw redirect({ to: "/login" });
           }
         }
 
         if (!response.ok && response.status === 401) {
-          console.error("Unauthorized request, redirecting to login");
           logout();
           throw redirect({ to: "/login" });
         }

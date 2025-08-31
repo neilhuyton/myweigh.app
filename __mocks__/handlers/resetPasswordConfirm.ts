@@ -12,13 +12,10 @@ interface TrpcRequestBody {
 export const resetPasswordConfirmHandler = http.post(
   'http://localhost:8888/.netlify/functions/trpc/resetPassword.confirm',
   async ({ request }) => {
-    console.log('MSW intercepting resetPassword.confirm request');
     let body: unknown;
     try {
       body = await request.json();
-      console.log('Received body:', JSON.stringify(body, null, 2));
-    } catch (error) {
-      console.error('Error reading resetPassword.confirm request body:', error);
+    } catch {
       return HttpResponse.json(
         [
           {
@@ -34,9 +31,7 @@ export const resetPasswordConfirmHandler = http.post(
       );
     }
 
-    // Check if body is an object with a "0" key
     if (!body || typeof body !== 'object' || !('0' in body)) {
-      console.error('Invalid body format: not an object with "0" key');
       return HttpResponse.json(
         [
           {
@@ -56,7 +51,6 @@ export const resetPasswordConfirmHandler = http.post(
     const { token, newPassword } = input || {};
 
     if (!token || !newPassword) {
-      console.log('Missing token or newPassword');
       return HttpResponse.json(
         [
           {
@@ -74,7 +68,6 @@ export const resetPasswordConfirmHandler = http.post(
 
     const user = mockUsers.find((u: MockUser) => u.resetPasswordToken === token);
     if (!user || !user.resetPasswordTokenExpiresAt || new Date(user.resetPasswordTokenExpiresAt) < new Date()) {
-      console.log('Invalid or expired token:', token);
       return HttpResponse.json(
         [
           {
@@ -90,14 +83,12 @@ export const resetPasswordConfirmHandler = http.post(
       );
     }
 
-    // Update the user's password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     user.resetPasswordToken = null;
     user.resetPasswordTokenExpiresAt = null;
     user.updatedAt = new Date().toISOString();
 
-    console.log('Password reset successful for user:', user.email);
     return HttpResponse.json(
       [
         {
