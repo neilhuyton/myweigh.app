@@ -6,7 +6,7 @@ import { setupMSW } from '../../../__tests__/setupTests';
 describe('verifyEmail', () => {
   setupMSW();
 
-  it.only('should verify email successfully', async () => {
+  it('should verify email successfully', async () => {
     server.use(
       http.post('http://localhost:8888/.netlify/functions/trpc/verifyEmail', async () => {
         return HttpResponse.json([{ id: 0, result: { data: { message: 'Email verified successfully!' } } }]);
