@@ -1,30 +1,44 @@
-// src/hooks/useWeightChart.ts
-import { useMemo, useState } from 'react';
-import { trpc } from '../trpc';
-import { startOfWeek, startOfMonth, format } from 'date-fns';
+import { useMemo, useState } from "react";
+import { trpc } from "../trpc";
+import { startOfWeek, startOfMonth, format } from "date-fns";
 
 export const useWeightChart = (
-  initialTrendPeriod: 'daily' | 'weekly' | 'monthly' = 'daily'
+  initialTrendPeriod: "daily" | "weekly" | "monthly" = "daily"
 ) => {
-  const [trendPeriod, setTrendPeriod] = useState<'daily' | 'weekly' | 'monthly'>(
-    initialTrendPeriod
-  );
-  const { data, isLoading, isError, error } = trpc.weight.getWeights.useQuery();
+  const [trendPeriod, setTrendPeriod] = useState<
+    "daily" | "weekly" | "monthly"
+  >(initialTrendPeriod);
+  const {
+    data: weightsData,
+    isLoading: weightsLoading,
+    isError: weightsError,
+    error: weightsErrorObj,
+  } = trpc.weight.getWeights.useQuery();
+  const {
+    data: currentGoal,
+    isLoading: goalLoading,
+    isError: goalError,
+  } = trpc.weight.getCurrentGoal.useQuery();
+
+  const isLoading = weightsLoading || goalLoading;
+  const isError = weightsError || goalError;
+  const error =
+    weightsErrorObj || (goalError ? new Error("Failed to fetch goal") : null);
 
   const weights = useMemo(() => {
-    if (!data) return [];
-    return data.sort((a, b) => {
+    if (!weightsData) return [];
+    return weightsData.sort((a, b) => {
       const dateA = new Date(a.createdAt);
       const dateB = new Date(b.createdAt);
       if (isNaN(dateA.getTime())) return 1;
       if (isNaN(dateB.getTime())) return -1;
       return dateA.getTime() - dateB.getTime();
     });
-  }, [data]);
+  }, [weightsData]);
 
   const chartData = useMemo(() => {
     if (!weights.length) return [];
-    if (trendPeriod === 'daily') {
+    if (trendPeriod === "daily") {
       return weights.map((weight) => ({
         date: isNaN(new Date(weight.createdAt).getTime())
           ? null
@@ -38,10 +52,10 @@ export const useWeightChart = (
       const date = new Date(weight.createdAt);
       if (isNaN(date.getTime())) return acc;
       let key: string;
-      if (trendPeriod === 'weekly') {
-        key = format(startOfWeek(date, { weekStartsOn: 0 }), 'yyyy-MM-dd');
+      if (trendPeriod === "weekly") {
+        key = format(startOfWeek(date, { weekStartsOn: 0 }), "yyyy-MM-dd");
       } else {
-        key = format(startOfMonth(date), 'yyyy-MM');
+        key = format(startOfMonth(date), "yyyy-MM");
       }
       if (!acc[key]) acc[key] = { weights: [], note: weight.note };
       acc[key].weights.push(weight.weightKg);
@@ -58,8 +72,8 @@ export const useWeightChart = (
   const chartConfig = useMemo(
     () => ({
       weight: {
-        label: 'Weight (kg)',
-        color: 'oklch(0.6 0.15 190)', // Hardcoded teal
+        label: "Weight (kg)",
+        color: "oklch(0.6 0.15 190)", // Hardcoded teal
       },
     }),
     []
@@ -68,10 +82,14 @@ export const useWeightChart = (
   const barColor = chartConfig.weight.color; // Static color
 
   const handleTrendPeriodChange = (value: string) => {
-    if (value === 'daily' || value === 'weekly' || value === 'monthly') {
+    if (value === "daily" || value === "weekly" || value === "monthly") {
       setTrendPeriod(value);
     }
   };
+
+  const goalWeight = useMemo(() => {
+    return currentGoal?.goalWeightKg ?? null;
+  }, [currentGoal]);
 
   return {
     weights,
@@ -83,5 +101,6 @@ export const useWeightChart = (
     barColor,
     trendPeriod,
     handleTrendPeriodChange,
+    goalWeight,
   };
 };

@@ -1,4 +1,3 @@
-// src/components/WeightChart.tsx
 import {
   Select,
   SelectTrigger,
@@ -23,6 +22,15 @@ function WeightChart() {
     handleTrendPeriodChange,
   } = useWeightChart("daily");
 
+  // Get the latest weight (most recent by createdAt)
+  const latestWeight = weights?.length
+    ? weights.reduce((latest, weight) =>
+        new Date(weight.createdAt) > new Date(latest.createdAt)
+          ? weight
+          : latest
+      )
+    : null;
+
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-6">
       <h1
@@ -33,7 +41,24 @@ function WeightChart() {
       >
         Your Stats
       </h1>
-      <div className="mx-auto max-w-md lg:max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm">
+      {latestWeight && !isError && !isLoading && (
+        <div
+          className="mx-auto max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm"
+          data-testid="latest-weight-card"
+        >
+          <h2 className="text-lg font-semibold text-foreground">
+            Latest Weight
+          </h2>
+          <p className="text-2xl font-bold text-foreground">
+            {latestWeight.weightKg} kg
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Recorded on{" "}
+            {new Date(latestWeight.createdAt).toLocaleDateString("en-GB")}
+          </p>
+        </div>
+      )}
+      <div className="mx-auto max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm">
         <div className="flex items-start justify-between mb-6">
           <Select onValueChange={handleTrendPeriodChange} value={trendPeriod}>
             <SelectTrigger
