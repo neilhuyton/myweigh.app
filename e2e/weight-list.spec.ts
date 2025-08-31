@@ -42,10 +42,8 @@ const badRequestResponse = (path: string, message: string) => ({
 test.describe('Weight List Functionality', () => {
   test.describe('Authenticated', () => {
     test.beforeEach(async ({ page }) => {
-      // Mock login request to match exact URL
       await page.route('http://localhost:8888/.netlify/functions/trpc/login?batch=1', async (route) => {
         if (route.request().method() === 'POST') {
-          console.log('Mocking login request:', route.request().url(), 'Method:', route.request().method());
           await route.fulfill({
             status: 200,
             contentType: 'application/json',
@@ -69,65 +67,22 @@ test.describe('Weight List Functionality', () => {
         }
       });
 
-      // Log browser console errors for debugging
-      page.on('console', (msg) => {
-        if (msg.type() === 'error') {
-          console.log(`Browser console error: ${msg.text()}`);
-        }
-      });
-
-      // Log all requests for debugging
-      page.on('request', async (req) => {
-        const url = req.url();
-        const method = req.method();
-        const headers = await req.allHeaders();
-        const postData = await req.postData();
-        console.log(`Request: ${method} ${url}`, { headers, postData });
-      });
-
-      // Log all responses for debugging
-      page.on('response', async (resp) => {
-        const url = resp.url();
-        const status = resp.status();
-        const contentType = resp.headers()['content-type'] || '';
-        const isJson = contentType.includes('application/json');
-        if (isJson) {
-          try {
-            const body = await resp.json();
-            console.log(`Response: ${url} - Status: ${status}`, JSON.stringify(body, null, 2));
-          } catch (e) {
-            console.log(`Failed to parse response for ${url}:`, e);
-          }
-        } else {
-          console.log(`Non-JSON response: ${url} - Status: ${status}`);
-        }
-      });
-
-      // Perform login
       await page.goto('http://localhost:5173/login');
       await expect(page.getByPlaceholder('m@example.com')).toBeVisible({ timeout: 5000 });
       await page.getByPlaceholder('m@example.com').fill('testuser@example.com');
       await page.getByPlaceholder('Enter your password').fill('password123');
       await Promise.all([
         page.waitForResponse(
-          (resp) => {
-            const matches = resp.url().includes('trpc/login') && resp.status() === 200;
-            console.log(`waitForResponse (login): ${resp.url()} - Status: ${resp.status()} - Matches: ${matches}`);
-            return matches;
-          },
+          (resp) => resp.url().includes('trpc/login') && resp.status() === 200,
           { timeout: 20000 }
         ),
         page.getByRole('button', { name: 'Login' }).click(),
       ]);
 
-      // Verify token is set
       await page.evaluate(() => {
         localStorage.setItem('token', 'mock-token');
       });
-      const token = await page.evaluate(() => localStorage.getItem('token') || document.cookie);
-      console.log(`Stored token after login: ${token}`);
 
-      // Wait for notifications to disappear
       await page
         .getByLabel('Notifications alt+T')
         .waitFor({ state: 'hidden', timeout: 5000 })
@@ -145,38 +100,29 @@ test.describe('Weight List Functionality', () => {
         },
       ];
 
-      // Mock tRPC requests
       await page.route('http://localhost:8888/.netlify/functions/trpc/**', async (route) => {
         const url = route.request().url();
         const method = route.request().method();
         const headers = await route.request().allHeaders();
-        const body = await route.request().postData();
-        console.log(`Intercepted tRPC request: ${method} ${url}`, { headers, body });
 
-        // Skip login route
         if (url.includes('trpc/login')) {
-          console.log('Skipping login route in general handler');
           await route.continue();
           return;
         }
 
-        // Parse tRPC batch queries from the URL
         const urlObj = new URL(url);
         const queries = urlObj.pathname.split('/trpc/')[1]?.split('?')[0]?.split(',') || [];
 
         if (method !== 'POST') {
-          console.log(`Non-POST request: ${method} ${url}`);
           await route.continue();
           return;
         }
 
         const auth = headers['authorization'];
         if (auth !== 'Bearer mock-token') {
-          console.log('Unauthorized: Invalid token');
           return await route.fulfill(unauthorizedResponse(queries.join(',')));
         }
 
-        // Construct response based on queried endpoints
         const responseBody = queries.map((query, index) => {
           if (query === 'weight.getWeights') {
             return {
@@ -216,11 +162,9 @@ test.describe('Weight List Functionality', () => {
         });
       });
 
-      // Navigate to Weight page
       await page.getByRole('link', { name: 'Weight' }).click();
       await expect(page.getByText('A list of your recent weight measurements')).toBeVisible({ timeout: 10000 });
 
-      // Verify weight data is displayed
       await expect(page.locator('table td').filter({ hasText: '70.5' })).toBeVisible({ timeout: 10000 });
       await expect(page.locator('table td').filter({ hasText: 'Morning weigh-in' })).toBeVisible({ timeout: 10000 });
       await expect(
@@ -243,38 +187,30 @@ test.describe('Weight List Functionality', () => {
         },
       ];
 
-      // Mock tRPC requests
       await page.route('http://localhost:8888/.netlify/functions/trpc/**', async (route) => {
         const url = route.request().url();
         const method = route.request().method();
         const headers = await route.request().allHeaders();
         const body = await route.request().postData();
-        console.log(`Intercepted tRPC request: ${method} ${url}`, { headers, body });
 
-        // Skip login route
         if (url.includes('trpc/login')) {
-          console.log('Skipping login route in general handler');
           await route.continue();
           return;
         }
 
-        // Parse tRPC batch queries from the URL
         const urlObj = new URL(url);
         const queries = urlObj.pathname.split('/trpc/')[1]?.split('?')[0]?.split(',') || [];
 
         if (method !== 'POST') {
-          console.log(`Non-POST request: ${method} ${url}`);
           await route.continue();
           return;
         }
 
         const auth = headers['authorization'];
         if (auth !== 'Bearer mock-token') {
-          console.log('Unauthorized: Invalid token');
           return await route.fulfill(unauthorizedResponse(queries.join(',')));
         }
 
-        // Construct response based on queried endpoints
         const responseBody = queries.map((query, index) => {
           if (query === 'weight.getWeights') {
             return {
@@ -293,7 +229,6 @@ test.describe('Weight List Functionality', () => {
             };
           } else if (query === 'weight.delete') {
             const input = JSON.parse(body || '{}')[index];
-            console.log('weight.delete input:', input);
             if (!input?.weightId) {
               return badRequestResponse('weight.delete', 'Weight ID is required');
             }
@@ -325,27 +260,21 @@ test.describe('Weight List Functionality', () => {
         });
       });
 
-      // Navigate to Weight page
       await page.getByRole('link', { name: 'Weight' }).click();
       await expect(page.getByText('A list of your recent weight measurements')).toBeVisible({ timeout: 10000 });
 
-      // Verify weight data is displayed
       await expect(page.locator('table td').filter({ hasText: '70.5' })).toBeVisible({ timeout: 10000 });
       await expect(page.locator('table td').filter({ hasText: 'Morning weigh-in' })).toBeVisible({ timeout: 10000 });
       await expect(
         page.locator('table td').filter({ hasText: /20\/08\/2025/ }).filter({ hasNot: page.getByRole('button') })
       ).toBeVisible({ timeout: 10000 });
 
-      // Debug delete button
       const deleteButton = page.getByRole('button', { name: 'Delete weight measurement from 20/08/2025' });
       await expect(deleteButton).toBeVisible({ timeout: 10000 });
       await expect(deleteButton).toBeEnabled({ timeout: 10000 });
-      console.log('Delete button found and enabled');
 
-      // Check for dropdown menu
       const dropdownTrigger = page.locator('[data-testid="dropdown-trigger"]');
       if (await dropdownTrigger.isVisible()) {
-        console.log('Dropdown trigger found, clicking to open');
         await dropdownTrigger.click();
         const deleteMenuItem = page.getByRole('menuitem', { name: 'Delete' });
         await expect(deleteMenuItem).toBeVisible({ timeout: 5000 });
@@ -354,23 +283,15 @@ test.describe('Weight List Functionality', () => {
         await deleteButton.click();
       }
 
-      // Trigger delete action
       await Promise.all([
         page.waitForResponse(
-          (resp) => {
-            const matches = resp.url().includes('trpc/weight.delete') && resp.status() === 200;
-            console.log(`waitForResponse (delete): ${resp.url()} - Status: ${resp.status()} - Matches: ${matches}`);
-            return matches;
-          },
+          (resp) => resp.url().includes('trpc/weight.delete') && resp.status() === 200,
           { timeout: 20000 }
         ),
-        // Click is handled above based on dropdown presence
       ]);
 
-      // Wait for UI to update
       await page.waitForTimeout(500);
 
-      // Verify weight is deleted
       await expect(page.getByText('No weight measurements found')).toBeVisible({ timeout: 10000 });
       await expect(page.locator('table td').filter({ hasText: '70.5' })).not.toBeVisible({ timeout: 10000 });
       await expect(page.locator('table td').filter({ hasText: 'Morning weigh-in' })).not.toBeVisible({ timeout: 10000 });

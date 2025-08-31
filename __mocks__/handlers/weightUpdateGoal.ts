@@ -5,16 +5,10 @@ import jwt from "jsonwebtoken";
 export const weightUpdateGoalHandler = http.post(
   "http://localhost:8888/.netlify/functions/trpc/weight.updateGoal",
   async ({ request }) => {
-    console.log(
-      "MSW: Intercepted weight.updateGoal request:",
-      request.url,
-      request.method
-    );
     let body;
     try {
       body = await request.json();
-    } catch (error) {
-      console.error("Error reading weight.updateGoal request body:", error);
+    } catch {
       return HttpResponse.json(
         [
           {
@@ -63,8 +57,7 @@ export const weightUpdateGoalHandler = http.post(
 
     try {
       jwt.verify(userId, process.env.JWT_SECRET || "your-secret-key");
-    } catch (error) {
-      console.error("MSW: Invalid token:", error);
+    } catch {
       return HttpResponse.json(
         [
           {
@@ -104,7 +97,6 @@ export const weightUpdateGoalHandler = http.post(
       );
     }
 
-    console.log("MSW: Handling request for userId:", userId);
     return HttpResponse.json(
       [
         {

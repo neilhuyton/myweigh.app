@@ -1,3 +1,4 @@
+// src/mocks/handlers/loginHandler.ts
 import { http, HttpResponse } from "msw";
 import { mockUsers } from "../mockUsers";
 import bcrypt from "bcryptjs";
@@ -14,9 +15,7 @@ export const loginHandler = http.post(
     let body: unknown;
     try {
       body = await request.json();
-      console.log("Mock Server Request Body:", JSON.stringify(body, null, 2));
-    } catch (error) {
-      console.error("Error parsing request body:", error);
+    } catch {
       return HttpResponse.json(
         [
           {
@@ -37,13 +36,10 @@ export const loginHandler = http.post(
     if (Array.isArray(body) && body.length > 0) {
       const first = body[0];
       if (first?.input) {
-        // Standard tRPC batch format: [{ input: { email, password } }]
         input = first.input as TrpcRequestBody;
       } else if (first && "email" in first && "password" in first) {
-        // Fallback for batch without input wrapper: [{ email, password }]
         input = first as TrpcRequestBody;
       } else {
-        console.error("Invalid array body format:", body);
         return HttpResponse.json(
           [
             {
@@ -60,7 +56,6 @@ export const loginHandler = http.post(
       }
     } else if (typeof body === "object" && body !== null) {
       if ("email" in body && "password" in body) {
-        // Non-batched: { email, password }
         input = body as TrpcRequestBody;
       } else if (
         "0" in body &&
@@ -69,10 +64,8 @@ export const loginHandler = http.post(
         "email" in body["0"] &&
         "password" in body["0"]
       ) {
-        // Custom batch format: { 0: { email, password } }
         input = body["0"] as TrpcRequestBody;
       } else {
-        console.error("Invalid object body format:", body);
         return HttpResponse.json(
           [
             {
@@ -88,7 +81,6 @@ export const loginHandler = http.post(
         );
       }
     } else {
-      console.error("Invalid body format:", body);
       return HttpResponse.json(
         [
           {

@@ -90,38 +90,6 @@ test.describe("Weight Goal Functionality", () => {
     test("should set, edit, and display weight goal", async ({ page }) => {
       const goals: Goal[] = [];
 
-      // Log browser console errors for debugging
-      page.on("console", (msg) => {
-        if (msg.type() === "error") {
-          console.log(`Browser console error: ${msg.text()}`);
-        }
-      });
-
-      // Log all requests for debugging
-      page.on("request", async (req) => {
-        const url = req.url();
-        const method = req.method();
-        const headers = await req.allHeaders();
-        const postData = await req.postData();
-        console.log(`Request: ${method} ${url}`, { headers, postData });
-      });
-
-      // Log all responses for debugging
-      page.on("response", async (resp) => {
-        const url = resp.url();
-        const status = resp.status();
-        try {
-          const body = await resp.json();
-          console.log(
-            `Response: ${url} - Status: ${status}`,
-            JSON.stringify(body, null, 2)
-          );
-        } catch (e) {
-          console.log(`Failed to parse response for ${url}:`, e);
-        }
-      });
-
-      // Mock login request to include token
       await page.route(
         "http://localhost:8888/.netlify/functions/trpc/login**",
         async (route) => {
@@ -150,7 +118,6 @@ test.describe("Weight Goal Functionality", () => {
         }
       );
 
-      // Perform login
       await page.goto("/login");
       await expect(page.getByPlaceholder("m@example.com")).toBeVisible({
         timeout: 5000,
@@ -159,26 +126,12 @@ test.describe("Weight Goal Functionality", () => {
       await page.getByPlaceholder("Enter your password").fill("password123");
       await Promise.all([
         page.waitForResponse(
-          (resp) => {
-            const matches =
-              resp.url().includes("trpc/login") && resp.status() === 200;
-            console.log(
-              `waitForResponse (login): ${resp.url()} - Status: ${resp.status()} - Matches: ${matches}`
-            );
-            return matches;
-          },
+          (resp) => resp.url().includes("trpc/login") && resp.status() === 200,
           { timeout: 20000 }
         ),
         page.getByRole("button", { name: "Login" }).click(),
       ]);
 
-      // Verify token is set (e.g., in localStorage or cookies)
-      const token = await page.evaluate(
-        () => localStorage.getItem("token") || document.cookie
-      );
-      console.log(`Stored token after login: ${token}`);
-
-      // Mock tRPC requests
       await page.route(
         "http://localhost:8888/.netlify/functions/trpc/**",
         async (route) => {
@@ -186,29 +139,21 @@ test.describe("Weight Goal Functionality", () => {
           const method = route.request().method();
           const headers = await route.request().allHeaders();
           const body = await route.request().postData();
-          console.log(`Intercepted tRPC request: ${method} ${url}`, {
-            headers,
-            body,
-          });
 
-          // Parse tRPC batch queries from the URL
           const urlObj = new URL(url);
           const queries =
             urlObj.pathname.split("/trpc/")[1]?.split("?")[0]?.split(",") || [];
 
           if (method !== "POST") {
-            console.log(`Non-POST request: ${method} ${url}`);
             await route.continue();
             return;
           }
 
           const auth = headers["authorization"];
           if (auth !== "Bearer mock-token") {
-            console.log("Unauthorized: Invalid token");
             return await route.fulfill(unauthorizedResponse(queries.join(",")));
           }
 
-          // Construct response based on queried endpoints
           const responseBody = queries.map((query, index) => {
             if (query === "weight.getCurrentGoal") {
               const currentGoal = goals.find((g) => !g.reachedAt) || null;
@@ -340,7 +285,6 @@ test.describe("Weight Goal Functionality", () => {
         }
       );
 
-      // Navigate to Goals page
       await page.getByRole("link", { name: "Goals" }).click();
       await expect(
         page.getByRole("heading", {
@@ -360,19 +304,10 @@ test.describe("Weight Goal Functionality", () => {
         timeout: 10000,
       });
 
-      // Set a new goal
       await page.getByPlaceholder("Enter your goal weight (kg)").fill("60");
       await Promise.all([
         page.waitForResponse(
-          (resp) => {
-            const matches =
-              resp.url().includes("trpc/weight.setGoal") &&
-              resp.status() === 200;
-            console.log(
-              `waitForResponse (setGoal): ${resp.url()} - Status: ${resp.status()} - Matches: ${matches}`
-            );
-            return matches;
-          },
+          (resp) => resp.url().includes("trpc/weight.setGoal") && resp.status() === 200,
           { timeout: 20000 }
         ),
         page.getByRole("button", { name: "Set Goal" }).click(),
@@ -387,7 +322,6 @@ test.describe("Weight Goal Functionality", () => {
         timeout: 5000,
       });
 
-      // Navigate to Weight page and submit weight
       await page.goto("/weight");
       await page.getByPlaceholder("Enter your weight (kg)").fill("55");
       await page.route(
@@ -416,40 +350,22 @@ test.describe("Weight Goal Functionality", () => {
       );
       await Promise.all([
         page.waitForResponse(
-          (resp) => {
-            const matches =
-              resp.url().includes("trpc/weight.create") &&
-              resp.status() === 200;
-            console.log(
-              `waitForResponse (create): ${resp.url()} - Status: ${resp.status()} - Matches: ${matches}`
-            );
-            return matches;
-          },
+          (resp) => resp.url().includes("trpc/weight.create") && resp.status() === 200,
           { timeout: 20000 }
         ),
         page.getByRole("button", { name: "Submit Weight" }).click(),
       ]);
       await expect(page.getByTestId("confetti")).toBeVisible({ timeout: 7000 });
 
-      // Return to Goals page
       await page.getByRole("link", { name: "Goals" }).click();
       await expect(page.getByRole("button", { name: "Set Goal" })).toBeVisible({
         timeout: 5000,
       });
 
-      // Set a new goal
       await page.getByPlaceholder("Enter your goal weight (kg)").fill("50");
       await Promise.all([
         page.waitForResponse(
-          (resp) => {
-            const matches =
-              resp.url().includes("trpc/weight.setGoal") &&
-              resp.status() === 200;
-            console.log(
-              `waitForResponse (setGoal): ${resp.url()} - Status: ${resp.status()} - Matches: ${matches}`
-            );
-            return matches;
-          },
+          (resp) => resp.url().includes("trpc/weight.setGoal") && resp.status() === 200,
           { timeout: 20000 }
         ),
         page.getByRole("button", { name: "Set Goal" }).click(),
@@ -464,37 +380,19 @@ test.describe("Weight Goal Functionality", () => {
         timeout: 5000,
       });
 
-      // Reload and verify
       await page.reload();
       await page.waitForResponse(
-        (resp) => {
-          const matches =
-            resp.url().includes("trpc/weight.getGoals") &&
-            resp.status() === 200;
-          console.log(
-            `waitForResponse (getGoals): ${resp.url()} - Status: ${resp.status()} - Matches: ${matches}`
-          );
-          return matches;
-        },
+        (resp) => resp.url().includes("trpc/weight.getGoals") && resp.status() === 200,
         { timeout: 10000 }
       );
       await expect(
         page.locator("table td").filter({ hasText: "50" })
       ).toBeVisible({ timeout: 10000 });
 
-      // Update goal
       await page.getByPlaceholder("Enter your goal weight (kg)").fill("55");
       await Promise.all([
         page.waitForResponse(
-          (resp) => {
-            const matches =
-              resp.url().includes("trpc/weight.updateGoal") &&
-              resp.status() === 200;
-            console.log(
-              `waitForResponse (updateGoal): ${resp.url()} - Status: ${resp.status()} - Matches: ${matches}`
-            );
-            return matches;
-          },
+          (resp) => resp.url().includes("trpc/weight.updateGoal") && resp.status() === 200,
           { timeout: 20000 }
         ),
         page.getByRole("button", { name: "Set Goal" }).click(),
@@ -561,6 +459,7 @@ test.describe("Weight Goal Functionality", () => {
         page.getByRole("heading", {
           name: "Past Weight Goals",
           exact: true,
+
           level: 2,
         })
       ).toBeVisible({ timeout: 5000 });

@@ -1,3 +1,4 @@
+// src/mocks/handlers/weightGetGoalsHandler.ts
 import { http, HttpResponse } from 'msw';
 
 // Define the shape of a single tRPC request for weight.getGoals
@@ -17,11 +18,6 @@ export const weightGetGoalsHandler = http.post(
     const userId = headers['authorization']?.split('Bearer ')[1];
     const body = (await request.json()) as TRPCRequestBody;
     const query = body['0'];
-    console.log('Mock server received request:', {
-      path: query.path,
-      headers,
-      body,
-    }); // Debug log
 
     if (query.path !== 'weight.getGoals') {
       return; // Let other handlers process

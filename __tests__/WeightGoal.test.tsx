@@ -22,7 +22,7 @@ import { act } from "react";
 import { weightHandlers } from "../__mocks__/handlers/weightHandlers";
 import { weightGetWeightsHandler } from "../__mocks__/handlers/weightGetWeights";
 import { refreshTokenHandler } from "../__mocks__/handlers/refreshToken";
-import { generateToken } from "./utils/token"; // Import from utility
+import { generateToken } from "./utils/token";
 
 // Mock GoalList
 vi.mock("../src/components/GoalList", () => ({
@@ -34,7 +34,6 @@ describe("WeightGoal Component", () => {
     initialPath = "/weight-goal",
     userId = "test-user-id"
   ) => {
-    // Set auth state before rendering
     useAuthStore.setState({
       isLoggedIn: true,
       userId,
@@ -64,7 +63,6 @@ describe("WeightGoal Component", () => {
   };
 
   beforeAll(() => {
-    console.log("MSW: Starting server");
     server.listen({ onUnhandledRequest: "warn" });
     server.use(...weightHandlers, weightGetWeightsHandler, refreshTokenHandler);
   });
@@ -74,7 +72,6 @@ describe("WeightGoal Component", () => {
     queryClient.clear();
     vi.clearAllMocks();
     document.body.innerHTML = "";
-    // Reset auth state
     useAuthStore.setState({
       isLoggedIn: false,
       userId: null,

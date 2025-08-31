@@ -7,18 +7,6 @@ import { TRPCError } from '@trpc/server';
 import { getHTTPStatusCodeFromError } from '@trpc/server/http';
 
 export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => {
-  console.log('Server Incoming Request Method:', event.httpMethod);
-  console.log('Server Incoming Request URL:', event.path);
-  console.log('Server Incoming Request Query:', event.queryStringParameters);
-  console.log('Server Raw Request Body:', event.body);
-  console.log('Server Content-Type Header:', event.headers['content-type'] || 'Not set');
-  try {
-    console.log('Server Parsed Request Body:', event.body ? JSON.parse(event.body) : null);
-  } catch (parseError) {
-    console.error('Server Body Parse Error:', parseError);
-  }
-  console.log('Server Incoming Request Headers:', event.headers);
-
   const queryString = event.queryStringParameters
     ? new URLSearchParams(event.queryStringParameters as Record<string, string>).toString()
     : '';
@@ -50,9 +38,6 @@ export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => 
   }
 
   try {
-    console.log('Body Sent to tRPC:', event.httpMethod !== 'GET' && event.body ? event.body : undefined);
-    console.log('URL Sent to tRPC:', url);
-
     const request = new Request(url, {
       method: event.httpMethod,
       headers,
@@ -64,16 +49,10 @@ export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => 
       req: request,
       router: appRouter,
       createContext: () => createContext({ req: { headers } as IncomingMessage }),
-      onError: ({ error, path, input }) => {
-        console.error(`tRPC error on path "${path}":`, error);
-        console.log(`tRPC Input for ${path}:`, input);
-      },
       batching: {
         enabled: true,
       },
-      // Allow POST for all procedures, including queries
       allowMethodOverride: true,
-      // Set CORS headers and ensure 200 for successful queries
       responseMeta: () => ({
         headers: corsHeaders,
         status: 200,
@@ -81,7 +60,6 @@ export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => 
     });
 
     const responseBody = await response.text();
-    console.log('tRPC Response:', responseBody);
 
     return {
       statusCode: response.status,
@@ -89,7 +67,6 @@ export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => 
       body: responseBody,
     };
   } catch (error: unknown) {
-    console.error('Handler error:', error);
     const trpcError = error instanceof TRPCError ? error : new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: 'An unexpected error occurred',

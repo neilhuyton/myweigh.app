@@ -6,6 +6,8 @@ let weights = [
   {
     id: '1',
     weightKg: 70,
+
+
     note: 'Morning weigh-in',
     createdAt: '2023-10-01T00:00:00Z',
   },
@@ -20,11 +22,8 @@ let weights = [
 export const weightDeleteHandler = http.post(
   'http://localhost:8888/.netlify/functions/trpc/weight.delete',
   async ({ request }) => {
-    console.log('MSW: Intercepted weight.delete request:', request.url, request.method);
-    // Define the expected TRPC batched request body type
     type TrpcRequestBody = { [key: string]: { weightId: string; id?: number } };
     const body = (await request.json()) as TrpcRequestBody | null;
-    console.log('MSW: Request body:', JSON.stringify(body, null, 2));
 
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -48,8 +47,7 @@ export const weightDeleteHandler = http.post(
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { userId: string };
       userId = decoded.userId;
-    } catch (error) {
-      console.error('MSW: Invalid token:', error);
+    } catch {
       return HttpResponse.json(
         [
           {
@@ -64,8 +62,6 @@ export const weightDeleteHandler = http.post(
         { status: 200 }
       );
     }
-
-    console.log('MSW: Handling request for userId:', userId);
 
     if (userId === 'error-user-id') {
       return HttpResponse.json(
@@ -83,7 +79,6 @@ export const weightDeleteHandler = http.post(
       );
     }
 
-    // Extract input from the TRPC batched request body
     const input = body?.['0'];
     if (!input || !input.weightId) {
       return HttpResponse.json(
@@ -103,7 +98,6 @@ export const weightDeleteHandler = http.post(
 
     if (input.weightId === '1') {
       weights = weights.filter((w) => w.id !== '1');
-      console.log('MSW: Updated weights:', weights);
       return HttpResponse.json([
         {
           id: input?.id ?? 0,

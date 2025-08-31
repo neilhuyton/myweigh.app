@@ -21,10 +21,8 @@ export const weightHandlers = [
     const userId = headers['authorization']?.split('Bearer ')[1];
     const body = (await request.json()) as TRPCRequestBody;
     const query = body['0'];
-    console.log('Mock server received request:', { path: query.path, headers, body });
 
     if (!userId) {
-      console.log(`Unauthorized request detected for ${query.path}`);
       return HttpResponse.json(
         [
           {
@@ -40,7 +38,6 @@ export const weightHandlers = [
     }
 
     if (query.path === 'weight.getCurrentGoal') {
-      console.log('Returning weight.getCurrentGoal response');
       return HttpResponse.json([
         {
           result: {
@@ -56,7 +53,6 @@ export const weightHandlers = [
     }
 
     if (query.path === 'weight.getGoals') {
-      console.log('Returning weight.getGoals response');
       return HttpResponse.json([
         {
           result: {
@@ -80,7 +76,6 @@ export const weightHandlers = [
     }
 
     if (query.path === 'weight.getWeights') {
-      console.log('Returning weight.getWeights response');
       return HttpResponse.json([
         {
           result: {
@@ -105,9 +100,7 @@ export const weightHandlers = [
 
     if (query.path === 'weight.setGoal') {
       const input = query.input as WeightSetGoalInput | undefined;
-      console.log('Handling weight.setGoal with input:', input);
       if (!input || input.goalWeightKg <= 0) {
-        console.log('Invalid goal weight');
         return HttpResponse.json(
           [
             {
@@ -122,7 +115,6 @@ export const weightHandlers = [
           { status: 400 },
         );
       }
-      console.log('Returning weight.setGoal response');
       return HttpResponse.json([
         {
           id: query.id ?? 0,
@@ -138,7 +130,6 @@ export const weightHandlers = [
       ]);
     }
 
-    console.log(`No handler for path: ${query.path}`);
     return HttpResponse.json(
       [
         {

@@ -1,3 +1,4 @@
+// src/mocks/handlers/refreshTokenHandler.ts
 import { http, HttpResponse } from 'msw';
 import jwt from 'jsonwebtoken';
 
@@ -18,11 +19,6 @@ type TRPCRequestBody = { [key: string]: TRPCRequest };
 export const refreshTokenHandler = http.post(
   /http:\/\/localhost:8888\/\.netlify\/functions\/trpc\/refreshToken\.refresh/,
   async ({ request }) => {
-    console.log(
-      'MSW: Intercepted refreshToken.refresh request:',
-      request.url,
-      request.method,
-    );
     const body = (await request.json()) as TRPCRequestBody;
     const { refreshToken } = body['0'].params.input;
 

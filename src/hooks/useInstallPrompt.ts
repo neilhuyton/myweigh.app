@@ -37,10 +37,7 @@ export function useInstallPrompt() {
   const handleInstallClick = () => {
     if (installPrompt) {
       installPrompt.prompt();
-      installPrompt.userChoice.then((choiceResult) => {
-        if (choiceResult.outcome === "accepted") {
-          console.log("User installed the app");
-        }
+      installPrompt.userChoice.then(() => {
         setInstallPrompt(null);
       });
     }

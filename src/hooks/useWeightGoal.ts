@@ -18,8 +18,6 @@ export function useWeightGoal() {
   const [message, setMessage] = useState<string | null>(null);
   const { userId } = useAuthStore();
 
-  console.log("USER ID", userId);
-
   const {
     data: currentGoal = null,
     isLoading: isGoalLoading,
