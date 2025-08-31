@@ -26,14 +26,19 @@ describe("Navigation Component", () => {
       component: () => <Navigation />,
     });
 
-    const homeRoute = createRoute({
-      getParentRoute: () => rootRoute,
-      path: "/",
-    });
+    // const homeRoute = createRoute({
+    //   getParentRoute: () => rootRoute,
+    //   path: "/",
+    // });
 
     const weightRoute = createRoute({
       getParentRoute: () => rootRoute,
       path: "/weight",
+    });
+
+        const goalsRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: "/weight-goal",
     });
 
     const chartRoute = createRoute({
@@ -41,16 +46,13 @@ describe("Navigation Component", () => {
       path: "/weight-chart",
     });
 
-    const goalsRoute = createRoute({
-      getParentRoute: () => rootRoute,
-      path: "/weight-goal",
-    });
+
 
     const routeTree = rootRoute.addChildren([
-      homeRoute,
+      // homeRoute,
       weightRoute,
-      chartRoute,
       goalsRoute,
+      chartRoute,
     ]);
 
     const history = createMemoryHistory({ initialEntries: [initialPath] });
@@ -75,25 +77,21 @@ describe("Navigation Component", () => {
     await setup("/");
 
     // Check that all links are rendered using aria-label
-    expect(screen.getByRole("link", { name: "Navigate to Home" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Navigate to Weight" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Navigate to Chart" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Navigate to Goals" })).toBeInTheDocument();
 
     // Check href attributes
-    expect(screen.getByRole("link", { name: "Navigate to Home" })).toHaveAttribute("href", "/");
     expect(screen.getByRole("link", { name: "Navigate to Weight" })).toHaveAttribute("href", "/weight");
     expect(screen.getByRole("link", { name: "Navigate to Chart" })).toHaveAttribute("href", "/weight-chart");
     expect(screen.getByRole("link", { name: "Navigate to Goals" })).toHaveAttribute("href", "/weight-goal");
 
     // Check text content of links
-    expect(screen.getByRole("link", { name: "Navigate to Home" })).toHaveTextContent("Home");
     expect(screen.getByRole("link", { name: "Navigate to Weight" })).toHaveTextContent("Weight");
     expect(screen.getByRole("link", { name: "Navigate to Chart" })).toHaveTextContent("Chart");
     expect(screen.getByRole("link", { name: "Navigate to Goals" })).toHaveTextContent("Goals");
 
     // Check icons are rendered
-    expect(screen.getByTestId("home-icon")).toBeInTheDocument();
     expect(screen.getByTestId("scale-icon")).toBeInTheDocument();
     expect(screen.getByTestId("line-chart-icon")).toBeInTheDocument();
     expect(screen.getByTestId("target-icon")).toBeInTheDocument();
@@ -108,7 +106,7 @@ describe("Navigation Component", () => {
       expect(weightLink).toHaveClass("bg-muted");
 
       // Verify other links do not have active styles
-      const homeLink = screen.getByRole("link", { name: "Navigate to Home" });
+      const homeLink = screen.getByRole("link", { name: "Navigate to Goals" });
       expect(homeLink).not.toHaveClass("font-semibold");
       expect(homeLink).not.toHaveClass("bg-muted");
     });
