@@ -1,7 +1,6 @@
 // src/components/Navigation.tsx
 import { Link } from "@tanstack/react-router";
 import {
-  HomeIcon,
   ScaleIcon,
   LineChartIcon,
   TargetIcon,
@@ -36,10 +35,9 @@ function Navigation() {
     <nav className="fixed bottom-0 left-0 right-0 bg-background shadow-md z-10">
       <div className="flex flex-row items-center justify-between p-2 sm:p-4">
         <div className="flex flex-row w-full items-center">
-          <NavItem to="/" label="Home" Icon={HomeIcon} />
           <NavItem to="/weight" label="Weight" Icon={ScaleIcon} />
-          <NavItem to="/weight-chart" label="Chart" Icon={LineChartIcon} />
-          <NavItem to="/weight-goal" label="Goals" Icon={TargetIcon} />
+          <NavItem to="/goals" label="Goals" Icon={TargetIcon} />
+          <NavItem to="/stats" label="Stats" Icon={LineChartIcon} />
         </div>
       </div>
     </nav>

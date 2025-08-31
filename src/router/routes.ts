@@ -73,7 +73,7 @@ export const weightRoute = (rootRoute: RootRoute) =>
 export const weightChartRoute = (rootRoute: RootRoute) =>
   createRoute({
     getParentRoute: () => rootRoute,
-    path: "/weight-chart",
+    path: "/stats",
     beforeLoad: () => {
       const { isLoggedIn } = useAuthStore.getState();
       if (!isLoggedIn) {
@@ -86,7 +86,7 @@ export const weightChartRoute = (rootRoute: RootRoute) =>
 export const weightGoalRoute = (rootRoute: RootRoute) =>
   createRoute({
     getParentRoute: () => rootRoute,
-    path: "/weight-goal",
+    path: "/goals",
     beforeLoad: () => {
       const { isLoggedIn } = useAuthStore.getState();
       if (!isLoggedIn) {

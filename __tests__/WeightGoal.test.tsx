@@ -31,7 +31,7 @@ vi.mock("../src/components/GoalList", () => ({
 
 describe("WeightGoal Component", () => {
   const setup = async (
-    initialPath = "/weight-goal",
+    initialPath = "/goals",
     userId = "test-user-id"
   ) => {
     useAuthStore.setState({
@@ -87,7 +87,7 @@ describe("WeightGoal Component", () => {
   });
 
   it("renders WeightGoal with correct content", async () => {
-    await setup("/weight-goal", "test-user-id");
+    await setup("/goals", "test-user-id");
 
     await act(async () => {
       await waitFor(
@@ -113,7 +113,7 @@ describe("WeightGoal Component", () => {
   });
 
   it("allows user to update a weight goal when logged in", async () => {
-    await setup("/weight-goal", "test-user-id");
+    await setup("/goals", "test-user-id");
 
     await act(async () => {
       await waitFor(

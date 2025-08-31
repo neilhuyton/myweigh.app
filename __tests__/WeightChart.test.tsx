@@ -26,7 +26,7 @@ import { weightGetWeightsHandler } from "../__mocks__/handlers/weightGetWeights"
 import { generateToken } from './utils/token';
 
 describe("WeightChart Component", () => {
-  const setup = async (initialPath = "/weight-chart", userId?: string) => {
+  const setup = async (initialPath = "/stats", userId?: string) => {
     if (userId) {
       useAuthStore.setState({
         isLoggedIn: true,
@@ -77,7 +77,7 @@ describe("WeightChart Component", () => {
   });
 
   it("renders WeightChart with correct title and select dropdown", async () => {
-    await setup("/weight-chart", "test-user-id");
+    await setup("/stats", "test-user-id");
 
     await act(async () => {
       await waitFor(
@@ -93,7 +93,7 @@ describe("WeightChart Component", () => {
   });
 
   it("displays error message when fetch fails", async () => {
-    await setup("/weight-chart", "error-user-id");
+    await setup("/stats", "error-user-id");
 
     await act(async () => {
       await waitFor(
@@ -109,7 +109,7 @@ describe("WeightChart Component", () => {
   });
 
   it("displays no measurements message when weights are empty", async () => {
-    await setup("/weight-chart", "empty-user-id");
+    await setup("/stats", "empty-user-id");
 
     await act(async () => {
       await waitFor(
@@ -126,7 +126,7 @@ describe("WeightChart Component", () => {
   });
 
   it("updates chart data when trend period changes", async () => {
-    await setup("/weight-chart", "test-user-id");
+    await setup("/stats", "test-user-id");
 
     await act(async () => {
       await waitFor(
