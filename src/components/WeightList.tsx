@@ -50,9 +50,9 @@ function WeightList() {
             <TableHead className="h-10 px-4 text-left font-semibold text-foreground bg-muted/50">
               Weight (kg)
             </TableHead>
-            <TableHead className="h-10 px-4 text-left font-semibold text-foreground bg-muted/50">
+            {/* <TableHead className="h-10 px-4 text-left font-semibold text-foreground bg-muted/50">
               Note
-            </TableHead>
+            </TableHead> */}
             <TableHead className="h-10 px-4 text-left font-semibold text-foreground bg-muted/50">
               Date
             </TableHead>
@@ -74,9 +74,9 @@ function WeightList() {
                 <TableCell className="p-4 text-foreground">
                   {weight.weightKg}
                 </TableCell>
-                <TableCell className="p-4 text-foreground">
+                {/* <TableCell className="p-4 text-foreground">
                   {weight.note || "-"}
-                </TableCell>
+                </TableCell> */}
                 <TableCell className="p-4 text-foreground">
                   {formatDate(weight.createdAt)}
                 </TableCell>
