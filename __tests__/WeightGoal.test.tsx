@@ -96,7 +96,7 @@ describe("WeightGoal Component", () => {
             screen.queryByTestId("weight-goal-loading")
           ).not.toBeInTheDocument();
           expect(
-            screen.getByRole("heading", { name: "Weight Goal" })
+            screen.getByRole("heading", { name: "Your Goals" })
           ).toBeInTheDocument();
           expect(screen.getByText(/Current Goal: 65 kg/)).toBeInTheDocument();
           expect(
@@ -122,7 +122,7 @@ describe("WeightGoal Component", () => {
             screen.queryByTestId("weight-goal-loading")
           ).not.toBeInTheDocument();
           expect(
-            screen.getByRole("heading", { name: "Weight Goal" })
+            screen.getByRole("heading", { name: "Your Goals" })
           ).toBeInTheDocument();
           expect(screen.getByText(/Current Goal: 65 kg/)).toBeInTheDocument();
           expect(

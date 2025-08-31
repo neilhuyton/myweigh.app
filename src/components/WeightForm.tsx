@@ -38,7 +38,7 @@ function WeightForm() {
           />,
           document.body
         )}
-      <div className="mx-auto max-w-md rounded-lg border border-border bg-card p-6 shadow-sm">
+      <div className="mx-auto max-w-md lg:max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm">
         <form
           onSubmit={handleSubmit}
           className="space-y-6"
