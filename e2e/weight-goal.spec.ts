@@ -482,7 +482,7 @@ test.describe("Weight Goal Functionality", () => {
         if (route.request().method() !== "GET") return await route.continue();
         await route.fulfill(unauthorizedResponse("weight.getGoals"));
       });
-      await page.goto("/goals");
+      await page.goto("/");
       await expect(page).toHaveURL(/.*\/login/, { timeout: 5000 });
       await expect(page.getByPlaceholder("m@example.com")).toBeVisible({
         timeout: 5000,
