@@ -1,3 +1,4 @@
+// src/components/WeightGoal.tsx
 import { useWeightGoal } from "../hooks/useWeightGoal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +31,7 @@ function WeightGoal() {
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-6">
       <h1
-        className="text-2xl font-bold text-foreground"
+        className="text-2xl font-bold text-foreground text-center"
         role="heading"
         aria-level={1}
       >

@@ -1,3 +1,4 @@
+// src/components/WeightChart.tsx
 import {
   Select,
   SelectTrigger,
@@ -8,6 +9,7 @@ import {
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { useWeightChart } from "../hooks/useWeightChart";
+import { cn } from "@/lib/utils";
 
 function WeightChart() {
   const {
@@ -25,7 +27,7 @@ function WeightChart() {
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-6">
       <h1
-        className="text-2xl font-bold text-foreground"
+        className="text-2xl font-bold text-foreground text-center"
         role="heading"
         aria-level={1}
         data-slot="card-title"
