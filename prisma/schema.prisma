@@ -1,4 +1,3 @@
-// prisma/schema.prisma
 generator client {
   provider      = "prisma-client-js"
   output        = "../node_modules/.prisma/client"
@@ -11,18 +10,19 @@ datasource db {
 }
 
 model User {
-  id                          String   @id @default(uuid())
-  email                       String   @unique
+  id                          String              @id @default(uuid())
+  email                       String              @unique
   password                    String
   verificationToken           String?
-  isEmailVerified             Boolean  @default(false)
+  isEmailVerified             Boolean             @default(false)
   resetPasswordToken          String?
   resetPasswordTokenExpiresAt DateTime?
-  refreshToken                String? 
-  createdAt                   DateTime @default(now())
-  updatedAt                   DateTime @updatedAt
-  weights                     WeightMeasurement[]
+  refreshToken                String?
+  createdAt                   DateTime            @default(now())
+  updatedAt                   DateTime            @updatedAt
   goals                       Goal[]
+  weights                     WeightMeasurement[]
+
   @@index([createdAt])
 }
 
@@ -33,15 +33,17 @@ model WeightMeasurement {
   note      String?
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([createdAt])
 }
 
 model Goal {
-  id            String    @id @default(uuid())
-  userId        String
-  goalWeightKg  Float
-  goalSetAt     DateTime  @default(now())
-  reachedAt     DateTime?
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String    @id @default(uuid())
+  userId       String
+  goalWeightKg Float
+  goalSetAt    DateTime  @default(now())
+  reachedAt    DateTime?
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([goalSetAt])
 }

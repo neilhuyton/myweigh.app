@@ -1,4 +1,3 @@
-// src/components/WeightGoal.tsx
 import { useWeightGoal } from "../hooks/useWeightGoal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +36,7 @@ function WeightGoal() {
       >
         Your Goals
       </h1>
-      <div className="mx-auto max-w-md lg:max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm">
+      <div className="mx-auto max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm">
         {error && (
           <p
             className="text-center text-sm font-medium text-destructive mb-6"
@@ -105,7 +104,7 @@ function WeightGoal() {
           </p>
         )}
       </div>
-      <div className="mx-auto max-w-md lg:max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm">
+      <div className="mx-auto max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm">
         <GoalList />
       </div>
     </div>
