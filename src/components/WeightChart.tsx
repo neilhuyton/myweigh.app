@@ -1,3 +1,4 @@
+// src/components/WeightChart.tsx
 import {
   Select,
   SelectTrigger,
@@ -23,22 +24,22 @@ function WeightChart() {
   } = useWeightChart("daily");
 
   return (
-    <div>
-      <div className="w-full max-w-md lg:max-w-full mx-auto bg-background rounded-lg p-4 pb-24">
-        <div className="flex items-start justify-between mb-4">
-          <h1
-            className="text-2xl font-bold text-left"
-            role="heading"
-            aria-level={1}
-            data-slot="card-title"
-          >
-            Total Weight
-          </h1>
+    <div className="mx-auto max-w-4xl space-y-6 px-4 py-6">
+      <h1
+        className="text-2xl font-bold text-foreground text-center"
+        role="heading"
+        aria-level={1}
+        data-slot="card-title"
+      >
+        Your Stats
+      </h1>
+      <div className="mx-auto max-w-md lg:max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm">
+        <div className="flex items-start justify-between mb-6">
           <Select onValueChange={handleTrendPeriodChange} value={trendPeriod}>
             <SelectTrigger
               data-testid="unit-select"
               aria-label="Select trend period"
-              className="w-[100px] h-8 text-sm"
+              className="w-[120px] h-9 text-sm border-border bg-background text-foreground focus-visible:ring-2 focus-visible:ring-ring"
             >
               <SelectValue>
                 {trendPeriod.charAt(0).toUpperCase() + trendPeriod.slice(1)}
@@ -58,7 +59,10 @@ function WeightChart() {
           </Select>
         </div>
         {isLoading ? (
-          <div className="py-4">
+          <div className="flex justify-center py-6">
+            <div className="h-[400px] flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            </div>
           </div>
         ) : isError ? (
           <p
@@ -66,7 +70,7 @@ function WeightChart() {
             className="text-center text-sm font-medium text-destructive"
             role="alert"
           >
-            Error: {error?.message || 'Failed to fetch weights'}
+            Error: {error?.message || "Failed to fetch weights"}
           </p>
         ) : !weights.length ? (
           <p
@@ -77,7 +81,7 @@ function WeightChart() {
             No weight measurements found
           </p>
         ) : (
-          <div className="h-[400px] w-full overflow-hidden">
+          <div className="h-[400px] w-full">
             <ChartContainer
               config={chartConfig}
               id="weight-chart"
@@ -99,7 +103,8 @@ function WeightChart() {
                       ? new Date(value).toLocaleDateString("en-US", {
                           month: "short",
                           day: trendPeriod === "daily" ? "numeric" : undefined,
-                          year: trendPeriod === "monthly" ? "numeric" : undefined,
+                          year:
+                            trendPeriod === "monthly" ? "numeric" : undefined,
                         })
                       : ""
                   }
@@ -118,7 +123,9 @@ function WeightChart() {
                     <ChartTooltipContent
                       indicator="dot"
                       formatter={(value, name, props) => [
-                        `${value} kg${props.payload.note ? ` (${props.payload.note})` : ""}`,
+                        `${value} kg${
+                          props.payload.note ? ` (${props.payload.note})` : ""
+                        }`,
                         "Weight",
                       ]}
                     />

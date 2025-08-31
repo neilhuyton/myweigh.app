@@ -83,7 +83,7 @@ describe("WeightChart Component", () => {
       await waitFor(
         () => {
           expect(
-            screen.getByRole("heading", { name: "Total Weight" })
+            screen.getByRole("heading", { name: "Your Stats" })
           ).toBeInTheDocument();
           expect(screen.getByTestId("unit-select")).toHaveTextContent("Daily");
         },

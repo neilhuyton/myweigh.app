@@ -45,7 +45,7 @@ const badRequestResponse = (path: string, message: string) => ({
   ]),
 });
 
-test.describe("Weight Goal Functionality", () => {
+test.describe("Your Goals Functionality", () => {
   test.describe("Authenticated", () => {
     test.beforeEach(async ({ page }) => {
       await page.route("**/trpc/login**", async (route) => {
@@ -288,7 +288,7 @@ test.describe("Weight Goal Functionality", () => {
       await page.getByRole("link", { name: "Goals" }).click();
       await expect(
         page.getByRole("heading", {
-          name: "Weight Goal",
+          name: "Your Goals",
           exact: true,
           level: 1,
         })
@@ -307,7 +307,8 @@ test.describe("Weight Goal Functionality", () => {
       await page.getByPlaceholder("Enter your goal weight (kg)").fill("60");
       await Promise.all([
         page.waitForResponse(
-          (resp) => resp.url().includes("trpc/weight.setGoal") && resp.status() === 200,
+          (resp) =>
+            resp.url().includes("trpc/weight.setGoal") && resp.status() === 200,
           { timeout: 20000 }
         ),
         page.getByRole("button", { name: "Set Goal" }).click(),
@@ -350,7 +351,8 @@ test.describe("Weight Goal Functionality", () => {
       );
       await Promise.all([
         page.waitForResponse(
-          (resp) => resp.url().includes("trpc/weight.create") && resp.status() === 200,
+          (resp) =>
+            resp.url().includes("trpc/weight.create") && resp.status() === 200,
           { timeout: 20000 }
         ),
         page.getByRole("button", { name: "Submit Weight" }).click(),
@@ -365,7 +367,8 @@ test.describe("Weight Goal Functionality", () => {
       await page.getByPlaceholder("Enter your goal weight (kg)").fill("50");
       await Promise.all([
         page.waitForResponse(
-          (resp) => resp.url().includes("trpc/weight.setGoal") && resp.status() === 200,
+          (resp) =>
+            resp.url().includes("trpc/weight.setGoal") && resp.status() === 200,
           { timeout: 20000 }
         ),
         page.getByRole("button", { name: "Set Goal" }).click(),
@@ -382,7 +385,8 @@ test.describe("Weight Goal Functionality", () => {
 
       await page.reload();
       await page.waitForResponse(
-        (resp) => resp.url().includes("trpc/weight.getGoals") && resp.status() === 200,
+        (resp) =>
+          resp.url().includes("trpc/weight.getGoals") && resp.status() === 200,
         { timeout: 10000 }
       );
       await expect(
@@ -392,7 +396,9 @@ test.describe("Weight Goal Functionality", () => {
       await page.getByPlaceholder("Enter your goal weight (kg)").fill("55");
       await Promise.all([
         page.waitForResponse(
-          (resp) => resp.url().includes("trpc/weight.updateGoal") && resp.status() === 200,
+          (resp) =>
+            resp.url().includes("trpc/weight.updateGoal") &&
+            resp.status() === 200,
           { timeout: 20000 }
         ),
         page.getByRole("button", { name: "Set Goal" }).click(),
@@ -450,7 +456,7 @@ test.describe("Weight Goal Functionality", () => {
       await page.getByRole("link", { name: "Goals" }).click();
       await expect(
         page.getByRole("heading", {
-          name: "Weight Goal",
+          name: "Your Goals",
           exact: true,
           level: 1,
         })
