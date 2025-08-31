@@ -68,7 +68,7 @@ function WeightForm() {
                 className="h-10 rounded-md border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label
                 htmlFor="note"
                 className="text-sm font-medium text-foreground"
@@ -86,7 +86,7 @@ function WeightForm() {
                 data-testid="note-input"
                 className="h-10 rounded-md border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
               />
-            </div>
+            </div> */}
             {isSubmitting && (
               <div className="flex justify-center">
                 <LoadingSpinner size="md" testId="weight-form-submitting" />
