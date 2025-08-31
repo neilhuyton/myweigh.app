@@ -48,7 +48,6 @@ export const trpcClient = trpc.createClient({
               return item;
             });
             // Transform to {0: {email, password}, 1: {...}, ...} for batched calls
-            const paths = url.toString().split('trpc/')[1]?.split('?')[0]?.split(',') || [];
             const transformedBody: Record<number, unknown> = {};
             correctedBody.forEach((item, index) => {
               transformedBody[index] = item;

@@ -1,13 +1,6 @@
 // e2e/weight-list.spec.ts
 import { test, expect } from '@playwright/test';
 
-type Goal = {
-  id: string;
-  goalWeightKg: number;
-  goalSetAt: string;
-  reachedAt: string | null;
-};
-
 const headers = {
   'Access-Control-Allow-Origin': 'http://localhost:5173',
   'Access-Control-Allow-Credentials': 'true',

@@ -13,6 +13,7 @@ import { catchAllHandler } from './catchAll';
 import { refreshTokenHandler } from './refreshToken';
 import { weightSetGoalHandler } from './weightSetGoal';
 import { weightUpdateGoalHandler } from './weightUpdateGoal';
+import { weightHandlers } from './weight';
 
 export const handlers = [
   verifyEmailHandler,
@@ -29,4 +30,5 @@ export const handlers = [
   weightUpdateGoalHandler,
   catchAllHandler,
   refreshTokenHandler,
+   ...weightHandlers,
 ];

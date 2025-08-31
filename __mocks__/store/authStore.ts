@@ -1,6 +1,21 @@
-// __mocks__/store/authStore.ts
-import { vi } from 'vitest';
+import { vi, type Mock } from 'vitest';
 import jwt from 'jsonwebtoken';
+
+// Define the shape of the auth state explicitly
+interface AuthState {
+  isLoggedIn: boolean;
+  userId: string;
+  token: string;
+  refreshToken: string;
+  login: Mock;
+  logout: Mock;
+}
+
+// Define the shape of the store state, including getState and setState
+interface AuthStoreState extends AuthState {
+  getState: () => AuthState;
+  setState: (newState: Partial<AuthState>) => void;
+}
 
 export const generateToken = (userId: string) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET || 'your-secret-key', {
@@ -8,7 +23,7 @@ export const generateToken = (userId: string) => {
   });
 };
 
-export const mockAuthState = {
+export const mockAuthState: AuthState = {
   isLoggedIn: true,
   userId: 'test-user-id',
   token: generateToken('test-user-id'),
@@ -17,22 +32,23 @@ export const mockAuthState = {
   logout: vi.fn(),
 };
 
-let state = { ...mockAuthState };
+let state: AuthState = { ...mockAuthState };
 
 // Define the store state with getState and setState
-const storeState = {
+const storeState: AuthStoreState = {
   ...state,
   getState: () => state,
-  setState: (newState: Partial<typeof state>) => {
+  setState: (newState: Partial<AuthState>) => {
     state = { ...state, ...newState };
   },
 };
 
-export const useAuthStore = vi.fn((selector?: (state: typeof storeState) => any) => {
+// Mock useAuthStore with a generic selector type
+export const useAuthStore = vi.fn(<T>(selector?: (state: AuthStoreState) => T): T => {
   // If a selector is provided, apply it (for routes.ts beforeLoad)
   if (selector) {
     return selector(storeState);
   }
   // Otherwise, return the full state (for Root.tsx destructuring)
-  return storeState;
+  return storeState as T;
 });

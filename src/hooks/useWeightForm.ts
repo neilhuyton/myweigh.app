@@ -1,5 +1,5 @@
 // src/hooks/useWeightForm.ts
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { trpc } from "../trpc";
 import { useAuthStore } from "../store/authStore";

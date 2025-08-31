@@ -9,12 +9,6 @@ import { useRouter } from "@tanstack/react-router";
 import type { TRPCClientErrorLike } from "@trpc/client";
 import type { AppRouter } from "server/trpc";
 
-type TRPCErrorData = {
-  code: string;
-  httpStatus: number;
-  path: string;
-};
-
 interface LoginResponse {
   id: string;
   email: string;

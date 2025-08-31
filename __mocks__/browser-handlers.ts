@@ -1,5 +1,5 @@
 // __mocks__/browser-handlers.ts
-import { http, HttpResponse } from 'msw';
+// import { http, HttpResponse } from 'msw';
 
 export const handlers = [
   // http.get('http://localhost:8888/.netlify/functions/trpc/getUsers', () => {
