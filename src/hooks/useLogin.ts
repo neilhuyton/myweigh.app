@@ -51,7 +51,7 @@ export const useLogin = (): UseLoginReturn => {
       setMessage("Login successful!");
       login(data.id, data.token, data.refreshToken);
       form.reset();
-      router.navigate({ to: "/" });
+      router.navigate({ to: "/weight" });
     },
     onError: (error: TRPCClientErrorLike<AppRouter>) => {
       const errorMessage = error.message || "Unknown error";

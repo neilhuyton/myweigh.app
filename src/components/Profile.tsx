@@ -132,11 +132,11 @@ function Profile() {
 
         <div className="flex justify-between items-center">
           <Link
-            to="/"
+            to="/weight"
             className="text-primary hover:underline"
             aria-label="Back to Home"
           >
-            Back to Home
+            Back to Weight
           </Link>
           <button
             onClick={handleLogout}
