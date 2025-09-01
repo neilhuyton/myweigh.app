@@ -1,9 +1,18 @@
+// src/client.ts
 import { QueryClient } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
 import { redirect } from "@tanstack/react-router";
 import { TRPCClientError } from "@trpc/client";
 import { trpc } from "./trpc";
 import { useAuthStore } from "./store/authStore";
+
+// Define tRPC response shape
+type TRPCResponse = {
+  error?: {
+    message: string;
+    data?: { code: string };
+  };
+}[];
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,7 +28,8 @@ export const trpcClient = trpc.createClient({
         import.meta.env.VITE_TRPC_URL ||
         "http://localhost:8888/.netlify/functions/trpc",
       fetch: async (url, options) => {
-        const { token, refreshToken, userId, login, logout } = useAuthStore.getState();
+        const { token, refreshToken, userId, login, logout } =
+          useAuthStore.getState();
         const headers: Record<string, string> = {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -55,7 +65,11 @@ export const trpcClient = trpc.createClient({
             let parsedBody: unknown = {};
             if (options?.body && typeof options.body === "string") {
               parsedBody = JSON.parse(options.body);
-              if (parsedBody && typeof parsedBody === "object" && "0" in parsedBody) {
+              if (
+                parsedBody &&
+                typeof parsedBody === "object" &&
+                "0" in parsedBody
+              ) {
                 parsedBody = parsedBody["0"];
               }
             }
@@ -74,37 +88,36 @@ export const trpcClient = trpc.createClient({
           signal: options?.signal,
         };
 
-        console.log("Sending request:", { url, headers: { ...headers, Authorization: "Bearer [REDACTED]" } });
-
         const response = await fetch(url, fetchOptions);
-        const responseData = await response.json();
+        const responseData: TRPCResponse = await response.json();
 
         // Check for tRPC UNAUTHORIZED errors in the response body
-        const isUnauthorized = Array.isArray(responseData) && responseData.some(
-          (item: any) =>
-            item.error &&
-            (item.error.data?.code === "UNAUTHORIZED" || item.error.message.includes("Unauthorized"))
-        );
+        const isUnauthorized =
+          Array.isArray(responseData) &&
+          responseData.some(
+            (item) =>
+              item.error &&
+              (item.error.data?.code === "UNAUTHORIZED" ||
+                item.error.message.includes("Unauthorized"))
+          );
 
         if (isUnauthorized && refreshToken && userId) {
-          console.log("Unauthorized error detected, attempting to refresh:", { refreshToken, userId });
           try {
-            const refreshResponse = await trpcClient.refreshToken.refresh.mutate({
-              refreshToken,
-            });
-            console.log("Refresh token response:", {
-              token: refreshResponse.token.slice(0, 20) + "...",
-              refreshToken: refreshResponse.refreshToken,
-            });
+            const refreshResponse =
+              await trpcClient.refreshToken.refresh.mutate({
+                refreshToken,
+              });
             login(userId, refreshResponse.token, refreshResponse.refreshToken);
             const newHeaders = {
               ...headers,
               Authorization: `Bearer ${refreshResponse.token}`,
             };
-            console.log("Retrying request with new token:", { url, token: refreshResponse.token.slice(0, 20) + "..." });
             return await fetch(url, { ...fetchOptions, headers: newHeaders });
           } catch (error) {
-            console.error("Refresh token failed:", error instanceof TRPCClientError ? error.message : error);
+            console.error(
+              "Refresh token failed:",
+              error instanceof TRPCClientError ? error.message : error
+            );
             logout();
             throw redirect({ to: "/login" });
           }
@@ -119,7 +132,6 @@ export const trpcClient = trpc.createClient({
           throw redirect({ to: "/login" });
         }
 
-        console.log("Request successful:", { url, status: response.status });
         return new Response(JSON.stringify(responseData), {
           status: response.status,
           headers: response.headers,

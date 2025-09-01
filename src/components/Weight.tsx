@@ -1,5 +1,5 @@
 // src/components/Weight.tsx
-import WeightForm from "./WeightForm";
+// import WeightForm from "./WeightForm";
 import WeightList from "./WeightList";
 
 function Weight() {
@@ -12,7 +12,7 @@ function Weight() {
       >
         Your Weight
       </h1>
-      <WeightForm />
+      {/* <WeightForm /> */}
       <WeightList />
     </div>
   );

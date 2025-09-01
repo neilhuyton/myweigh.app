@@ -7,7 +7,7 @@ import { ThemeProvider } from "./ThemeProvider";
 import Navigation from "./Navigation";
 import ProfileIcon from "./ProfileIcon";
 import { ThemeToggle } from "./ThemeToggle";
-import { InstallPrompt } from "./InstallPrompt"; // Import the new component
+import { InstallPrompt } from "./InstallPrompt";
 import type { TRPCClient } from "@trpc/client";
 import type { AppRouter } from "../../server/trpc";
 
@@ -40,7 +40,10 @@ function Root({
         >
           <div className="flex flex-col">
             {isLoggedIn && !isPublicRoute && (
-              <header className="sticky top-0 left-0 right-0 z-50 bg-background flex items-center justify-between px-4 py-2">
+              <header
+                data-testid="header"
+                className="sticky top-0 left-0 right-0 z-50 bg-background flex items-center justify-between px-4 py-2"
+              >
                 <ThemeToggle />
                 <ProfileIcon />
               </header>
