@@ -13,7 +13,6 @@ import { catchAllHandler } from './catchAll';
 import { refreshTokenHandler } from './refreshToken';
 import { weightSetGoalHandler } from './weightSetGoal';
 import { weightUpdateGoalHandler } from './weightUpdateGoal';
-import { weightHandlers } from './weight';
 
 export const handlers = [
   verifyEmailHandler,
@@ -30,5 +29,22 @@ export const handlers = [
   weightUpdateGoalHandler,
   catchAllHandler,
   refreshTokenHandler,
-   ...weightHandlers,
 ];
+
+// Explicitly export handlers to avoid TypeScript errors
+export {
+  verifyEmailHandler,
+  forgotPasswordHandler,
+  resetPasswordConfirmHandler,
+  resetPasswordRequestHandler,
+  registerHandler,
+  loginHandler,
+  weightCreateHandler,
+  weightDeleteHandler,
+  weightGetWeightsHandler,
+  weightGetCurrentGoalHandler,
+  weightSetGoalHandler,
+  weightUpdateGoalHandler,
+  catchAllHandler,
+  refreshTokenHandler,
+};

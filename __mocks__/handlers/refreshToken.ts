@@ -1,62 +1,80 @@
-// src/mocks/handlers/refreshTokenHandler.ts
 import { http, HttpResponse } from 'msw';
 import jwt from 'jsonwebtoken';
+import { mockUsers, type MockUser } from '../mockUsers';
 
-// Define input type for refreshToken.refresh
-interface RefreshTokenInput {
-  refreshToken: string;
+interface TRPCRequestBody {
+  '0': {
+    json: {
+      refreshToken: string;
+    };
+  };
 }
-
-// Define the shape of a single tRPC request
-interface TRPCRequest {
-  params: { input: RefreshTokenInput };
-  id?: number;
-}
-
-// Define the shape of the request body (for batch requests)
-type TRPCRequestBody = { [key: string]: TRPCRequest };
 
 export const refreshTokenHandler = http.post(
-  /http:\/\/localhost:8888\/\.netlify\/functions\/trpc\/refreshToken\.refresh/,
+  'http://localhost:8888/.netlify/functions/trpc/refreshToken.refresh',
   async ({ request }) => {
-    const body = (await request.json()) as TRPCRequestBody;
-    const { refreshToken } = body['0'].params.input;
+    try {
+      const body = (await request.json()) as TRPCRequestBody;
+      const { refreshToken } = body['0'].json;
 
-    if (refreshToken === 'valid-refresh-token') {
-      const newToken = jwt.sign(
-        { userId: 'empty-user-id' },
-        process.env.JWT_SECRET || 'your-secret-key',
-        { expiresIn: '1h' },
-      );
+      const user = mockUsers.find((u: MockUser) => u.refreshToken === refreshToken);
+
+      if (user) {
+        const newToken = jwt.sign(
+          { userId: user.id, email: user.email },
+          process.env.JWT_SECRET || 'your-secret-key',
+          { expiresIn: '1h' }
+        );
+        return HttpResponse.json(
+          [
+            {
+              id: 0,
+              result: {
+                type: 'data',
+                data: { token: newToken, refreshToken: 'new-mock-refresh-token' },
+              },
+            },
+          ],
+          { status: 200 }
+        );
+      }
+
       return HttpResponse.json(
         [
           {
             id: 0,
-            result: {
-              data: { token: newToken, refreshToken: 'new-refresh-token' },
+            error: {
+              message: 'Invalid refresh token',
+              code: -32001,
+              data: {
+                code: 'UNAUTHORIZED',
+                httpStatus: 401,
+                path: 'refreshToken.refresh',
+              },
             },
           },
         ],
-        { status: 200 },
+        { status: 200 }
       );
-    }
-
-    return HttpResponse.json(
-      [
-        {
-          id: 0,
-          error: {
-            message: 'Invalid refresh token',
-            code: -32001,
-            data: {
-              code: 'UNAUTHORIZED',
-              httpStatus: 401,
-              path: 'refreshToken.refresh',
+    } catch (error) {
+      console.error('Refresh Token Handler Error:', error);
+      return HttpResponse.json(
+        [
+          {
+            id: 0,
+            error: {
+              message: 'Internal server error',
+              code: -32002,
+              data: {
+                code: 'INTERNAL_SERVER_ERROR',
+                httpStatus: 500,
+                path: 'refreshToken.refresh',
+              },
             },
           },
-        },
-      ],
-      { status: 200 },
-    );
-  },
+        ],
+        { status: 200 }
+      );
+    }
+  }
 );

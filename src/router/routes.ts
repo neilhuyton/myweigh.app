@@ -14,15 +14,41 @@ import {
   verifyEmailSearchSchema,
   confirmResetPasswordSearchSchema,
 } from "../schemas";
+import { jwtDecode } from "jwt-decode";
+
+interface DecodedToken {
+  userId: string;
+  email: string;
+  iat: number;
+  exp: number;
+}
+
+const checkAuth = () => {
+  const { isLoggedIn, token } = useAuthStore.getState();
+  if (!isLoggedIn || !token) {
+    throw redirect({ to: "/login" });
+  }
+  try {
+    const decoded = jwtDecode<DecodedToken>(token);
+    const now = Math.floor(Date.now() / 1000);
+    if (decoded.exp < now) {
+      console.log("Token expired in route check:", { exp: decoded.exp, now });
+      return false; // Let trpcClient handle refresh
+    }
+    return true;
+  } catch (error) {
+    console.error("Invalid token in route check:", error);
+    throw redirect({ to: "/login" });
+  }
+};
 
 export const homeRoute = (rootRoute: RootRoute) =>
   createRoute({
     getParentRoute: () => rootRoute,
     path: "/",
     beforeLoad: () => {
-      const { isLoggedIn } = useAuthStore.getState();
-      if (!isLoggedIn) {
-        throw redirect({ to: "/login" });
+      if (!checkAuth()) {
+        return; // Allow trpcClient to attempt refresh
       }
     },
     component: Home,
@@ -62,9 +88,8 @@ export const weightRoute = (rootRoute: RootRoute) =>
     getParentRoute: () => rootRoute,
     path: "/weight",
     beforeLoad: () => {
-      const { isLoggedIn } = useAuthStore.getState();
-      if (!isLoggedIn) {
-        throw redirect({ to: "/login" });
+      if (!checkAuth()) {
+        return; // Allow trpcClient to attempt refresh
       }
     },
     component: Weight,
@@ -75,9 +100,8 @@ export const weightChartRoute = (rootRoute: RootRoute) =>
     getParentRoute: () => rootRoute,
     path: "/stats",
     beforeLoad: () => {
-      const { isLoggedIn } = useAuthStore.getState();
-      if (!isLoggedIn) {
-        throw redirect({ to: "/login" });
+      if (!checkAuth()) {
+        return; // Allow trpcClient to attempt refresh
       }
     },
     component: WeightChart,
@@ -88,9 +112,8 @@ export const weightGoalRoute = (rootRoute: RootRoute) =>
     getParentRoute: () => rootRoute,
     path: "/goals",
     beforeLoad: () => {
-      const { isLoggedIn } = useAuthStore.getState();
-      if (!isLoggedIn) {
-        throw redirect({ to: "/login" });
+      if (!checkAuth()) {
+        return; // Allow trpcClient to attempt refresh
       }
     },
     component: WeightGoal,
@@ -109,9 +132,8 @@ export const profileRoute = (rootRoute: RootRoute) =>
     getParentRoute: () => rootRoute,
     path: "/profile",
     beforeLoad: () => {
-      const { isLoggedIn } = useAuthStore.getState();
-      if (!isLoggedIn) {
-        throw redirect({ to: "/login" });
+      if (!checkAuth()) {
+        return; // Allow trpcClient to attempt refresh
       }
     },
     component: Profile,

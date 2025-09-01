@@ -1,6 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
 import { redirect } from "@tanstack/react-router";
+import { TRPCClientError } from "@trpc/client";
 import { trpc } from "./trpc";
 import { useAuthStore } from "./store/authStore";
 
@@ -18,7 +19,7 @@ export const trpcClient = trpc.createClient({
         import.meta.env.VITE_TRPC_URL ||
         "http://localhost:8888/.netlify/functions/trpc",
       fetch: async (url, options) => {
-        const { token, refreshToken, login, logout } = useAuthStore.getState();
+        const { token, refreshToken, userId, login, logout } = useAuthStore.getState();
         const headers: Record<string, string> = {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -45,7 +46,8 @@ export const trpcClient = trpc.createClient({
               transformedBody[index] = item;
             });
             body = JSON.stringify(transformedBody);
-          } catch {
+          } catch (error) {
+            console.error("Failed to parse batch request body:", error);
             throw new Error("Invalid request body format");
           }
         } else {
@@ -58,7 +60,8 @@ export const trpcClient = trpc.createClient({
               }
             }
             body = JSON.stringify(parsedBody);
-          } catch {
+          } catch (error) {
+            console.error("Failed to parse request body:", error);
             throw new Error("Invalid request body format");
           }
         }
@@ -71,35 +74,56 @@ export const trpcClient = trpc.createClient({
           signal: options?.signal,
         };
 
-        const response = await fetch(url, fetchOptions);
+        console.log("Sending request:", { url, headers: { ...headers, Authorization: "Bearer [REDACTED]" } });
 
-        if (!response.ok && response.status === 401 && refreshToken) {
+        const response = await fetch(url, fetchOptions);
+        const responseData = await response.json();
+
+        // Check for tRPC UNAUTHORIZED errors in the response body
+        const isUnauthorized = Array.isArray(responseData) && responseData.some(
+          (item: any) =>
+            item.error &&
+            (item.error.data?.code === "UNAUTHORIZED" || item.error.message.includes("Unauthorized"))
+        );
+
+        if (isUnauthorized && refreshToken && userId) {
+          console.log("Unauthorized error detected, attempting to refresh:", { refreshToken, userId });
           try {
             const refreshResponse = await trpcClient.refreshToken.refresh.mutate({
               refreshToken,
             });
-            login(
-              useAuthStore.getState().userId!,
-              refreshResponse.token,
-              refreshToken,
-            );
+            console.log("Refresh token response:", {
+              token: refreshResponse.token.slice(0, 20) + "...",
+              refreshToken: refreshResponse.refreshToken,
+            });
+            login(userId, refreshResponse.token, refreshResponse.refreshToken);
             const newHeaders = {
               ...headers,
               Authorization: `Bearer ${refreshResponse.token}`,
             };
+            console.log("Retrying request with new token:", { url, token: refreshResponse.token.slice(0, 20) + "..." });
             return await fetch(url, { ...fetchOptions, headers: newHeaders });
-          } catch {
+          } catch (error) {
+            console.error("Refresh token failed:", error instanceof TRPCClientError ? error.message : error);
             logout();
             throw redirect({ to: "/login" });
           }
         }
 
-        if (!response.ok && response.status === 401) {
+        if (isUnauthorized) {
+          console.warn("Unauthorized request, redirecting to login:", {
+            hasRefreshToken: !!refreshToken,
+            hasUserId: !!userId,
+          });
           logout();
           throw redirect({ to: "/login" });
         }
 
-        return response;
+        console.log("Request successful:", { url, status: response.status });
+        return new Response(JSON.stringify(responseData), {
+          status: response.status,
+          headers: response.headers,
+        });
       },
     }),
   ],

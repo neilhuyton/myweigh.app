@@ -8,11 +8,14 @@ const prisma = new PrismaClient();
 export type Context = {
   prisma: PrismaClient;
   userId?: string;
+  email?: string; // Added for debugging
 };
 
 export function createContext({ req }: { req: IncomingMessage }): Context {
   let userId: string | undefined;
+  let email: string | undefined;
   const authHeader = req.headers.authorization;
+
   if (authHeader && authHeader.startsWith("Bearer ")) {
     const token = authHeader.split("Bearer ")[1];
     try {
@@ -26,9 +29,17 @@ export function createContext({ req }: { req: IncomingMessage }): Context {
         exp: number;
       };
       userId = decoded.userId;
+      email = decoded.email; // Store email for context
     } catch (error) {
-      console.error("JWT verification failed:", error); // Log but don’t throw
+      console.error("JWT verification failed:", {
+        error: error instanceof Error ? error.message : String(error),
+        token, // Log token for debugging (be cautious in production)
+      });
+      // Don’t throw; let procedures handle unauthenticated state
     }
+  } else {
+    console.warn("No Authorization header provided");
   }
-  return { prisma, userId };
+
+  return { prisma, userId, email };
 }

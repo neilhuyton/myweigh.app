@@ -12,7 +12,7 @@ export function useVerifyEmail() {
       setMessage(data.message);
     },
     onError: (error) => {
-      setMessage(`Verification failed: ${error.message}`);
+      setMessage(error.message); // Use raw error message
     },
   });
 
