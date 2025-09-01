@@ -2,7 +2,7 @@
 import { createContext } from "react";
 
 export type Theme = "dark" | "light" | "system";
-export type ColorTheme = "zinc" | "blue" | "green";
+export type ColorTheme = "default" | "red" | "rose" | "orange" | "green" | "blue" | "yellow" | "violet";
 
 export type ThemeProviderState = {
   theme: Theme;
@@ -14,9 +14,8 @@ export type ThemeProviderState = {
 const initialState: ThemeProviderState = {
   theme: "system",
   setTheme: () => null,
-  colorTheme: "zinc",
+  colorTheme: "default",
   setColorTheme: () => null,
 };
 
-export const ThemeProviderContext =
-  createContext<ThemeProviderState>(initialState);
+export const ThemeProviderContext = createContext<ThemeProviderState>(initialState);

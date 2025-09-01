@@ -1,11 +1,7 @@
 // src/components/ThemeProvider.tsx
 import { ThemeProvider as NextThemeProvider, useTheme } from "next-themes";
 import { useEffect, useState, type ReactNode } from "react";
-import {
-  ThemeProviderContext,
-  type Theme,
-  type ColorTheme,
-} from "../contexts/ThemeContext";
+import { ThemeProviderContext, type Theme, type ColorTheme } from "../contexts/ThemeContext";
 
 type ThemeProviderProps = {
   children: ReactNode;
@@ -19,7 +15,7 @@ type ThemeProviderProps = {
 export function ThemeProvider({
   children,
   defaultTheme = "dark",
-  defaultColorTheme = "zinc",
+  defaultColorTheme = "default",
   storageKey = "vite-ui-theme",
   colorStorageKey = "vite-ui-color-theme",
   enableSystem = true,
@@ -27,10 +23,7 @@ export function ThemeProvider({
   const { theme, setTheme } = useTheme();
   const [colorTheme, setColorTheme] = useState<ColorTheme>(() => {
     if (typeof window !== "undefined") {
-      return (
-        (localStorage.getItem(colorStorageKey) as ColorTheme) ||
-        defaultColorTheme
-      );
+      return (localStorage.getItem(colorStorageKey) as ColorTheme) || defaultColorTheme;
     }
     return defaultColorTheme;
   });

@@ -21,14 +21,29 @@ export function ColorThemeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setColorTheme("zinc")}>
-          Zinc
+        <DropdownMenuItem onClick={() => setColorTheme("default")}>
+          Default
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setColorTheme("red")}>
+          Red
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setColorTheme("rose")}>
+          Rose
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setColorTheme("orange")}>
+          Orange
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setColorTheme("green")}>
+          Green
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setColorTheme("blue")}>
           Blue
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setColorTheme("green")}>
-          Green
+        <DropdownMenuItem onClick={() => setColorTheme("yellow")}>
+          Yellow
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setColorTheme("violet")}>
+          Violet
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

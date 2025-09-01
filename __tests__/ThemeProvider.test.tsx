@@ -3,16 +3,16 @@ import { render, waitFor } from "@testing-library/react";
 import { ThemeProvider } from "../src/components/ThemeProvider";
 
 describe("ThemeProvider", () => {
-  it("defaults to dark theme with zinc color theme", async () => {
+  it("defaults to dark theme with default color theme", async () => {
     render(<ThemeProvider>Test</ThemeProvider>);
     await waitFor(
       () => {
         expect(document.documentElement.classList.contains("dark")).toBe(true);
         expect(document.documentElement.getAttribute("data-color-theme")).toBe(
-          "zinc"
+          "default"
         );
         expect(localStorage.getItem("vite-ui-theme")).toBe("dark");
-        expect(localStorage.getItem("vite-ui-color-theme")).toBe("zinc");
+        expect(localStorage.getItem("vite-ui-color-theme")).toBe("default");
       },
       { timeout: 1000 }
     );
