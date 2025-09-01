@@ -1,3 +1,4 @@
+// __tests__/WeightChart.test.tsx
 import {
   describe,
   it,
@@ -30,7 +31,6 @@ global.ResizeObserver = class ResizeObserver {
   unobserve() {}
   disconnect() {}
 };
-
 // Create queryClient once
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -117,31 +117,6 @@ describe('WeightChart Component', () => {
 
     await waitFor(
       () => {
-        if (!screen.queryByTestId('unit-select')) {
-          console.log('Test (renders WeightChart) - DOM Debug:');
-          screen.debug();
-          const weightsQuery = queryClient
-            .getQueryCache()
-            .find({ queryKey: ['weight.getWeights'] });
-          console.log('Weights Query:', {
-            status: weightsQuery?.state.status,
-            error: weightsQuery?.state.error,
-          });
-          const goalQuery = queryClient
-            .getQueryCache()
-            .find({ queryKey: ['weight.getCurrentGoal'] });
-          console.log('Goal Query:', {
-            status: goalQuery?.state.status,
-            error: goalQuery?.state.error,
-          });
-          const goalsQuery = queryClient
-            .getQueryCache()
-            .find({ queryKey: ['weight.getGoals'] });
-          console.log('Goals Query:', {
-            status: goalsQuery?.state.status,
-            error: goalsQuery?.state.error,
-          });
-        }
         expect(
           screen.getByRole('heading', { name: 'Your Stats' })
         ).toBeInTheDocument();

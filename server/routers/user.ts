@@ -1,13 +1,13 @@
 // server/routers/user.ts
-import { t } from '../trpc-base';
-import { z } from 'zod';
-import { sendEmailChangeNotification } from '../email';
+import { t } from "../trpc-base";
+import { z } from "zod";
+import { sendEmailChangeNotification } from "../email";
 
 export const userRouter = t.router({
   updateEmail: t.procedure
     .input(
       z.object({
-        email: z.string().email({ message: 'Invalid email address' }),
+        email: z.string().email({ message: "Invalid email address" }),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -15,7 +15,7 @@ export const userRouter = t.router({
       const userId = ctx.userId;
 
       if (!userId) {
-        throw new Error('Unauthorized: User must be logged in');
+        throw new Error("Unauthorized: User must be logged in");
       }
 
       // Fetch the current user to get the old email
@@ -25,7 +25,7 @@ export const userRouter = t.router({
       });
 
       if (!currentUser) {
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
 
       const oldEmail = currentUser.email;
@@ -36,7 +36,7 @@ export const userRouter = t.router({
       });
 
       if (existingUser && existingUser.id !== userId) {
-        throw new Error('Email already in use');
+        throw new Error("Email already in use");
       }
 
       // Update the user's email
@@ -49,11 +49,13 @@ export const userRouter = t.router({
       if (oldEmail !== email) {
         const emailResult = await sendEmailChangeNotification(oldEmail, email);
         if (!emailResult.success) {
-          console.warn(`Failed to send email change notification to ${oldEmail}: ${emailResult.error}`);
           // Note: Don't throw an error to avoid reverting the email update
         }
       }
 
-      return { message: 'Email updated successfully', email: updatedUser.email };
+      return {
+        message: "Email updated successfully",
+        email: updatedUser.email,
+      };
     }),
 });

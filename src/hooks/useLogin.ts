@@ -1,3 +1,4 @@
+// src/hooks/useLogin.ts
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -53,7 +54,6 @@ export const useLogin = (): UseLoginReturn => {
       router.navigate({ to: "/weight" });
     },
     onError: (error: TRPCClientErrorLike<AppRouter>) => {
-      console.log("useLogin error:", error); // Debug error object
       setMessage(`Login failed: ${error.message || "Unknown error"}`);
     },
   });

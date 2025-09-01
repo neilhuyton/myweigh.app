@@ -1,3 +1,4 @@
+// __tests__/LoginForm.test.tsx
 import {
   describe,
   it,
@@ -132,14 +133,7 @@ describe('LoginForm Component', () => {
         expect(useAuthStore.getState().isLoggedIn).toBe(true);
         expect(useAuthStore.getState().userId).toBe('test-user-1');
       },
-      {
-        timeout: 2000,
-        onTimeout: (error) => {
-          console.log('Auth Store State:', useAuthStore.getState());
-          console.log('Query Cache:', queryClient.getQueryCache().getAll());
-          throw error;
-        },
-      }
+      { timeout: 2000 }
     );
   });
 

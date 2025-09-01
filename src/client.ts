@@ -2,7 +2,6 @@
 import { QueryClient } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
 import { redirect } from "@tanstack/react-router";
-import { TRPCClientError } from "@trpc/client";
 import { trpc } from "./trpc";
 import { useAuthStore } from "./store/authStore";
 
@@ -56,8 +55,7 @@ export const trpcClient = trpc.createClient({
               transformedBody[index] = item;
             });
             body = JSON.stringify(transformedBody);
-          } catch (error) {
-            console.error("Failed to parse batch request body:", error);
+          } catch {
             throw new Error("Invalid request body format");
           }
         } else {
@@ -74,8 +72,7 @@ export const trpcClient = trpc.createClient({
               }
             }
             body = JSON.stringify(parsedBody);
-          } catch (error) {
-            console.error("Failed to parse request body:", error);
+          } catch {
             throw new Error("Invalid request body format");
           }
         }
@@ -113,21 +110,13 @@ export const trpcClient = trpc.createClient({
               Authorization: `Bearer ${refreshResponse.token}`,
             };
             return await fetch(url, { ...fetchOptions, headers: newHeaders });
-          } catch (error) {
-            console.error(
-              "Refresh token failed:",
-              error instanceof TRPCClientError ? error.message : error
-            );
+          } catch {
             logout();
             throw redirect({ to: "/login" });
           }
         }
 
         if (isUnauthorized) {
-          console.warn("Unauthorized request, redirecting to login:", {
-            hasRefreshToken: !!refreshToken,
-            hasUserId: !!userId,
-          });
           logout();
           throw redirect({ to: "/login" });
         }

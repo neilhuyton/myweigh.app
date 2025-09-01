@@ -1,3 +1,4 @@
+// e2e/login.spec.ts
 import { test, expect } from '@playwright/test';
 
 test.describe('Login Functionality', () => {
@@ -9,17 +10,11 @@ test.describe('Login Functionality', () => {
     }
   });
 
-  test.beforeEach(async ({ page }) => {
-    // Log console messages for debugging
-    page.on('console', (msg) => console.log(`Browser console: ${msg.text()}`));
-  });
+  test.beforeEach(async () => {});
 
   test('should log in successfully with valid credentials', async ({ page }) => {
-    // Mock the login API response with a valid JWT
     await page.route('http://localhost:8888/.netlify/functions/trpc/login**', async (route) => {
       if (route.request().method() === 'POST') {
-        console.log('Mock intercepted:', route.request().url());
-        console.log('Request body:', route.request().postData());
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -64,10 +59,6 @@ test.describe('Login Functionality', () => {
       page.getByTestId('login-button').click(),
     ]);
 
-    // Log URL and content after navigation
-    console.log('URL after login:', await page.url());
-    console.log('Page content after login:', await page.content());
-
     await expect(page.getByTestId('login-form')).not.toBeVisible({ timeout: 10000 });
     await expect(page.getByRole('link', { name: 'Weight' })).toBeVisible({ timeout: 10000 });
   });
@@ -75,8 +66,6 @@ test.describe('Login Functionality', () => {
   test('should display error message with invalid credentials', async ({ page }) => {
     await page.route('http://localhost:8888/.netlify/functions/trpc/login**', async (route) => {
       if (route.request().method() === 'POST') {
-        console.log('Mock intercepted:', route.request().url());
-        console.log('Request body:', route.request().postData());
         await route.fulfill({
           status: 401,
           contentType: 'application/json',

@@ -1,3 +1,4 @@
+// src/router/routes.ts
 import { createRoute, redirect, type RootRoute } from "@tanstack/react-router";
 import Home from "../components/Home";
 import Weight from "../components/Weight";
@@ -32,12 +33,10 @@ const checkAuth = () => {
     const decoded = jwtDecode<DecodedToken>(token);
     const now = Math.floor(Date.now() / 1000);
     if (decoded.exp < now) {
-      console.log("Token expired in route check:", { exp: decoded.exp, now });
       return false; // Let trpcClient handle refresh
     }
     return true;
-  } catch (error) {
-    console.error("Invalid token in route check:", error);
+  } catch {
     throw redirect({ to: "/login" });
   }
 };
