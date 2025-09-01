@@ -7,14 +7,16 @@ import { httpBatchLink } from "@trpc/client";
 import { trpc } from "../src/trpc";
 import "@testing-library/jest-dom";
 import { server } from "../__mocks__/server";
-import {
-  RouterProvider,
-  createRouter,
-  createMemoryHistory,
-} from "@tanstack/react-router";
-import { router } from "../src/router/router";
 import { act } from "react-dom/test-utils";
-import { resetPasswordConfirmHandler } from "../__mocks__/handlers/resetPasswordConfirm"; // Import the external handler
+import { resetPasswordConfirmHandler } from "../__mocks__/handlers/resetPasswordConfirm";
+import ConfirmResetPasswordForm from "../src/components/ConfirmResetPasswordForm";
+
+// Mock the router module to avoid router.navigate errors
+vi.mock("../src/router/router", () => ({
+  router: {
+    navigate: vi.fn(),
+  },
+}));
 
 describe("ConfirmResetPasswordForm Component", () => {
   const queryClient = new QueryClient({
@@ -28,38 +30,24 @@ describe("ConfirmResetPasswordForm Component", () => {
     links: [
       httpBatchLink({
         url: "http://localhost:8888/.netlify/functions/trpc",
-        fetch: async (input, options) =>
-          fetch(input, { ...options }),
+        fetch: async (input, options) => fetch(input, { ...options }),
       }),
     ],
   });
 
-  const setup = (initialPath = "/confirm-reset-password", search = {}) => {
-    const queryString = new URLSearchParams(search).toString();
-    const initialEntry = queryString
-      ? `${initialPath}?${queryString}`
-      : initialPath;
-    const history = createMemoryHistory({ initialEntries: [initialEntry] });
-    const testRouter = createRouter({ routeTree: router.routeTree, history });
-
-    // Mock router.navigate
-    vi.spyOn(testRouter, "navigate").mockImplementation(async () => {});
-
-    act(() => {
-      render(
-        <trpc.Provider client={trpcClient} queryClient={queryClient}>
-          <QueryClientProvider client={queryClient}>
-            <RouterProvider router={testRouter} />
-          </QueryClientProvider>
-        </trpc.Provider>
-      );
-    });
-    return { history, testRouter };
+  const setup = (props = { token: "123e4567-e89b-12d3-a456-426614174000" }) => {
+    render(
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <ConfirmResetPasswordForm {...props} />
+        </QueryClientProvider>
+      </trpc.Provider>
+    );
   };
 
   beforeAll(() => {
     server.listen({ onUnhandledRequest: "warn" });
-    server.use(resetPasswordConfirmHandler); // Use the external handler
+    server.use(resetPasswordConfirmHandler);
     process.on("unhandledRejection", (reason) => {
       if (
         reason instanceof Error &&
@@ -84,9 +72,7 @@ describe("ConfirmResetPasswordForm Component", () => {
   });
 
   it("submits valid token and new password and displays success message", async () => {
-    setup("/confirm-reset-password", {
-      token: "123e4567-e89b-12d3-a456-426614174000",
-    });
+    setup({ token: "123e4567-e89b-12d3-a456-426614174000" });
 
     await waitFor(() => {
       expect(

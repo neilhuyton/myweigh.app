@@ -1,3 +1,4 @@
+// src/hooks/useWeightChart.ts
 import { useMemo, useState } from 'react';
 import { trpc } from '../trpc';
 import { startOfWeek, startOfMonth, format } from 'date-fns';
@@ -18,11 +19,11 @@ export const useWeightChart = (
     data: currentGoal,
     isLoading: goalLoading,
     isError: goalError,
+    error: goalErrorObj,
   } = trpc.weight.getCurrentGoal.useQuery();
 
   const isLoading = weightsLoading || goalLoading;
-  const isError = weightsError || goalError;
-  const error = weightsErrorObj || new Error('Failed to fetch weights');
+  const error = weightsErrorObj || goalErrorObj || new Error('Failed to fetch data');
 
   const weights = useMemo(() => {
     if (!weightsData) return [];
@@ -78,7 +79,7 @@ export const useWeightChart = (
     []
   );
 
-  const barColor = chartConfig.weight.color; // Static color
+  const barColor = chartConfig.weight.color;
 
   const handleTrendPeriodChange = (value: string) => {
     if (value === 'daily' || value === 'weekly' || value === 'monthly') {
@@ -93,7 +94,8 @@ export const useWeightChart = (
   return {
     weights,
     isLoading,
-    isError,
+    isWeightsError: weightsError, // Separate error for weights
+    isGoalError: goalError, // Separate error for goals
     error,
     chartData,
     chartConfig,

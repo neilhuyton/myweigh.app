@@ -2,15 +2,51 @@
 import { http, HttpResponse } from "msw";
 import jwt from "jsonwebtoken";
 
+interface TRPCRequestBody {
+  id: number;
+  method: string;
+  path: string;
+  params?: any;
+}
+
 export const weightGetCurrentGoalHandler = http.post(
-  "http://localhost:8888/.netlify/functions/trpc/weight.getCurrentGoal",
+  "http://localhost:8888/.netlify/functions/trpc",
   async ({ request }) => {
+    // Clone the request to avoid consuming the body
+    const requestClone = request.clone();
+    let requestBody: unknown;
+    try {
+      requestBody = await requestClone.json();
+    } catch (error) {
+      console.error("Failed to parse request body:", error);
+      return HttpResponse.json(
+        [
+          {
+            id: 1,
+            error: {
+              message: "Invalid request body",
+              code: -32000,
+              data: { code: "BAD_REQUEST", httpStatus: 400, path: "weight.getCurrentGoal" },
+            },
+          },
+        ],
+        { status: 200 }
+      );
+    }
+
+    const requests = Array.isArray(requestBody) ? requestBody : [requestBody];
+    const goalRequest = requests.find((req: TRPCRequestBody) => req.path === "weight.getCurrentGoal");
+
+    if (!goalRequest) {
+      return; // Pass to other handlers
+    }
+
     const authHeader = request.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return HttpResponse.json(
         [
           {
-            id: 0,
+            id: goalRequest.id,
             error: {
               message: "Unauthorized",
               code: -32001,
@@ -38,7 +74,7 @@ export const weightGetCurrentGoalHandler = http.post(
       return HttpResponse.json(
         [
           {
-            id: 0,
+            id: goalRequest.id,
             error: {
               message: "Invalid token",
               code: -32001,
@@ -58,9 +94,9 @@ export const weightGetCurrentGoalHandler = http.post(
       return HttpResponse.json(
         [
           {
-            id: 0,
+            id: goalRequest.id,
             error: {
-              message: "Failed to fetch weights",
+              message: "Failed to fetch goal",
               code: -32002,
               data: {
                 code: "INTERNAL_SERVER_ERROR",
@@ -76,7 +112,7 @@ export const weightGetCurrentGoalHandler = http.post(
 
     if (userId === "empty-user-id") {
       return HttpResponse.json(
-        [{ id: 0, result: { type: "data", data: null } }],
+        [{ id: goalRequest.id, result: { type: "data", data: null } }],
         { status: 200 }
       );
     }
@@ -87,7 +123,7 @@ export const weightGetCurrentGoalHandler = http.post(
       goalSetAt: "2023-10-01T00:00:00Z",
     };
     return HttpResponse.json(
-      [{ id: 0, result: { type: "data", data: mockGoal } }],
+      [{ id: goalRequest.id, result: { type: "data", data: mockGoal } }],
       { status: 200 }
     );
   }

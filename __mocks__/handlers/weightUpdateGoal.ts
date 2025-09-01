@@ -2,6 +2,11 @@
 import { http, HttpResponse } from "msw";
 import jwt from "jsonwebtoken";
 
+interface TRPCRequestBody {
+  id?: number;
+  input?: { goalId: string; goalWeightKg: number };
+}
+
 export const weightUpdateGoalHandler = http.post(
   "http://localhost:8888/.netlify/functions/trpc/weight.updateGoal",
   async ({ request }) => {
@@ -28,18 +33,12 @@ export const weightUpdateGoalHandler = http.post(
       );
     }
 
-    const headers = Object.fromEntries(request.headers.entries());
-    const input = (
-      body as { [key: string]: { id?: number; goalWeightKg?: number } }
-    )["0"];
-    const id = input?.id ?? 0;
-    const userId = headers["authorization"]?.split("Bearer ")[1];
-
-    if (!userId) {
+    const authHeader = request.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return HttpResponse.json(
         [
           {
-            id,
+            id: 0,
             error: {
               message: "Unauthorized: User must be logged in",
               code: -32001,
@@ -55,13 +54,14 @@ export const weightUpdateGoalHandler = http.post(
       );
     }
 
+    const token = authHeader.split(" ")[1];
     try {
-      jwt.verify(userId, process.env.JWT_SECRET || "your-secret-key");
+      jwt.verify(token, process.env.JWT_SECRET || "your-secret-key");
     } catch {
       return HttpResponse.json(
         [
           {
-            id,
+            id: 0,
             error: {
               message: "Invalid token",
               code: -32001,
@@ -77,13 +77,30 @@ export const weightUpdateGoalHandler = http.post(
       );
     }
 
-    if (!input?.goalWeightKg || input.goalWeightKg <= 0) {
+    let input: { goalId?: string; goalWeightKg?: number } | undefined;
+    let id: number = 0;
+    if (Array.isArray(body)) {
+      input = (body[0] as TRPCRequestBody)?.input;
+      id = (body[0] as TRPCRequestBody)?.id ?? 0;
+    } else if (body && typeof body === "object") {
+      if ("0" in body) {
+        input = body["0"] as { goalId: string; goalWeightKg: number };
+        id = body["0"]?.id ?? 0;
+      } else if ("input" in body) {
+        input = (body as TRPCRequestBody).input;
+        id = (body as TRPCRequestBody).id ?? 0;
+      }
+    }
+
+    const { goalId, goalWeightKg } = input || {};
+
+    if (!goalId || !goalWeightKg || goalWeightKg <= 0) {
       return HttpResponse.json(
         [
           {
             id,
             error: {
-              message: "Goal weight must be a positive number",
+              message: "Goal ID and valid weight are required",
               code: -32001,
               data: {
                 code: "BAD_REQUEST",
@@ -102,7 +119,8 @@ export const weightUpdateGoalHandler = http.post(
         {
           id,
           result: {
-            data: { goalWeightKg: input.goalWeightKg },
+            type: "data",
+            data: { id: goalId, goalWeightKg, goalSetAt: new Date().toISOString() },
           },
         },
       ],

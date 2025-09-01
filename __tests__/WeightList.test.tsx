@@ -9,13 +9,6 @@ import {
   vi,
 } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
-import {
-  RouterProvider,
-  createRouter,
-  createMemoryHistory,
-  createRootRoute,
-  createRoute,
-} from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
 import { trpc } from "../src/trpc";
@@ -25,8 +18,9 @@ import { act } from "react";
 import WeightList from "../src/components/WeightList";
 import { weightGetWeightsHandler } from "../__mocks__/handlers/weightGetWeights";
 import { weightDeleteHandler } from "../__mocks__/handlers/weightDelete";
+import { resetWeights } from "../__mocks__/handlers/weightsData";
 import { useAuthStore } from "../src/store/authStore";
-import { generateToken } from "./utils/token"; // Import from utility
+import { generateToken } from "./utils/token";
 
 // Mock lucide-react icons
 vi.mock("lucide-react", () => ({
@@ -47,26 +41,26 @@ describe("WeightList Component", () => {
         url: "http://localhost:8888/.netlify/functions/trpc",
         fetch: async (url, options) => {
           const headers = {
-            ...options?.headers,
+            "content-type": "application/json",
             ...(useAuthStore.getState().token
               ? { Authorization: `Bearer ${useAuthStore.getState().token}` }
               : {}),
           };
-          return fetch(url, {
+          const body = options?.body || JSON.stringify([{ id: 0, method: "query", path: "weight.getWeights" }]);
+          const response = await fetch(url, {
             ...options,
             headers,
             method: "POST",
+            body,
           });
+          const responseBody = await response.clone().json();
+          return response;
         },
       }),
     ],
   });
 
-  const setup = async (
-    initialPath: string = "/weights",
-    userId = "test-user-id"
-  ) => {
-    // Set auth state for handlers
+  const setup = async (userId = "test-user-id") => {
     useAuthStore.setState({
       isLoggedIn: true,
       userId,
@@ -76,35 +70,15 @@ describe("WeightList Component", () => {
       logout: vi.fn(),
     });
 
-    // Define a minimal route tree
-    const rootRoute = createRootRoute({
-      component: () => <WeightList />,
-    });
-
-    const weightsRoute = createRoute({
-      getParentRoute: () => rootRoute,
-      path: "/weights",
-    });
-
-    const routeTree = rootRoute.addChildren([weightsRoute]);
-
-    const history = createMemoryHistory({ initialEntries: [initialPath] });
-    const testRouter = createRouter({
-      routeTree,
-      history,
-    });
-
     await act(async () => {
       render(
         <trpc.Provider client={trpcClient} queryClient={queryClient}>
           <QueryClientProvider client={queryClient}>
-            <RouterProvider router={testRouter} />
+            <WeightList />
           </QueryClientProvider>
         </trpc.Provider>
       );
     });
-
-    return { history, testRouter };
   };
 
   beforeAll(() => {
@@ -126,6 +100,7 @@ describe("WeightList Component", () => {
       login: vi.fn(),
       logout: vi.fn(),
     });
+    resetWeights();
   });
 
   afterAll(() => {
@@ -134,39 +109,38 @@ describe("WeightList Component", () => {
   });
 
   it("displays weight measurements in a table", async () => {
-    await setup("/weights");
+    await setup();
 
     await waitFor(
       () => {
+        expect(screen.queryByTestId("weight-list-loading")).not.toBeInTheDocument();
         expect(screen.getByRole("table")).toBeInTheDocument();
         expect(screen.getByText("Weight (kg)")).toBeInTheDocument();
-        // expect(screen.getByText("Note")).toBeInTheDocument();
         expect(screen.getByText("Date")).toBeInTheDocument();
         expect(screen.getByText("70")).toBeInTheDocument();
-        // expect(screen.getByText("Morning weigh-in")).toBeInTheDocument();
-        expect(screen.getByText("69.5")).toBeInTheDocument();
-        // expect(screen.getByText("Evening weigh-in")).toBeInTheDocument();
+        expect(screen.getByText("69.9")).toBeInTheDocument();
+        expect(screen.queryByTestId("error-message")).not.toBeInTheDocument();
       },
-      { timeout: 2000 }
+      { timeout: 3000 }
     );
   });
 
   it("deletes a weight measurement when delete button is clicked", async () => {
-    await setup("/weights");
+    await setup();
 
     await waitFor(
       () => {
+        expect(screen.queryByTestId("weight-list-loading")).not.toBeInTheDocument();
         expect(screen.getByText("70")).toBeInTheDocument();
-        // expect(screen.getByText("Morning weigh-in")).toBeInTheDocument();
-        expect(screen.getByText("69.5")).toBeInTheDocument();
-        // expect(screen.getByText("Evening weigh-in")).toBeInTheDocument();
+        expect(screen.getByText("69.9")).toBeInTheDocument();
         expect(
           screen.getByRole("button", {
             name: /Delete weight measurement from 01\/10\/2023/i,
           })
         ).toBeInTheDocument();
+        expect(screen.queryByTestId("error-message")).not.toBeInTheDocument();
       },
-      { timeout: 2000 }
+      { timeout: 3000 }
     );
 
     await act(async () => {
@@ -175,5 +149,14 @@ describe("WeightList Component", () => {
       });
       fireEvent.click(deleteButton);
     });
+
+    await waitFor(
+      () => {
+        expect(screen.queryByText("70")).not.toBeInTheDocument();
+        expect(screen.getByText("69.9")).toBeInTheDocument();
+        expect(screen.queryByTestId("error-message")).not.toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
   });
 });

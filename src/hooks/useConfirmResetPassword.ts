@@ -4,10 +4,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { trpc } from "../trpc";
 import { useState, useEffect } from "react";
-import { useSearch } from "@tanstack/react-router";
 
 const formSchema = z.object({
-  token: z.string().min(1, { message: "Reset token is required" }).optional(),
   newPassword: z
     .string()
     .min(8, { message: "Password must be at least 8 characters" }),
@@ -25,12 +23,10 @@ interface UseConfirmResetPasswordReturn {
   ) => Promise<void>;
 }
 
-export const useConfirmResetPassword = (): UseConfirmResetPasswordReturn => {
-  const { token } = useSearch({ from: "/confirm-reset-password" });
-
+export const useConfirmResetPassword = (token: string): UseConfirmResetPasswordReturn => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { token: token || "", newPassword: "" },
+    defaultValues: { newPassword: "" },
     mode: "onChange",
   });
 

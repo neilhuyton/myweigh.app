@@ -1,3 +1,4 @@
+// src/components/WeightChart.tsx
 import {
   Select,
   SelectTrigger,
@@ -13,16 +14,17 @@ function WeightChart() {
   const {
     weights,
     isLoading,
-    isError,
+    isWeightsError,
+    isGoalError,
     error,
     chartData,
     chartConfig,
     barColor,
     trendPeriod,
     handleTrendPeriodChange,
+    goalWeight,
   } = useWeightChart("daily");
 
-  // Get the latest weight (most recent by createdAt)
   const latestWeight = weights?.length
     ? weights.reduce((latest, weight) =>
         new Date(weight.createdAt) > new Date(latest.createdAt)
@@ -41,7 +43,7 @@ function WeightChart() {
       >
         Your Stats
       </h1>
-      {latestWeight && !isError && !isLoading && (
+      {latestWeight && !isWeightsError && !isLoading && (
         <div
           className="mx-auto max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm"
           data-testid="latest-weight-card"
@@ -55,6 +57,19 @@ function WeightChart() {
           <p className="text-sm text-muted-foreground">
             Recorded on{" "}
             {new Date(latestWeight.createdAt).toLocaleDateString("en-GB")}
+          </p>
+        </div>
+      )}
+      {goalWeight && !isGoalError && !isLoading && (
+        <div
+          className="mx-auto max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm"
+          data-testid="goal-weight-card"
+        >
+          <h2 className="text-lg font-semibold text-foreground">Goal Weight</h2>
+          <p className="text-2xl font-bold text-foreground">{goalWeight} kg</p>
+          <p className="text-sm text-muted-foreground">
+            Set on{" "}
+            {new Date("2023-10-01T00:00:00Z").toLocaleDateString("en-GB")}
           </p>
         </div>
       )}
@@ -89,7 +104,7 @@ function WeightChart() {
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
             </div>
           </div>
-        ) : isError ? (
+        ) : isWeightsError ? (
           <p
             data-testid="error"
             className="text-center text-sm font-medium text-destructive"
@@ -97,7 +112,7 @@ function WeightChart() {
           >
             Error: {error?.message || "Failed to fetch weights"}
           </p>
-        ) : !weights.length ? (
+        ) : !weights?.length ? (
           <p
             data-testid="no-data"
             className="text-center text-sm font-medium text-muted-foreground"

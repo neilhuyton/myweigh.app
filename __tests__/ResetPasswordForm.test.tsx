@@ -7,14 +7,16 @@ import { httpBatchLink } from "@trpc/client";
 import { trpc } from "../src/trpc";
 import "@testing-library/jest-dom";
 import { server } from "../__mocks__/server";
-import {
-  RouterProvider,
-  createRouter,
-  createMemoryHistory,
-} from "@tanstack/react-router";
-import { router } from "../src/router/router";
 import { act } from "react-dom/test-utils";
-import { resetPasswordRequestHandler } from "../__mocks__/handlers/resetPasswordRequest"; // Import the external handler
+import { resetPasswordRequestHandler } from "../__mocks__/handlers/resetPasswordRequest";
+import ResetPasswordForm from "../src/components/ResetPasswordForm"; // Adjust the import path as needed
+
+// Mock the router module to avoid router.navigate errors
+vi.mock("../src/router/router", () => ({
+  router: {
+    navigate: vi.fn(),
+  },
+}));
 
 describe("ResetPasswordForm Component", () => {
   const queryClient = new QueryClient({
@@ -28,17 +30,12 @@ describe("ResetPasswordForm Component", () => {
     links: [
       httpBatchLink({
         url: "http://localhost:8888/.netlify/functions/trpc",
-        fetch: async (input, options) =>
-          fetch(input, { ...options }),
+        fetch: async (input, options) => fetch(input, { ...options }),
       }),
     ],
   });
 
-  const setup = (initialPath = "/reset-password") => {
-    const history = createMemoryHistory({ initialEntries: [initialPath] });
-    const testRouter = createRouter({ routeTree: router.routeTree, history });
-
-    vi.spyOn(testRouter, "navigate").mockImplementation(async () => {});
+  const setup = async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     vi.mock("../src/store/authStore", () => ({
       useAuthStore: Object.assign(
@@ -51,21 +48,20 @@ describe("ResetPasswordForm Component", () => {
       ),
     }));
 
-    act(() => {
+    await act(async () => {
       render(
         <trpc.Provider client={trpcClient} queryClient={queryClient}>
           <QueryClientProvider client={queryClient}>
-            <RouterProvider router={testRouter} />
+            <ResetPasswordForm />
           </QueryClientProvider>
         </trpc.Provider>
       );
     });
-    return { history, testRouter };
   };
 
   beforeAll(() => {
     server.listen({ onUnhandledRequest: "error" });
-    server.use(resetPasswordRequestHandler); // Use the external handler
+    server.use(resetPasswordRequestHandler);
     process.on("unhandledRejection", (reason) => {
       if (
         reason instanceof Error &&
@@ -89,7 +85,7 @@ describe("ResetPasswordForm Component", () => {
   });
 
   it("renders password reset form with email input, submit button, and back to login link", async () => {
-    setup();
+    await setup();
     await waitFor(
       () => {
         expect(screen.getByTestId("email-input")).toBeInTheDocument();
@@ -101,7 +97,7 @@ describe("ResetPasswordForm Component", () => {
   });
 
   it("submits email and displays neutral success message", async () => {
-    setup();
+    await setup();
 
     await waitFor(
       () => {

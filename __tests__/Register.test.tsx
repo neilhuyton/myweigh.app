@@ -1,17 +1,22 @@
 // __tests__/Register.test.tsx
 import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
-import { createMemoryHistory } from "@tanstack/history";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
 import { trpc } from "../src/trpc";
-import { router } from "../src/router/router";
 import { server } from "../__mocks__/server";
 import "@testing-library/jest-dom";
 import { act } from "react-dom/test-utils";
 import { useAuthStore } from "../src/store/authStore";
-import { registerHandler } from "../__mocks__/handlers/register"; // Import the external register handler
+import { registerHandler } from "../__mocks__/handlers/register";
+import Register from "../src/components/Register"; // Adjust the import path as needed
+
+// Mock the router module to avoid router.navigate errors
+vi.mock("../src/router/router", () => ({
+  router: {
+    navigate: vi.fn(),
+  },
+}));
 
 describe("Register Component Email Verification", () => {
   const queryClient = new QueryClient({
@@ -25,36 +30,26 @@ describe("Register Component Email Verification", () => {
     links: [
       httpBatchLink({
         url: "http://localhost:8888/.netlify/functions/trpc",
-        fetch: async (input, options) =>
-          fetch(input, { ...options }),
+        fetch: async (input, options) => fetch(input, { ...options }),
       }),
     ],
   });
 
-  const setup = async (initialPath: string = "/register") => {
-    const history = createMemoryHistory({ initialEntries: [initialPath] });
-    const testRouter = createRouter({
-      ...router.options,
-      history,
-      routeTree: router.routeTree,
-    });
-
+  const setup = async () => {
     await act(async () => {
       render(
         <trpc.Provider client={trpcClient} queryClient={queryClient}>
           <QueryClientProvider client={queryClient}>
-            <RouterProvider router={testRouter} />
+            <Register />
           </QueryClientProvider>
         </trpc.Provider>
       );
     });
-
-    return { history, testRouter };
   };
 
   beforeAll(() => {
     server.listen({ onUnhandledRequest: "warn" });
-    server.use(registerHandler); // Use the external register handler
+    server.use(registerHandler);
     process.on("unhandledRejection", (reason) => {
       if (
         reason instanceof Error &&
@@ -82,7 +77,7 @@ describe("Register Component Email Verification", () => {
   });
 
   it("displays email verification prompt after successful registration", async () => {
-    await setup("/register");
+    await setup();
 
     await waitFor(() => {
       expect(screen.getByText("Create an account")).toBeInTheDocument();

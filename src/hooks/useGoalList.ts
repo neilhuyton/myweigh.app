@@ -1,25 +1,13 @@
 // src/hooks/useGoalList.ts
-import { useEffect } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { trpc } from "../trpc";
-import { useAuthStore } from "../store/authStore";
 
 export function useGoalList() {
-  const { isLoggedIn } = useAuthStore();
-  const navigate = useNavigate();
   const {
     data: goals,
     isLoading,
     isError,
     error,
   } = trpc.weight.getGoals.useQuery();
-
-  // Redirect to home if not logged in
-  useEffect(() => {
-    if (!isLoggedIn) {
-      navigate({ to: "/" });
-    }
-  }, [isLoggedIn, navigate]);
 
   // Format date as DD/MM/YYYY
   const formatDate = (dateString: string) => {
