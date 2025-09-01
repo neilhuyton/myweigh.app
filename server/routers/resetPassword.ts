@@ -1,15 +1,18 @@
 // server/routers/resetPassword.ts
-import { t } from '../trpc-base';
-import { z } from 'zod';
-import crypto from 'crypto';
-import { sendResetPasswordEmail, sendPasswordChangeNotification } from '../email';
-import bcrypt from 'bcryptjs';
+import { t } from "../trpc-base";
+import { z } from "zod";
+import crypto from "crypto";
+import {
+  sendResetPasswordEmail,
+  sendPasswordChangeNotification,
+} from "../email";
+import bcrypt from "bcryptjs";
 
 export const resetPasswordRouter = t.router({
   request: t.procedure
     .input(
       z.object({
-        email: z.string().email({ message: 'Invalid email address' }),
+        email: z.string().email({ message: "Invalid email address" }),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -21,7 +24,7 @@ export const resetPasswordRouter = t.router({
 
       if (!user) {
         // Return success to avoid leaking user existence
-        return { message: 'If the email exists, a reset link has been sent.' };
+        return { message: "If the email exists, a reset link has been sent." };
       }
 
       const resetToken = crypto.randomUUID();
@@ -37,16 +40,18 @@ export const resetPasswordRouter = t.router({
 
       const emailResult = await sendResetPasswordEmail(email, resetToken);
       if (!emailResult.success) {
-        throw new Error('Failed to send reset email');
+        throw new Error("Failed to send reset email");
       }
 
-      return { message: 'Reset link sent to your email' };
+      return { message: "Reset link sent to your email" };
     }),
   confirm: t.procedure
     .input(
       z.object({
-        token: z.string().min(1, { message: 'Reset token is required' }),
-        newPassword: z.string().min(8, { message: 'Password must be at least 8 characters' }),
+        token: z.string().min(1, { message: "Reset token is required" }),
+        newPassword: z
+          .string()
+          .min(8, { message: "Password must be at least 8 characters" }),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -58,7 +63,7 @@ export const resetPasswordRouter = t.router({
       });
 
       if (!user) {
-        throw new Error('Invalid or expired token');
+        throw new Error("Invalid or expired token");
       }
 
       const hashedPassword = await bcrypt.hash(input.newPassword, 10);
@@ -72,12 +77,13 @@ export const resetPasswordRouter = t.router({
       });
 
       // Send notification to the user's email
-      const emailResult = await sendPasswordChangeNotification(updatedUser.email);
+      const emailResult = await sendPasswordChangeNotification(
+        updatedUser.email
+      );
       if (!emailResult.success) {
-        console.warn(`Failed to send password change notification to ${updatedUser.email}: ${emailResult.error}`);
         // Note: Don't throw an error to avoid reverting the password update
       }
 
-      return { message: 'Password reset successfully' };
+      return { message: "Password reset successfully" };
     }),
 });

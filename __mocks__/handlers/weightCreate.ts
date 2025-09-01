@@ -7,8 +7,7 @@ export const weightCreateHandler = http.post(
     let body;
     try {
       body = await request.json();
-    } catch (error) {
-      console.error('Error reading weight.create request body:', error);
+    } catch {
       return HttpResponse.json(
         [
           {

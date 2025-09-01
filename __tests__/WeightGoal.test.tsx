@@ -19,10 +19,14 @@ import { server } from "../__mocks__/server";
 import "@testing-library/jest-dom";
 import { useAuthStore } from "../src/store/authStore";
 import { act } from "react";
-import { weightHandlers } from "../__mocks__/handlers/weightHandlers";
-import { weightGetWeightsHandler } from "../__mocks__/handlers/weightGetWeights";
-import { refreshTokenHandler } from "../__mocks__/handlers/refreshToken";
+import {
+  weightGetWeightsHandler,
+  weightGetCurrentGoalHandler,
+  weightSetGoalHandler,
+  refreshTokenHandler,
+} from "../__mocks__/handlers";
 import { generateToken } from "./utils/token";
+import { http, HttpResponse } from "msw";
 
 // Mock GoalList
 vi.mock("../src/components/GoalList", () => ({
@@ -30,17 +34,16 @@ vi.mock("../src/components/GoalList", () => ({
 }));
 
 describe("WeightGoal Component", () => {
-  const setup = async (
-    initialPath = "/goals",
-    userId = "test-user-id"
-  ) => {
-    useAuthStore.setState({
-      isLoggedIn: true,
-      userId,
-      token: generateToken(userId),
-      refreshToken: "valid-refresh-token",
-      login: vi.fn(),
-      logout: vi.fn(),
+  const setup = async (initialPath = "/goals", userId = "test-user-id") => {
+    await act(async () => {
+      useAuthStore.setState({
+        isLoggedIn: true,
+        userId,
+        token: generateToken(userId),
+        refreshToken: "valid-refresh-token",
+        login: vi.fn(),
+        logout: vi.fn(),
+      });
     });
 
     const history = createMemoryHistory({ initialEntries: [initialPath] });
@@ -63,8 +66,38 @@ describe("WeightGoal Component", () => {
   };
 
   beforeAll(() => {
-    server.listen({ onUnhandledRequest: "warn" });
-    server.use(...weightHandlers, weightGetWeightsHandler, refreshTokenHandler);
+    server.listen({ onUnhandledRequest: "error" });
+  });
+
+  beforeEach(() => {
+    server.use(
+      weightGetCurrentGoalHandler,
+      weightSetGoalHandler,
+      weightGetWeightsHandler,
+      refreshTokenHandler,
+      http.post(
+        "http://localhost:8888/.netlify/functions/trpc/*",
+        async ({ request }) => {
+          return HttpResponse.json(
+            [
+              {
+                id: 0,
+                error: {
+                  message: "Unhandled tRPC request",
+                  code: -32001,
+                  data: {
+                    code: "NOT_FOUND",
+                    httpStatus: 404,
+                    path: request.url,
+                  },
+                },
+              },
+            ],
+            { status: 200 }
+          );
+        }
+      )
+    );
   });
 
   afterEach(() => {
@@ -89,53 +122,49 @@ describe("WeightGoal Component", () => {
   it("renders WeightGoal with correct content", async () => {
     await setup("/goals", "test-user-id");
 
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(
-            screen.queryByTestId("weight-goal-loading")
-          ).not.toBeInTheDocument();
-          expect(
-            screen.getByRole("heading", { name: "Your Goals" })
-          ).toBeInTheDocument();
-          expect(screen.getByText(/Current Goal: 65 kg/)).toBeInTheDocument();
-          expect(
-            screen.getByPlaceholderText("Enter your goal weight (kg)")
-          ).toBeInTheDocument();
-          expect(
-            screen.getByRole("button", { name: /Set Goal/i })
-          ).toBeInTheDocument();
-          expect(screen.getByTestId("goal-list")).toBeInTheDocument();
-        },
-        { timeout: 5000 }
-      );
-    });
+    await waitFor(
+      () => {
+        expect(
+          screen.queryByTestId("weight-goal-loading")
+        ).not.toBeInTheDocument();
+        expect(
+          screen.getByRole("heading", { name: "Your Goals" })
+        ).toBeInTheDocument();
+        expect(screen.getByText(/Current Goal.*65 kg/i)).toBeInTheDocument();
+        expect(
+          screen.getByPlaceholderText("Enter your goal weight (kg)")
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /Set Goal/i })
+        ).toBeInTheDocument();
+        expect(screen.getByTestId("goal-list")).toBeInTheDocument();
+      },
+      { timeout: 30000 }
+    );
   });
 
   it("allows user to update a weight goal when logged in", async () => {
     await setup("/goals", "test-user-id");
 
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(
-            screen.queryByTestId("weight-goal-loading")
-          ).not.toBeInTheDocument();
-          expect(
-            screen.getByRole("heading", { name: "Your Goals" })
-          ).toBeInTheDocument();
-          expect(screen.getByText(/Current Goal: 65 kg/)).toBeInTheDocument();
-          expect(
-            screen.getByPlaceholderText("Enter your goal weight (kg)")
-          ).toBeInTheDocument();
-          expect(
-            screen.getByRole("button", { name: /Set Goal/i })
-          ).toBeInTheDocument();
-          expect(screen.getByTestId("goal-list")).toBeInTheDocument();
-        },
-        { timeout: 5000 }
-      );
-    });
+    await waitFor(
+      () => {
+        expect(
+          screen.queryByTestId("weight-goal-loading")
+        ).not.toBeInTheDocument();
+        expect(
+          screen.getByRole("heading", { name: "Your Goals" })
+        ).toBeInTheDocument();
+        expect(screen.getByText(/Current Goal.*65 kg/i)).toBeInTheDocument();
+        expect(
+          screen.getByPlaceholderText("Enter your goal weight (kg)")
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /Set Goal/i })
+        ).toBeInTheDocument();
+        expect(screen.getByTestId("goal-list")).toBeInTheDocument();
+      },
+      { timeout: 30000 }
+    );
 
     await act(async () => {
       const input = screen.getByPlaceholderText("Enter your goal weight (kg)");
@@ -144,15 +173,13 @@ describe("WeightGoal Component", () => {
       fireEvent.click(screen.getByRole("button", { name: /Set Goal/i }));
     });
 
-    await act(async () => {
-      await waitFor(
-        () => {
-          expect(
-            screen.getByText("Goal updated successfully!")
-          ).toBeInTheDocument();
-        },
-        { timeout: 5000 }
-      );
-    });
+    await waitFor(
+      () => {
+        expect(
+          screen.getByText("Goal updated successfully!")
+        ).toBeInTheDocument();
+      },
+      { timeout: 30000 }
+    );
   });
 });

@@ -1,20 +1,24 @@
 // __mocks__/handlers/weightGetCurrentGoal.ts
-import { http, HttpResponse } from 'msw';
-import jwt from 'jsonwebtoken';
+import { http, HttpResponse } from "msw";
+import jwt from "jsonwebtoken";
 
 export const weightGetCurrentGoalHandler = http.post(
-  /http:\/\/localhost:8888\/\.netlify\/functions\/trpc\/weight\.getCurrentGoal/,
+  "http://localhost:8888/.netlify/functions/trpc/weight.getCurrentGoal",
   async ({ request }) => {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const authHeader = request.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return HttpResponse.json(
         [
           {
             id: 0,
             error: {
-              message: 'Unauthorized',
+              message: "Unauthorized",
               code: -32001,
-              data: { code: 'UNAUTHORIZED', httpStatus: 401, path: 'weight.getCurrentGoal' },
+              data: {
+                code: "UNAUTHORIZED",
+                httpStatus: 401,
+                path: "weight.getCurrentGoal",
+              },
             },
           },
         ],
@@ -22,10 +26,13 @@ export const weightGetCurrentGoalHandler = http.post(
       );
     }
 
-    const token = authHeader.split(' ')[1];
+    const token = authHeader.split(" ")[1];
     let userId: string | null = null;
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { userId: string };
+      const decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET || "your-secret-key"
+      ) as { userId: string };
       userId = decoded.userId;
     } catch {
       return HttpResponse.json(
@@ -33,9 +40,13 @@ export const weightGetCurrentGoalHandler = http.post(
           {
             id: 0,
             error: {
-              message: 'Invalid token',
+              message: "Invalid token",
               code: -32001,
-              data: { code: 'UNAUTHORIZED', httpStatus: 401, path: 'weight.getCurrentGoal' },
+              data: {
+                code: "UNAUTHORIZED",
+                httpStatus: 401,
+                path: "weight.getCurrentGoal",
+              },
             },
           },
         ],
@@ -43,15 +54,19 @@ export const weightGetCurrentGoalHandler = http.post(
       );
     }
 
-    if (userId === 'error-user-id') {
+    if (userId === "error-user-id") {
       return HttpResponse.json(
         [
           {
             id: 0,
             error: {
-              message: 'Failed to fetch goal',
+              message: "Failed to fetch weights",
               code: -32002,
-              data: { code: 'INTERNAL_SERVER_ERROR', httpStatus: 500, path: 'weight.getCurrentGoal' },
+              data: {
+                code: "INTERNAL_SERVER_ERROR",
+                httpStatus: 500,
+                path: "weight.getCurrentGoal",
+              },
             },
           },
         ],
@@ -59,21 +74,20 @@ export const weightGetCurrentGoalHandler = http.post(
       );
     }
 
-    if (userId === 'empty-user-id') {
+    if (userId === "empty-user-id") {
       return HttpResponse.json(
-        [{ id: 0, result: { data: null } }],
+        [{ id: 0, result: { type: "data", data: null } }],
         { status: 200 }
       );
     }
 
     const mockGoal = {
-      id: 'goal-1',
-      goalWeightKg: 65.0,
-      goalSetAt: '2025-08-28T12:00:00Z',
-      reachedAt: null,
+      id: "1",
+      goalWeightKg: 65,
+      goalSetAt: "2023-10-01T00:00:00Z",
     };
     return HttpResponse.json(
-      [{ id: 0, result: { data: mockGoal } }],
+      [{ id: 0, result: { type: "data", data: mockGoal } }],
       { status: 200 }
     );
   }

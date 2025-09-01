@@ -54,8 +54,7 @@ export const useLogin = (): UseLoginReturn => {
       router.navigate({ to: "/weight" });
     },
     onError: (error: TRPCClientErrorLike<AppRouter>) => {
-      const errorMessage = error.message || "Unknown error";
-      setMessage(`Login failed: ${errorMessage}`);
+      setMessage(`Login failed: ${error.message || "Unknown error"}`);
     },
   });
 

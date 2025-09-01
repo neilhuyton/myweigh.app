@@ -1,3 +1,4 @@
+// __mocks__/handlers/verifyEmail.ts
 import { http, HttpResponse } from 'msw';
 import { mockUsers, type MockUser } from '../mockUsers';
 import type { inferProcedureInput } from '@trpc/server';
@@ -55,7 +56,7 @@ export const verifyEmailHandler = http.post(
             id: 0,
             error: {
               message: 'No verification token provided',
-              code: -32001,
+              code: -32600,
               data: { code: 'BAD_REQUEST', httpStatus: 400, path: 'verifyEmail' },
             },
           },
@@ -76,8 +77,8 @@ export const verifyEmailHandler = http.post(
             id: 0,
             error: {
               message: 'Invalid or expired verification token',
-              code: -32001,
-              data: { code: 'UNAUTHORIZED', httpStatus: 401, path: 'verifyEmail' },
+              code: -32602,
+              data: { code: 'BAD_REQUEST', httpStatus: 400, path: 'verifyEmail' },
             },
           },
         ],
@@ -92,7 +93,7 @@ export const verifyEmailHandler = http.post(
             id: 0,
             error: {
               message: 'Email already verified',
-              code: -32001,
+              code: -32602,
               data: { code: 'BAD_REQUEST', httpStatus: 400, path: 'verifyEmail' },
             },
           },

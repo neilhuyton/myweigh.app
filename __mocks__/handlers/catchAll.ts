@@ -9,8 +9,7 @@ export const catchAllHandler = http.post(
     let body;
     try {
       body = await clonedRequest.json();
-    } catch (error) {
-      console.error('Error reading catch-all request body:', error);
+    } catch {
       return HttpResponse.json(
         [
           {
@@ -32,7 +31,6 @@ export const catchAllHandler = http.post(
 
     // Handle invalid batched procedure paths
     if (procedure.includes(',')) {
-      console.error('Invalid batched procedure path:', procedure);
       return HttpResponse.json(
         [
           {
@@ -48,7 +46,6 @@ export const catchAllHandler = http.post(
       );
     }
 
-    console.error('Unhandled procedure:', path);
     return HttpResponse.json(
       [
         {

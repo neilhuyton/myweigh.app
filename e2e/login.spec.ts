@@ -1,6 +1,15 @@
+// e2e/login.spec.ts
 import { test, expect } from '@playwright/test';
 
 test.describe('Login Functionality', () => {
+  test.afterEach(async ({ page }, testInfo) => {
+    if (testInfo.status === 'failed' || testInfo.status === 'timedOut') {
+      await page.screenshot({
+        path: `test-results/failure-screenshot-${testInfo.title.replace(/\s+/g, '-')}-${Date.now()}.png`,
+      });
+    }
+  });
+
   test.beforeEach(async () => {});
 
   test('should log in successfully with valid credentials', async ({ page }) => {
@@ -13,19 +22,16 @@ test.describe('Login Functionality', () => {
             'Access-Control-Allow-Origin': 'http://localhost:5173',
             'Access-Control-Allow-Credentials': 'true',
           },
-          body: JSON.stringify([
-            {
-              id: 0,
-              result: {
-                data: {
-                  id: 'test-user-id',
-                  email: 'testuser@example.com',
-                  token: 'mock-token',
-                  refreshToken: 'mock-refresh-token',
-                },
+          body: JSON.stringify({
+            result: {
+              data: {
+                id: 'test-user-id',
+                email: 'testuser@example.com',
+                token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ0ZXN0LXVzZXItMSIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImlhdCI6MTc1NjcyNTIwMCwiZXhwIjoxNzU5MzE3MjAwfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
+                refreshToken: 'mock-refresh-token',
               },
             },
-          ]),
+          }),
         });
       } else {
         await route.continue();
@@ -43,9 +49,13 @@ test.describe('Login Functionality', () => {
 
     await Promise.all([
       page.waitForResponse(
-        (resp) => resp.request().method() === 'POST' && resp.url().includes('trpc/login') && resp.status() === 200,
+        (resp) =>
+          resp.request().method() === 'POST' &&
+          resp.url().includes('trpc/login') &&
+          resp.status() === 200,
         { timeout: 10000 }
       ),
+      page.waitForURL('**/weight', { timeout: 20000 }),
       page.getByTestId('login-button').click(),
     ]);
 
@@ -63,16 +73,13 @@ test.describe('Login Functionality', () => {
             'Access-Control-Allow-Origin': 'http://localhost:5173',
             'Access-Control-Allow-Credentials': 'true',
           },
-          body: JSON.stringify([
-            {
-              id: 0,
-              error: {
-                message: 'Invalid email or password',
-                code: -32001,
-                data: { code: 'UNAUTHORIZED', httpStatus: 401, path: 'login' },
-              },
+          body: JSON.stringify({
+            error: {
+              message: 'Invalid email or password',
+              code: -32001,
+              data: { code: 'UNAUTHORIZED', httpStatus: 401, path: 'login' },
             },
-          ]),
+          }),
         });
       } else {
         await route.continue();
@@ -90,13 +97,18 @@ test.describe('Login Functionality', () => {
 
     await Promise.all([
       page.waitForResponse(
-        (resp) => resp.request().method() === 'POST' && resp.url().includes('trpc/login') && resp.status() === 401,
+        (resp) =>
+          resp.request().method() === 'POST' &&
+          resp.url().includes('trpc/login') &&
+          resp.status() === 401,
         { timeout: 10000 }
       ),
       page.getByTestId('login-button').click(),
     ]);
 
-    await expect(page.getByTestId('login-message')).toHaveText('Login failed: Unknown error', { timeout: 5000 });
+    await expect(page.getByTestId('login-message')).toHaveText('Login failed: Invalid email or password', {
+      timeout: 5000,
+    });
 
     await expect(page.getByTestId('login-form')).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole('link', { name: 'Measurements' })).not.toBeVisible({ timeout: 10000 });
@@ -115,12 +127,16 @@ test.describe('Login Functionality', () => {
     await page.getByTestId('login-button').click();
 
     await expect(page.getByText('Please enter a valid email address')).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText('Password must be at least 8 characters long')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('Password must be at least 8 characters long')).toBeVisible({
+      timeout: 5000,
+    });
 
-    const response = await page.waitForResponse(
-      (resp) => resp.request().method() === 'POST' && resp.url().includes('trpc/login'),
-      { timeout: 2000 }
-    ).catch(() => null);
+    const response = await page
+      .waitForResponse(
+        (resp) => resp.request().method() === 'POST' && resp.url().includes('trpc/login'),
+        { timeout: 2000 }
+      )
+      .catch(() => null);
     expect(response).toBeNull();
 
     await expect(page.getByTestId('login-form')).toBeVisible({ timeout: 5000 });
