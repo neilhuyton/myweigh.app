@@ -1,12 +1,19 @@
-<!doctype html>
+<!-- index.html -->
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#000000" />
     <link rel="manifest" href="/manifest.json" />
-    <!-- <link rel="icon" type="image/svg+xml" href="/vite.svg" /> -->
     <title>My Weigh</title>
+    <script>
+      document.documentElement.classList.add("dark");
+      document.documentElement.setAttribute("data-color-theme", "zinc");
+      if (localStorage.getItem("vite-ui-theme") !== "light") {
+        localStorage.setItem("vite-ui-theme", "dark");
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

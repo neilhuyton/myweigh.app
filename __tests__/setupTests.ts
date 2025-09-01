@@ -1,11 +1,11 @@
-// __tests__/setupTests.ts
+// tests/setupTests.ts
 // import { configure } from '@testing-library/dom';
 import '@testing-library/jest-dom';
 import { vi, beforeAll, afterEach, afterAll } from 'vitest';
 import { server } from '../__mocks__/server';
 import fetch, { Request } from 'node-fetch';
+import '../src/index.css';
 
-// Polyfill fetch and Request globals
 Object.defineProperty(global, 'fetch', {
   writable: true,
   value: fetch,
@@ -16,7 +16,6 @@ Object.defineProperty(global, 'Request', {
   value: Request,
 });
 
-// Mock ResizeObserver
 global.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
@@ -28,14 +27,12 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 // vi.spyOn(console, 'error').mockImplementation(() => {});
 // vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-// Suppress HTML output in @testing-library error messages
 // configure({
 //   getElementError: (message: string | null) => {
 //     return new Error(message ?? undefined);
 //   },
 // });
 
-// Mock localStorage
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
   return {
@@ -47,10 +44,8 @@ const localStorageMock = (() => {
 })();
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
-// Mock sessionStorage (optional, include if used in your app)
 Object.defineProperty(window, 'sessionStorage', { value: localStorageMock });
 
-// Mock matchMedia
 const matchMediaMock = (matchesDark: boolean) =>
   ({
     matches: matchesDark,
@@ -72,7 +67,6 @@ Object.defineProperty(window, 'matchMedia', {
     ),
 });
 
-// Polyfill PointerEvent for jsdom to support @radix-ui/react-select
 if (typeof window !== 'undefined') {
   window.PointerEvent = class PointerEvent extends Event {
     public pointerId: number;
@@ -99,21 +93,35 @@ if (typeof window !== 'undefined') {
     Element.prototype.hasPointerCapture = () => false;
   }
 
-  // Polyfill scrollIntoView for jsdom
   if (!Element.prototype.scrollIntoView) {
     Element.prototype.scrollIntoView = () => {};
   }
 }
 
-// MSW setup for server tests
 export const setupMSW = () => {
   beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 };
 
-// Enhance console.log for clarity in tests
 // const originalConsoleLog = console.log;
 // console.log = (...args) => {
 //   originalConsoleLog('[TEST LOG]', ...args);
 // };
+
+beforeAll(() => {
+  const originalGetComputedStyle = window.getComputedStyle;
+  window.getComputedStyle = (element: Element) => {
+    const styles = originalGetComputedStyle(element);
+    return {
+      ...styles,
+      getPropertyValue: (property: string) => {
+        if (element === document.documentElement) {
+          if (property === "--radius") return "0.625rem";
+          if (property === "--radius-sm") return "calc(0.625rem - 4px)";
+        }
+        return styles.getPropertyValue(property);
+      },
+    } as CSSStyleDeclaration;
+  };
+});

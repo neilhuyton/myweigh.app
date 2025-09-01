@@ -1,34 +1,69 @@
 // src/components/ThemeProvider.tsx
-import { ThemeProvider as NextThemeProvider } from "next-themes";
-import type { ReactNode } from "react";
-import type { ThemeProviderProps as NextThemeProviderProps } from "next-themes";
+import { ThemeProvider as NextThemeProvider, useTheme } from "next-themes";
+import { useEffect, useState, type ReactNode } from "react";
+import {
+  ThemeProviderContext,
+  type Theme,
+  type ColorTheme,
+} from "../contexts/ThemeContext";
 
 type ThemeProviderProps = {
   children: ReactNode;
-  defaultTheme?: string;
+  defaultTheme?: Theme;
+  defaultColorTheme?: ColorTheme;
   storageKey?: string;
+  colorStorageKey?: string;
   enableSystem?: boolean;
-} & Omit<
-  NextThemeProviderProps,
-  "children" | "defaultTheme" | "storageKey" | "enableSystem"
->;
+};
 
 export function ThemeProvider({
   children,
   defaultTheme = "dark",
+  defaultColorTheme = "zinc",
   storageKey = "vite-ui-theme",
+  colorStorageKey = "vite-ui-color-theme",
   enableSystem = true,
-  ...props
 }: ThemeProviderProps) {
+  const { theme, setTheme } = useTheme();
+  const [colorTheme, setColorTheme] = useState<ColorTheme>(() => {
+    if (typeof window !== "undefined") {
+      return (
+        (localStorage.getItem(colorStorageKey) as ColorTheme) ||
+        defaultColorTheme
+      );
+    }
+    return defaultColorTheme;
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (!localStorage.getItem(storageKey)) {
+        localStorage.setItem(storageKey, "dark");
+        document.documentElement.classList.add("dark");
+        setTheme("dark");
+      }
+      localStorage.setItem(colorStorageKey, colorTheme);
+      document.documentElement.setAttribute("data-color-theme", colorTheme);
+    }
+  }, [theme, setTheme, colorTheme, colorStorageKey, storageKey]);
+
   return (
-    <NextThemeProvider
-      attribute="class"
-      defaultTheme={defaultTheme}
-      storageKey={storageKey}
-      enableSystem={enableSystem}
-      {...props}
+    <ThemeProviderContext.Provider
+      value={{
+        theme: theme as Theme,
+        setTheme,
+        colorTheme,
+        setColorTheme,
+      }}
     >
-      {children}
-    </NextThemeProvider>
+      <NextThemeProvider
+        attribute="class"
+        defaultTheme={defaultTheme}
+        storageKey={storageKey}
+        enableSystem={enableSystem}
+      >
+        {children}
+      </NextThemeProvider>
+    </ThemeProviderContext.Provider>
   );
 }
