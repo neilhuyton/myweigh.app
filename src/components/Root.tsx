@@ -7,6 +7,7 @@ import { ThemeProvider } from "./ThemeProvider";
 import Navigation from "./Navigation";
 import ProfileIcon from "./ProfileIcon";
 import { ThemeToggle } from "./ThemeToggle";
+import { ColorThemeToggle } from "./ColorThemeToggle";
 // import { InstallPrompt } from "./InstallPrompt";
 import type { TRPCClient } from "@trpc/client";
 import type { AppRouter } from "../../server/trpc";
@@ -44,7 +45,10 @@ function Root({
                 data-testid="header"
                 className="sticky top-0 left-0 right-0 z-50 bg-background flex items-center justify-between px-4 py-2"
               >
-                <ThemeToggle />
+                <div className="flex items-center gap-2">
+                  <ThemeToggle />
+                  <ColorThemeToggle />
+                </div>
                 <ProfileIcon />
               </header>
             )}
