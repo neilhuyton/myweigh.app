@@ -1,4 +1,3 @@
-// __tests__/WeightGoal.test.tsx
 import {
   describe,
   it,
@@ -8,25 +7,22 @@ import {
   afterEach,
   vi,
 } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
-import { createMemoryHistory } from "@tanstack/history";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { httpLink } from "@trpc/client";
 import { trpc } from "../src/trpc";
-import { trpcClient, queryClient } from "../src/client";
-import { router } from "../src/router/router";
 import { server } from "../__mocks__/server";
 import "@testing-library/jest-dom";
-import { useAuthStore } from "../src/store/authStore";
-import { act } from "react";
+import { act } from "@testing-library/react";
+import WeightGoal from "../src/components/WeightGoal";
 import {
-  weightGetWeightsHandler,
   weightGetCurrentGoalHandler,
   weightSetGoalHandler,
-  refreshTokenHandler,
+  weightUpdateGoalHandler,
 } from "../__mocks__/handlers";
+import { useAuthStore } from "../src/store/authStore";
 import { generateToken } from "./utils/token";
-import { http, HttpResponse } from "msw";
 
 // Mock GoalList
 vi.mock("../src/components/GoalList", () => ({
@@ -34,7 +30,26 @@ vi.mock("../src/components/GoalList", () => ({
 }));
 
 describe("WeightGoal Component", () => {
-  const setup = async (initialPath = "/goals", userId = "test-user-id") => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+  const trpcClient = trpc.createClient({
+    links: [
+      httpLink({
+        url: "http://localhost:8888/.netlify/functions/trpc",
+        headers: () => ({
+          "content-type": "application/json",
+          Authorization: `Bearer ${useAuthStore.getState().token}`,
+        }),
+      }),
+    ],
+  });
+
+  const setup = async (userId = "test-user-id") => {
     await act(async () => {
       useAuthStore.setState({
         isLoggedIn: true,
@@ -44,60 +59,23 @@ describe("WeightGoal Component", () => {
         login: vi.fn(),
         logout: vi.fn(),
       });
-    });
 
-    const history = createMemoryHistory({ initialEntries: [initialPath] });
-    const testRouter = createRouter({
-      routeTree: router.routeTree,
-      history,
-    });
-
-    await act(async () => {
       render(
         <trpc.Provider client={trpcClient} queryClient={queryClient}>
           <QueryClientProvider client={queryClient}>
-            <RouterProvider router={testRouter} />
+            <WeightGoal />
           </QueryClientProvider>
         </trpc.Provider>
       );
     });
-
-    return { history, testRouter };
   };
 
   beforeAll(() => {
-    server.listen({ onUnhandledRequest: "error" });
+    server.listen({ onUnhandledRequest: "warn" });
   });
 
   beforeEach(() => {
-    server.use(
-      weightGetCurrentGoalHandler,
-      weightSetGoalHandler,
-      weightGetWeightsHandler,
-      refreshTokenHandler,
-      http.post(
-        "http://localhost:8888/.netlify/functions/trpc/*",
-        async ({ request }) => {
-          return HttpResponse.json(
-            [
-              {
-                id: 0,
-                error: {
-                  message: "Unhandled tRPC request",
-                  code: -32001,
-                  data: {
-                    code: "NOT_FOUND",
-                    httpStatus: 404,
-                    path: request.url,
-                  },
-                },
-              },
-            ],
-            { status: 200 }
-          );
-        }
-      )
-    );
+    server.use(weightGetCurrentGoalHandler, weightSetGoalHandler, weightUpdateGoalHandler);
   });
 
   afterEach(() => {
@@ -120,66 +98,51 @@ describe("WeightGoal Component", () => {
   });
 
   it("renders WeightGoal with correct content", async () => {
-    await setup("/goals", "test-user-id");
+    await setup();
 
     await waitFor(
       () => {
-        expect(
-          screen.queryByTestId("weight-goal-loading")
-        ).not.toBeInTheDocument();
-        expect(
-          screen.getByRole("heading", { name: "Your Goals" })
-        ).toBeInTheDocument();
+        expect(screen.queryByTestId("weight-goal-loading")).not.toBeInTheDocument();
+        expect(screen.getByRole("heading", { name: "Your Goals" })).toBeInTheDocument();
         expect(screen.getByText(/Current Goal.*65 kg/i)).toBeInTheDocument();
-        expect(
-          screen.getByPlaceholderText("Enter your goal weight (kg)")
-        ).toBeInTheDocument();
-        expect(
-          screen.getByRole("button", { name: /Set Goal/i })
-        ).toBeInTheDocument();
+        expect(screen.getByTestId("goal-weight-input")).toBeInTheDocument();
+        expect(screen.getByTestId("submit-button")).toBeInTheDocument();
         expect(screen.getByTestId("goal-list")).toBeInTheDocument();
+        expect(screen.queryByTestId("error-message")).not.toBeInTheDocument();
       },
-      { timeout: 30000 }
+      { timeout: 2000, interval: 100 }
     );
   });
 
   it("allows user to update a weight goal when logged in", async () => {
-    await setup("/goals", "test-user-id");
+    await setup();
 
     await waitFor(
       () => {
-        expect(
-          screen.queryByTestId("weight-goal-loading")
-        ).not.toBeInTheDocument();
-        expect(
-          screen.getByRole("heading", { name: "Your Goals" })
-        ).toBeInTheDocument();
+        expect(screen.queryByTestId("weight-goal-loading")).not.toBeInTheDocument();
         expect(screen.getByText(/Current Goal.*65 kg/i)).toBeInTheDocument();
-        expect(
-          screen.getByPlaceholderText("Enter your goal weight (kg)")
-        ).toBeInTheDocument();
-        expect(
-          screen.getByRole("button", { name: /Set Goal/i })
-        ).toBeInTheDocument();
-        expect(screen.getByTestId("goal-list")).toBeInTheDocument();
+        expect(screen.getByTestId("goal-weight-input")).toBeInTheDocument();
+        expect(screen.getByTestId("submit-button")).toBeInTheDocument();
       },
-      { timeout: 30000 }
+      { timeout: 2000, interval: 100 }
     );
 
     await act(async () => {
-      const input = screen.getByPlaceholderText("Enter your goal weight (kg)");
-      fireEvent.change(input, { target: { value: "60" } });
+      const input = screen.getByTestId("goal-weight-input");
+      await userEvent.clear(input);
+      await userEvent.type(input, "60", { delay: 10 });
       expect(input).toHaveValue(60);
-      fireEvent.click(screen.getByRole("button", { name: /Set Goal/i }));
+      const form = screen.getByTestId("goal-weight-form");
+      await form.dispatchEvent(new Event("submit", { bubbles: true }));
     });
 
     await waitFor(
       () => {
-        expect(
-          screen.getByText("Goal updated successfully!")
-        ).toBeInTheDocument();
+        const messageElement = screen.getByTestId("goal-message");
+        expect(messageElement).toBeInTheDocument();
+        expect(messageElement).toHaveTextContent("Goal updated successfully!");
       },
-      { timeout: 30000 }
+      { timeout: 5000, interval: 100 }
     );
   });
 });

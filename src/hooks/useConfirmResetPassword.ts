@@ -1,13 +1,13 @@
-// src/hooks/useConfirmResetPassword.ts
-import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { trpc } from "../trpc";
 import { useState, useEffect } from "react";
 import { useSearch } from "@tanstack/react-router";
+import type { TRPCClientErrorLike } from "@trpc/client";
+import type { AppRouter } from "server/trpc";
 
 const formSchema = z.object({
-  token: z.string().min(1, { message: "Reset token is required" }).optional(),
   newPassword: z
     .string()
     .min(8, { message: "Password must be at least 8 characters" }),
@@ -26,33 +26,31 @@ interface UseConfirmResetPasswordReturn {
 }
 
 export const useConfirmResetPassword = (): UseConfirmResetPasswordReturn => {
-  const { token } = useSearch({ from: "/confirm-reset-password" });
-
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { token: token || "", newPassword: "" },
+    defaultValues: { newPassword: "" },
     mode: "onChange",
   });
 
   const [message, setMessage] = useState<string | null>(null);
+  const { token } = useSearch({ from: "/confirm-reset-password" });
 
   const resetMutation = trpc.resetPassword.confirm.useMutation({
     onSuccess: () => {
       setMessage("Password reset successfully!");
-      setTimeout(() => {
-        form.reset();
-        setMessage(null);
-      }, 3000);
+      form.reset(); // Clear input
     },
-    onError: (error) => {
+    onError: (error: TRPCClientErrorLike<AppRouter>) => {
       const errorMessage = error.message || "Failed to reset password";
       setMessage(`Failed to reset password: ${errorMessage}`);
     },
   });
 
   useEffect(() => {
-    const subscription = form.watch(() => {
-      setMessage(null);
+    const subscription = form.watch((value, { type }) => {
+      if (type === "change") {
+        setMessage(null);
+      }
     });
     return () => subscription.unsubscribe();
   }, [form]);
@@ -71,8 +69,19 @@ export const useConfirmResetPassword = (): UseConfirmResetPasswordReturn => {
       return;
     }
 
-    await resetMutation.mutateAsync({ token, newPassword: data.newPassword });
-    onSwitchToLogin();
+    try {
+      await resetMutation.mutateAsync({ token, newPassword: data.newPassword });
+      setTimeout(() => {
+        onSwitchToLogin();
+      }, 1000);
+    } catch (error: unknown) {
+      // Type guard to check if error is TRPCClientErrorLike
+      if (error instanceof Error && 'message' in error) {
+        setMessage(`Failed to reset password: ${error.message || "Unknown error"}`);
+      } else {
+        setMessage("Failed to reset password: Unexpected error");
+      }
+    }
   };
 
   return {

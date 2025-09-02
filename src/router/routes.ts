@@ -1,6 +1,5 @@
 // src/router/routes.ts
 import { createRoute, redirect, type RootRoute } from "@tanstack/react-router";
-import Home from "../components/Home";
 import Weight from "../components/Weight";
 import WeightChart from "../components/WeightChart";
 import WeightGoal from "../components/WeightGoal";
@@ -40,18 +39,6 @@ const checkAuth = () => {
     throw redirect({ to: "/login" });
   }
 };
-
-export const homeRoute = (rootRoute: RootRoute) =>
-  createRoute({
-    getParentRoute: () => rootRoute,
-    path: "/",
-    beforeLoad: () => {
-      if (!checkAuth()) {
-        return; // Allow trpcClient to attempt refresh
-      }
-    },
-    component: Home,
-  });
 
 export const registerRoute = (rootRoute: RootRoute) =>
   createRoute({

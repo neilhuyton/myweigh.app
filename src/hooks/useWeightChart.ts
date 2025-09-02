@@ -1,12 +1,12 @@
-import { useMemo, useState } from 'react';
-import { trpc } from '../trpc';
-import { startOfWeek, startOfMonth, format } from 'date-fns';
+import { useMemo, useState } from "react";
+import { trpc } from "../trpc";
+import { startOfWeek, startOfMonth, format } from "date-fns";
 
 export const useWeightChart = (
-  initialTrendPeriod: 'daily' | 'weekly' | 'monthly' = 'daily'
+  initialTrendPeriod: "daily" | "weekly" | "monthly" = "daily"
 ) => {
   const [trendPeriod, setTrendPeriod] = useState<
-    'daily' | 'weekly' | 'monthly'
+    "daily" | "weekly" | "monthly"
   >(initialTrendPeriod);
   const {
     data: weightsData,
@@ -18,11 +18,12 @@ export const useWeightChart = (
     data: currentGoal,
     isLoading: goalLoading,
     isError: goalError,
+    error: goalErrorObj,
   } = trpc.weight.getCurrentGoal.useQuery();
 
   const isLoading = weightsLoading || goalLoading;
-  const isError = weightsError || goalError;
-  const error = weightsErrorObj || new Error('Failed to fetch weights');
+  const error =
+    weightsErrorObj || goalErrorObj || new Error("Failed to fetch data");
 
   const weights = useMemo(() => {
     if (!weightsData) return [];
@@ -37,7 +38,7 @@ export const useWeightChart = (
 
   const chartData = useMemo(() => {
     if (!weights.length) return [];
-    if (trendPeriod === 'daily') {
+    if (trendPeriod === "daily") {
       return weights.map((weight) => ({
         date: isNaN(new Date(weight.createdAt).getTime())
           ? null
@@ -51,10 +52,10 @@ export const useWeightChart = (
       const date = new Date(weight.createdAt);
       if (isNaN(date.getTime())) return acc;
       let key: string;
-      if (trendPeriod === 'weekly') {
-        key = format(startOfWeek(date, { weekStartsOn: 0 }), 'yyyy-MM-dd');
+      if (trendPeriod === "weekly") {
+        key = format(startOfWeek(date, { weekStartsOn: 0 }), "yyyy-MM-dd");
       } else {
-        key = format(startOfMonth(date), 'yyyy-MM');
+        key = format(startOfMonth(date), "yyyy-MM");
       }
       if (!acc[key]) acc[key] = { weights: [], note: weight.note };
       acc[key].weights.push(weight.weightKg);
@@ -71,17 +72,17 @@ export const useWeightChart = (
   const chartConfig = useMemo(
     () => ({
       weight: {
-        label: 'Weight (kg)',
-        color: 'oklch(0.6 0.15 190)', // Hardcoded teal
+        label: "Weight (kg)",
+        color: "oklch(0.6 0.15 190)",
       },
     }),
     []
   );
 
-  const barColor = chartConfig.weight.color; // Static color
+  const barColor = chartConfig.weight.color;
 
   const handleTrendPeriodChange = (value: string) => {
-    if (value === 'daily' || value === 'weekly' || value === 'monthly') {
+    if (value === "daily" || value === "weekly" || value === "monthly") {
       setTrendPeriod(value);
     }
   };
@@ -93,7 +94,8 @@ export const useWeightChart = (
   return {
     weights,
     isLoading,
-    isError,
+    isWeightsError: weightsError,
+    isGoalError: goalError,
     error,
     chartData,
     chartConfig,

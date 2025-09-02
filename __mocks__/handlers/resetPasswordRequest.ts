@@ -1,80 +1,74 @@
 import { http, HttpResponse } from 'msw';
-import type { inferProcedureInput } from '@trpc/server';
-import type { AppRouter } from '../../server/trpc';
 
-interface TrpcRequestBody {
-  '0': inferProcedureInput<AppRouter['resetPassword']['request']>; // { email: string }
+interface TRPCRequestBody {
+  id?: number;
+  input?: { email: string };
+  email?: string;
 }
 
 export const resetPasswordRequestHandler = http.post(
   'http://localhost:8888/.netlify/functions/trpc/resetPassword.request',
   async ({ request }) => {
-    let body: unknown;
+    let body;
     try {
       body = await request.json();
     } catch {
       return HttpResponse.json(
-        [
-          {
-            id: 0,
-            error: {
-              message: 'Invalid request body',
-              code: -32600,
-              data: { code: 'BAD_REQUEST', httpStatus: 400, path: 'resetPassword.request' },
-            },
+        {
+          error: {
+            message: 'Invalid request body',
+            code: -32602,
+            data: { code: 'BAD_REQUEST', httpStatus: 400, path: 'resetPassword.request' },
           },
-        ],
-        { status: 200 }
+        },
+        { status: 400 }
       );
     }
 
-    if (!body || typeof body !== 'object' || !('0' in body)) {
+    let email: string | undefined;
+
+    if (Array.isArray(body)) {
+      email = body[0]?.input?.email ?? body[0]?.email;
+    } else if (body && typeof body === 'object') {
+      email = (body as TRPCRequestBody).input?.email ?? (body as TRPCRequestBody).email;
+    }
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return HttpResponse.json(
-        [
-          {
-            id: 0,
-            error: {
-              message: 'Invalid request body',
-              code: -32600,
-              data: { code: 'BAD_REQUEST', httpStatus: 400, path: 'resetPassword.request' },
-            },
+        {
+          error: {
+            message: 'Invalid email address',
+            code: -32602,
+            data: { code: 'BAD_REQUEST', httpStatus: 400, path: 'resetPassword.request' },
           },
-        ],
-        { status: 200 }
+        },
+        { status: 400 }
       );
     }
 
-    const input = (body as TrpcRequestBody)['0'];
-    const { email } = input || {};
-
-    if (!email) {
+    if (email === 'nonexistent@example.com' || email === 'unknown@example.com') {
       return HttpResponse.json(
-        [
-          {
-            id: 0,
-            error: {
-              message: 'Invalid email',
-              code: -32603,
-              data: { code: 'BAD_REQUEST', httpStatus: 400, path: 'resetPassword.request' },
-            },
+        { result: { data: { message: 'If the email exists, a reset link has been sent.' } } },
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (email === 'fail@example.com') {
+      return HttpResponse.json(
+        {
+          error: {
+            message: 'Failed to send reset email',
+            code: -32001,
+            data: { code: 'INTERNAL_SERVER_ERROR', httpStatus: 500, path: 'resetPassword.request' },
           },
-        ],
-        { status: 200 }
+        },
+        { status: 500 }
       );
     }
 
     return HttpResponse.json(
-      [
-        {
-          id: 0,
-          result: {
-            data: {
-              message: 'If the email exists, a reset link has been sent.',
-            },
-          },
-        },
-      ],
-      { status: 200 }
+      { result: { data: { message: 'Reset link sent to your email' } } },
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
   }
 );
