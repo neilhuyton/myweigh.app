@@ -11,6 +11,7 @@ import { resetPasswordRequestHandler } from "./resetPasswordRequest";
 import { verifyEmailHandler } from "./verifyEmail";
 import { authLogoutHandler } from "./authLogout";
 import { userUpdateEmailHandler } from "./userUpdateEmail";
+import { weightCreateHandler } from "./weightCreate";
 
 export const handlers = [
   verifyEmailHandler,
@@ -26,6 +27,7 @@ export const handlers = [
   resetPasswordRequestHandler,
   authLogoutHandler,
   userUpdateEmailHandler,
+  weightCreateHandler,
 ];
 
 export {
@@ -42,4 +44,5 @@ export {
   resetPasswordRequestHandler,
   authLogoutHandler,
   userUpdateEmailHandler,
+  weightCreateHandler,
 };
