@@ -1,20 +1,19 @@
-// src/hooks/useLogin.ts
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { trpc } from "../trpc";
 import { useAuthStore } from "../store/authStore";
 import { useEffect, useState } from "react";
-import { useRouter } from "@tanstack/react-router";
 import type { TRPCClientErrorLike } from "@trpc/client";
 import type { AppRouter } from "server/trpc";
 
-interface LoginResponse {
+// Define the expected response type for the login mutation
+type LoginResponse = {
   id: string;
   email: string;
   token: string;
   refreshToken: string;
-}
+};
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -41,17 +40,16 @@ export const useLogin = (): UseLoginReturn => {
 
   const [message, setMessage] = useState<string | null>(null);
   const { login } = useAuthStore();
-  const router = useRouter();
 
   const loginMutation = trpc.login.useMutation({
     onMutate: () => {
       setMessage(null);
     },
-    onSuccess: (data: LoginResponse) => {
+    onSuccess: (data: { result: { data: LoginResponse } } | LoginResponse) => {
+      const response = "result" in data ? data.result.data : data;
       setMessage("Login successful!");
-      login(data.id, data.token, data.refreshToken);
+      login(response.id, response.token, response.refreshToken);
       form.reset();
-      router.navigate({ to: "/weight" });
     },
     onError: (error: TRPCClientErrorLike<AppRouter>) => {
       setMessage(`Login failed: ${error.message || "Unknown error"}`);

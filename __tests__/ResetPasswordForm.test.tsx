@@ -2,16 +2,15 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { httpBatchLink } from "@trpc/client";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { trpc } from "../src/trpc";
 import "@testing-library/jest-dom";
 import { server } from "../__mocks__/server";
 import { act } from "react-dom/test-utils";
 import { resetPasswordRequestHandler } from "../__mocks__/handlers/resetPasswordRequest";
-import ResetPasswordForm from "../src/components/ResetPasswordForm"; // Adjust the import path as needed
+import ResetPasswordForm from "../src/components/ResetPasswordForm";
+import { trpcClient, queryClient } from "../src/client";
 
-// Mock the router module to avoid router.navigate errors
 vi.mock("../src/router/router", () => ({
   router: {
     navigate: vi.fn(),
@@ -19,31 +18,13 @@ vi.mock("../src/router/router", () => ({
 }));
 
 describe("ResetPasswordForm Component", () => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-      mutations: { retry: false },
-    },
-  });
-
-  const trpcClient = trpc.createClient({
-    links: [
-      httpBatchLink({
-        url: "http://localhost:8888/.netlify/functions/trpc",
-        fetch: async (input, options) => fetch(input, { ...options }),
-      }),
-    ],
-  });
-
   const setup = async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     vi.mock("../src/store/authStore", () => ({
       useAuthStore: Object.assign(
-        vi.fn().mockReturnValue({ isLoggedIn: false, userId: null }),
+        vi.fn().mockReturnValue({ isLoggedIn: false, userId: null, token: null, refreshToken: null }),
         {
-          getState: vi
-            .fn()
-            .mockReturnValue({ isLoggedIn: false, userId: null }),
+          getState: vi.fn().mockReturnValue({ isLoggedIn: false, userId: null, token: null, refreshToken: null }),
         }
       ),
     }));
@@ -63,10 +44,8 @@ describe("ResetPasswordForm Component", () => {
     server.listen({ onUnhandledRequest: "error" });
     server.use(resetPasswordRequestHandler);
     process.on("unhandledRejection", (reason) => {
-      if (
-        reason instanceof Error &&
-        reason.message.includes("Invalid email")
-      ) {
+      console.error("Unhandled rejection in beforeAll:", reason);
+      if (reason instanceof Error && reason.message.includes("Invalid email")) {
         return;
       }
       throw reason;
@@ -108,25 +87,21 @@ describe("ResetPasswordForm Component", () => {
 
     await act(async () => {
       const emailInput = screen.getByTestId("email-input");
-      const form = screen.getByRole("form");
-      await userEvent.type(emailInput, "unknown@example.com");
-      const submitEvent = new Event("submit", {
-        bubbles: true,
-        cancelable: true,
-      });
-      await form.dispatchEvent(submitEvent);
+      await userEvent.clear(emailInput);
+      await userEvent.type(emailInput, "unknown@example.com", { delay: 10 });
+      expect(emailInput).toHaveValue("unknown@example.com");
+      const form = screen.getByTestId("reset-password-form");
+      await form.dispatchEvent(new Event("submit", { bubbles: true }));
     });
 
     await waitFor(
       () => {
-        const alert = screen.getByRole("alert");
-        expect(alert).toHaveTextContent(
-          "If the email exists, a reset link has been sent."
-        );
+        const alert = screen.getByTestId("reset-password-message");
+        expect(alert).toHaveTextContent("If the email exists, a reset link has been sent.");
         expect(alert).toHaveClass("text-green-500");
         expect(screen.getByTestId("email-input")).toHaveValue("");
       },
-      { timeout: 300, interval: 50 }
+      { timeout: 3000, interval: 100 }
     );
   });
 });

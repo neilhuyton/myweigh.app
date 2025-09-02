@@ -1,4 +1,3 @@
-// src/components/ConfirmResetPasswordForm.tsx
 import { cn } from "@/lib/utils";
 import {
   Form,
@@ -15,12 +14,8 @@ import { router } from "../router/router";
 import { Logo } from "./Logo";
 import { LoadingSpinner } from "./LoadingSpinner";
 
-interface ConfirmResetPasswordFormProps {
-  token: string;
-}
-
-function ConfirmResetPasswordForm({ token }: ConfirmResetPasswordFormProps) {
-  const { form, message, isPending, handleSubmit } = useConfirmResetPassword(token);
+function ConfirmResetPasswordForm() {
+  const { form, message, isPending, handleSubmit } = useConfirmResetPassword();
 
   return (
     <div className="min-h-[100dvh] flex flex-col items-center p-1 sm:p-2 lg:p-3">

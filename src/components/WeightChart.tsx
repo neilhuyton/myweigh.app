@@ -1,4 +1,3 @@
-// src/components/WeightChart.tsx
 import {
   Select,
   SelectTrigger,
@@ -125,12 +124,14 @@ function WeightChart() {
             <ChartContainer
               config={chartConfig}
               id="weight-chart"
-              className="h-full w-full"
+              className="h-[400px] w-full min-h-[400px] min-w-[200px]"
               data-testid="chart-mock"
             >
               <BarChart
                 data={chartData}
                 margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
+                width={800}
+                height={400}
               >
                 <CartesianGrid stroke="hsl(var(--border))" />
                 <XAxis

@@ -1,21 +1,20 @@
-// __mocks__/handlers/weightGetGoals.ts
 import { http, HttpResponse } from 'msw';
 
 interface TRPCRequestBody {
   id: number;
   path?: string;
   method?: string;
-  [key: string]: any;
+  [key: string]: unknown; // Changed from `any` to `unknown`
 }
 
 export const weightGetGoalsHandler = http.post(
   'http://localhost:8888/.netlify/functions/trpc/:path',
   async ({ request, params }) => {
+    const clonedRequest = request.clone();
     let requestBody: unknown;
     try {
-      requestBody = await request.json();
-    } catch (error) {
-      console.error('Failed to parse request body:', error);
+      requestBody = await clonedRequest.json();
+    } catch {
       return HttpResponse.json(
         [
           {
@@ -64,7 +63,7 @@ export const weightGetGoalsHandler = http.post(
     let userId: string | null = null;
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      userId = payload.userId;
+      userId = payload.userId as string | null;
     } catch {
       return HttpResponse.json(
         [

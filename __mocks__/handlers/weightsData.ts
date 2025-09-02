@@ -1,16 +1,16 @@
-// __mocks__/handlers/weightsData.ts
+// __mocks__/weightsData.ts
 export let weights = [
   {
     id: "1",
     weightKg: 70,
-    note: "Morning weigh-in",
     createdAt: "2023-10-01T00:00:00Z",
+    note: "Morning weigh-in",
   },
   {
     id: "2",
-    weightKg: 69.9, // Consistent with weightGetWeightsHandler
-    note: "Evening weigh-in",
+    weightKg: 69.9,
     createdAt: "2023-10-02T00:00:00Z",
+    note: "Evening weigh-in",
   },
 ];
 
@@ -19,14 +19,14 @@ export const resetWeights = () => {
     {
       id: "1",
       weightKg: 70,
-      note: "Morning weigh-in",
       createdAt: "2023-10-01T00:00:00Z",
+      note: "Morning weigh-in",
     },
     {
       id: "2",
       weightKg: 69.9,
-      note: "Evening weigh-in",
       createdAt: "2023-10-02T00:00:00Z",
+      note: "Evening weigh-in",
     },
   ];
 };

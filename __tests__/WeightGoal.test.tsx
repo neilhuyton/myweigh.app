@@ -1,4 +1,3 @@
-// __tests__/WeightGoal.test.tsx
 import {
   describe,
   it,
@@ -8,13 +7,14 @@ import {
   afterEach,
   vi,
 } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { httpBatchLink } from "@trpc/client";
+import { httpLink } from "@trpc/client";
 import { trpc } from "../src/trpc";
 import { server } from "../__mocks__/server";
 import "@testing-library/jest-dom";
-import { act } from "react";
+import { act } from "@testing-library/react";
 import WeightGoal from "../src/components/WeightGoal";
 import {
   weightGetCurrentGoalHandler,
@@ -39,28 +39,12 @@ describe("WeightGoal Component", () => {
 
   const trpcClient = trpc.createClient({
     links: [
-      httpBatchLink({
+      httpLink({
         url: "http://localhost:8888/.netlify/functions/trpc",
-        fetch: async (url, options) => {
-          const headers = {
-            "content-type": "application/json",
-            ...(useAuthStore.getState().token
-              ? { Authorization: `Bearer ${useAuthStore.getState().token}` }
-              : {}),
-          };
-          const body = options?.body || JSON.stringify([{ id: 0, method: "query", path: "weight.getCurrentGoal" }]);
-          console.log("tRPC Fetch Headers:", headers);
-          console.log("tRPC Fetch Body:", body);
-          const response = await fetch(url, {
-            ...options,
-            headers,
-            method: "POST",
-            body,
-          });
-          const responseBody = await response.clone().json();
-          console.log("tRPC Response:", responseBody);
-          return response;
-        },
+        headers: () => ({
+          "content-type": "application/json",
+          Authorization: `Bearer ${useAuthStore.getState().token}`,
+        }),
       }),
     ],
   });
@@ -75,9 +59,7 @@ describe("WeightGoal Component", () => {
         login: vi.fn(),
         logout: vi.fn(),
       });
-    });
 
-    await act(async () => {
       render(
         <trpc.Provider client={trpcClient} queryClient={queryClient}>
           <QueryClientProvider client={queryClient}>
@@ -128,7 +110,7 @@ describe("WeightGoal Component", () => {
         expect(screen.getByTestId("goal-list")).toBeInTheDocument();
         expect(screen.queryByTestId("error-message")).not.toBeInTheDocument();
       },
-      { timeout: 20000 }
+      { timeout: 2000, interval: 100 }
     );
   });
 
@@ -142,23 +124,25 @@ describe("WeightGoal Component", () => {
         expect(screen.getByTestId("goal-weight-input")).toBeInTheDocument();
         expect(screen.getByTestId("submit-button")).toBeInTheDocument();
       },
-      { timeout: 20000 }
+      { timeout: 2000, interval: 100 }
     );
 
     await act(async () => {
       const input = screen.getByTestId("goal-weight-input");
-      const form = input.closest("form")!;
-      fireEvent.change(input, { target: { value: "60" } });
+      await userEvent.clear(input);
+      await userEvent.type(input, "60", { delay: 10 });
       expect(input).toHaveValue(60);
+      const form = screen.getByTestId("goal-weight-form");
       await form.dispatchEvent(new Event("submit", { bubbles: true }));
-      await new Promise((resolve) => setTimeout(resolve, 0)); // Ensure async updates complete
     });
 
     await waitFor(
       () => {
-        expect(screen.getByTestId("goal-message")).toHaveTextContent("Goal updated successfully!");
+        const messageElement = screen.getByTestId("goal-message");
+        expect(messageElement).toBeInTheDocument();
+        expect(messageElement).toHaveTextContent("Goal updated successfully!");
       },
-      { timeout: 20000 }
+      { timeout: 5000, interval: 100 }
     );
   });
 });

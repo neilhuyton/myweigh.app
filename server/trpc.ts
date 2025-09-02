@@ -1,15 +1,13 @@
 // server/trpc.ts
-import { t } from './trpc-base';
-import { userRouter } from './routers/user';
-import { registerRouter } from './routers/register';
-import { loginRouter } from './routers/login';
-import { verifyEmailRouter } from './routers/verifyEmail';
-import { weightRouter } from './routers/weight';
-import { resetPasswordRouter } from './routers/resetPassword';
-import { refreshTokenRouter } from './routers/refreshToken';
+import { t } from "./trpc-base";
+import { loginRouter } from "./routers/login";
+import { verifyEmailRouter } from "./routers/verifyEmail";
+import { weightRouter } from "./routers/weight";
+import { resetPasswordRouter } from "./routers/resetPassword";
+import { refreshTokenRouter } from "./routers/refreshToken";
+import { registerRouter } from "./routers/register";
 
 export const appRouter = t.router({
-  user: userRouter,
   register: registerRouter.register,
   login: loginRouter.login,
   verifyEmail: verifyEmailRouter.verifyEmail,

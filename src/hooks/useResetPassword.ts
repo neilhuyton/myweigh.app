@@ -33,7 +33,7 @@ export const useResetPassword = (): UseResetPasswordReturn => {
       form.reset();
     },
     onError: (error) => {
-      setMessage(`Failed to send reset link: ${error.message}`);
+      setMessage(`Failed to send reset link: ${error}`);
     },
   });
 

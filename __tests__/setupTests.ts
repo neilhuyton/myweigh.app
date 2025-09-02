@@ -1,41 +1,17 @@
-// __tests__/setupTests.ts
-// import { configure } from '@testing-library/dom';
 import '@testing-library/jest-dom';
 import { vi, beforeAll, afterEach, afterAll } from 'vitest';
 import { server } from '../__mocks__/server';
 import fetch, { Request } from 'node-fetch';
 
-// Polyfill fetch and Request globals
-Object.defineProperty(global, 'fetch', {
-  writable: true,
-  value: fetch,
-});
+Object.defineProperty(global, 'fetch', { writable: true, value: fetch });
+Object.defineProperty(global, 'Request', { writable: false, value: Request });
 
-Object.defineProperty(global, 'Request', {
-  writable: false,
-  value: Request,
-});
-
-// Mock ResizeObserver
 global.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn(),
 }));
 
-// Mock console methods for cleaner test output (optional)
-// vi.spyOn(console, 'log').mockImplementation(() => {});
-// vi.spyOn(console, 'error').mockImplementation(() => {});
-// vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-// Suppress HTML output in @testing-library error messages
-// configure({
-//   getElementError: (message: string | null) => {
-//     return new Error(message ?? undefined);
-//   },
-// });
-
-// Mock localStorage
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
   return {
@@ -46,11 +22,8 @@ const localStorageMock = (() => {
   };
 })();
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
-
-// Mock sessionStorage (optional, include if used in your app)
 Object.defineProperty(window, 'sessionStorage', { value: localStorageMock });
 
-// Mock matchMedia
 const matchMediaMock = (matchesDark: boolean) =>
   ({
     matches: matchesDark,
@@ -65,14 +38,9 @@ const matchMediaMock = (matchesDark: boolean) =>
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi
-    .fn()
-    .mockImplementation((query: string) =>
-      matchMediaMock(query === '(prefers-color-scheme: dark)')
-    ),
+  value: vi.fn().mockImplementation((query: string) => matchMediaMock(query === '(prefers-color-scheme: dark)')),
 });
 
-// Polyfill PointerEvent for jsdom to support @radix-ui/react-select
 if (typeof window !== 'undefined') {
   window.PointerEvent = class PointerEvent extends Event {
     public pointerId: number;
@@ -82,7 +50,6 @@ if (typeof window !== 'undefined') {
     public pointerType: string;
     public button: number;
     public buttons: number;
-
     constructor(type: string, init?: PointerEventInit) {
       super(type, init);
       this.pointerId = init?.pointerId ?? 0;
@@ -98,22 +65,11 @@ if (typeof window !== 'undefined') {
   if (!Element.prototype.hasPointerCapture) {
     Element.prototype.hasPointerCapture = () => false;
   }
-
-  // Polyfill scrollIntoView for jsdom
   if (!Element.prototype.scrollIntoView) {
     Element.prototype.scrollIntoView = () => {};
   }
 }
 
-// MSW setup for server tests
-export const setupMSW = () => {
-  beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
-  afterEach(() => server.resetHandlers());
-  afterAll(() => server.close());
-};
-
-// Enhance console.log for clarity in tests
-// const originalConsoleLog = console.log;
-// console.log = (...args) => {
-//   originalConsoleLog('[TEST LOG]', ...args);
-// };
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' })); // Change to 'error' for stricter checking
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());

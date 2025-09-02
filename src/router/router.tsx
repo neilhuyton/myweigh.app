@@ -2,7 +2,6 @@ import { createRouter, createRootRoute } from "@tanstack/react-router";
 import Root from "../components/Root";
 import { queryClient, trpcClient } from "../client";
 import {
-  homeRoute,
   registerRoute,
   loginRoute,
   resetPasswordRoute,
@@ -26,7 +25,6 @@ const rootRoute = createRootRoute({
 
 // Create route tree
 const routeTree = rootRoute.addChildren([
-  homeRoute(rootRoute),
   registerRoute(rootRoute),
   loginRoute(rootRoute),
   resetPasswordRoute(rootRoute),
