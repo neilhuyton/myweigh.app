@@ -9,6 +9,8 @@ import { refreshTokenHandler } from "./refreshToken";
 import { resetPasswordConfirmHandler } from "./resetPasswordConfirm";
 import { resetPasswordRequestHandler } from "./resetPasswordRequest";
 import { verifyEmailHandler } from "./verifyEmail";
+import { authLogoutHandler } from "./authLogout";
+import { userUpdateEmailHandler } from "./userUpdateEmail";
 
 export const handlers = [
   verifyEmailHandler,
@@ -22,6 +24,8 @@ export const handlers = [
   refreshTokenHandler,
   resetPasswordConfirmHandler,
   resetPasswordRequestHandler,
+  authLogoutHandler,
+  userUpdateEmailHandler,
 ];
 
 export {
@@ -36,4 +40,6 @@ export {
   refreshTokenHandler,
   resetPasswordConfirmHandler,
   resetPasswordRequestHandler,
+  authLogoutHandler,
+  userUpdateEmailHandler,
 };
