@@ -13,7 +13,7 @@ export const resetPasswordRequestHandler = http.post(
     let body;
     try {
       body = await request.json();
-    } catch (error) {
+    } catch {
       return HttpResponse.json(
         {
           id: 0,

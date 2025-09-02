@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { trpc } from "../trpc";
 import { startOfWeek, startOfMonth, format } from "date-fns";
 

@@ -20,7 +20,7 @@ export const weightDeleteHandler = http.post(
     let body: unknown;
     try {
       body = await request.clone().json();
-    } catch (error) {
+    } catch {
       return HttpResponse.json(
         {
           id: 0,
