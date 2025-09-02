@@ -27,7 +27,6 @@ export const userUpdateEmailHandler = http.post(
     const token = authHeader.split(' ')[1];
     // Bypass JWT verification for test token
     if (token === 'mock-token-test-user-id') {
-      const userId = 'test-user-id';
       let body: unknown;
       try {
         body = await request.json();

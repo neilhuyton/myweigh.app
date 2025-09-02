@@ -1,0 +1,43 @@
+import { describe, it, expect, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import ProfileIcon from "../src/components/ProfileIcon";
+import "@testing-library/jest-dom";
+
+// Mock lucide-react icons
+vi.mock("lucide-react", () => ({
+  UserIcon: ({ className }: { className?: string }) => (
+    <div data-testid="user-icon" className={className} />
+  ),
+}));
+
+// Define minimal interface for Link props used in ProfileIcon
+interface MockLinkProps {
+  to: string;
+  className?: string;
+  "aria-label"?: string;
+  "data-testid"?: string;
+  children?: React.ReactNode;
+}
+
+// Mock the Link component from @tanstack/react-router
+vi.mock("@tanstack/react-router", () => ({
+  Link: ({ to, ...props }: MockLinkProps) => <a href={to} {...props} />,
+}));
+
+describe("ProfileIcon Component", () => {
+  it("renders with correct link, icon, and accessibility attributes", () => {
+    render(<ProfileIcon />);
+
+    const link = screen.getByTestId("profile-icon");
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute("href", "/profile");
+    expect(link).toHaveAttribute("aria-label", "User Profile");
+    expect(link).toHaveClass(
+      "flex items-center justify-center rounded-full p-2 bg-gray-700 dark:bg-gray-700 text-white dark:text-gray-100 hover:bg-gray-600 dark:hover:bg-gray-600 transition-colors"
+    );
+
+    const userIcon = screen.getByTestId("user-icon");
+    expect(userIcon).toBeInTheDocument();
+    expect(userIcon).toHaveClass("h-6 w-6");
+  });
+});
