@@ -1,4 +1,3 @@
-// src/components/ConfirmResetPasswordForm.tsx
 import { cn } from "@/lib/utils";
 import {
   Form,

@@ -1,4 +1,4 @@
-// src/components/GoalList.tsx
+// src/components/GoalList.tsx (unchanged)
 import { useGoalList } from "../hooks/useGoalList";
 import {
   Table,
@@ -57,7 +57,7 @@ function GoalList() {
                   index === goals.length - 1 && "rounded-b-lg"
                 )}
               >
-                <TableCell>{goal.goalWeightKg}</TableCell>
+                <TableCell>{goal.goalWeightKg.toFixed(1)}</TableCell>
                 <TableCell>{formatDate(goal.goalSetAt)}</TableCell>
                 <TableCell>
                   {goal.reachedAt ? formatDate(goal.reachedAt) : "Not Reached"}
@@ -79,7 +79,7 @@ function GoalList() {
           className="text-sm text-center text-destructive dark:text-red-400 mt-4"
           data-testid="error-message"
         >
-          Error: {error?.message}
+          Error: {error?.message || "An unexpected error occurred"}
         </p>
       )}
     </>

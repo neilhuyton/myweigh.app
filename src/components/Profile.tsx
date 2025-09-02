@@ -1,8 +1,7 @@
-// src/components/Profile.tsx
-import { Link } from "@tanstack/react-router";
-import { MailIcon, LockIcon, LogOutIcon } from "lucide-react";
-import { useProfile } from "../hooks/useProfile";
-import { LoadingSpinner } from "./LoadingSpinner";
+import { Link } from '@tanstack/react-router';
+import { MailIcon, LockIcon, LogOutIcon } from 'lucide-react';
+import { useProfile } from '../hooks/useProfile';
+import { LoadingSpinner } from './LoadingSpinner';
 
 function Profile() {
   const {
@@ -17,6 +16,17 @@ function Profile() {
     handleLogout,
   } = useProfile();
 
+  const isEmailError =
+    emailMessage &&
+    emailForm.formState.isSubmitted &&
+    !isEmailPending &&
+    emailMessage !== 'Email updated successfully';
+  const isPasswordError =
+    passwordMessage &&
+    passwordForm.formState.isSubmitted &&
+    !isPasswordPending &&
+    passwordMessage !== 'Reset link sent to your email';
+
   return (
     <div className="p-4 sm:p-6 bg-background text-foreground flex flex-col items-center overflow-auto">
       <div className="w-full max-w-md space-y-8">
@@ -30,11 +40,11 @@ function Profile() {
         >
           <h2 className="text-lg font-semibold">Change Email</h2>
           <div className="flex items-center space-x-2">
-            <MailIcon className="h-5 w-5 text-primary" />
+            <MailIcon className="h-5 w-5 text-primary" data-testid="mail-icon" />
             <input
               type="email"
               placeholder="New email address"
-              {...emailForm.register("email")}
+              {...emailForm.register('email')}
               className="flex-1 p-2 bg-background border border-input rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               aria-label="New email address"
               data-testid="email-input"
@@ -50,18 +60,10 @@ function Profile() {
               <LoadingSpinner size="md" testId="email-loading" />
             </div>
           )}
-          {emailMessage && (
+          {emailMessage && !isEmailPending && (
             <p
-              className={`text-sm ${
-                emailMessage.includes("failed")
-                  ? "text-red-500"
-                  : "text-green-500"
-              }`}
-              data-testid={
-                emailMessage.includes("failed")
-                  ? "email-error"
-                  : "email-success"
-              }
+              className={`text-sm ${isEmailError ? 'text-red-500' : 'text-green-500'}`}
+              data-testid={isEmailError ? 'email-error' : 'email-success'}
             >
               {emailMessage}
             </p>
@@ -72,7 +74,7 @@ function Profile() {
             disabled={isEmailPending}
             data-testid="email-submit"
           >
-            {isEmailPending ? "Updating..." : "Update Email"}
+            {isEmailPending ? 'Updating...' : 'Update Email'}
           </button>
         </form>
 
@@ -84,11 +86,11 @@ function Profile() {
         >
           <h2 className="text-lg font-semibold">Change Password</h2>
           <div className="flex items-center space-x-2">
-            <LockIcon className="h-5 w-5 text-primary" />
+            <LockIcon className="h-5 w-5 text-primary" data-testid="lock-icon" />
             <input
               type="email"
               placeholder="Enter your email to reset password"
-              {...passwordForm.register("email")}
+              {...passwordForm.register('email')}
               className="flex-1 p-2 bg-background border border-input rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               aria-label="Email for password reset"
               data-testid="password-input"
@@ -104,18 +106,10 @@ function Profile() {
               <LoadingSpinner size="md" testId="password-loading" />
             </div>
           )}
-          {passwordMessage && (
+          {passwordMessage && !isPasswordPending && (
             <p
-              className={`text-sm ${
-                passwordMessage.includes("failed")
-                  ? "text-red-500"
-                  : "text-green-500"
-              }`}
-              data-testid={
-                passwordMessage.includes("failed")
-                  ? "password-error"
-                  : "password-success"
-              }
+              className={`text-sm ${isPasswordError ? 'text-red-500' : 'text-green-500'}`}
+              data-testid={isPasswordError ? 'password-error' : 'password-success'}
             >
               {passwordMessage}
             </p>
@@ -126,7 +120,7 @@ function Profile() {
             disabled={isPasswordPending}
             data-testid="password-submit"
           >
-            {isPasswordPending ? "Sending..." : "Send Reset Link"}
+            {isPasswordPending ? 'Sending...' : 'Send Reset Link'}
           </button>
         </form>
 
@@ -135,6 +129,7 @@ function Profile() {
             to="/weight"
             className="text-primary hover:underline"
             aria-label="Back to Home"
+            data-testid="back-to-weight-link"
           >
             Back to Weight
           </Link>
@@ -143,7 +138,7 @@ function Profile() {
             className="flex items-center p-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/80 transition-colors"
             data-testid="logout-button"
           >
-            <LogOutIcon className="h-5 w-5 mr-2" />
+            <LogOutIcon className="h-5 w-5 mr-2" data-testid="logout-icon" />
             Logout
           </button>
         </div>

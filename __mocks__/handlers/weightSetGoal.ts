@@ -1,6 +1,5 @@
 import { http, HttpResponse } from "msw";
 import jwt from "jsonwebtoken";
-import type { DefaultBodyType } from "msw";
 
 interface TRPCRequestBody {
   id?: number;
@@ -10,25 +9,23 @@ interface TRPCRequestBody {
 export const weightSetGoalHandler = http.post(
   "http://localhost:8888/.netlify/functions/trpc/weight.setGoal",
   async ({ request }) => {
-    let body: DefaultBodyType;
+    let body;
     try {
       body = await request.json();
     } catch {
       return HttpResponse.json(
-        [
-          {
-            id: 0,
-            error: {
-              message: "Invalid request body",
-              code: -32600,
-              data: {
-                code: "BAD_REQUEST",
-                httpStatus: 400,
-                path: "weight.setGoal",
-              },
+        {
+          id: 0,
+          error: {
+            message: "Invalid request body",
+            code: -32600,
+            data: {
+              code: "BAD_REQUEST",
+              httpStatus: 400,
+              path: "weight.setGoal",
             },
           },
-        ],
+        },
         { status: 400 }
       );
     }
@@ -36,20 +33,18 @@ export const weightSetGoalHandler = http.post(
     const authHeader = request.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return HttpResponse.json(
-        [
-          {
-            id: 0,
-            error: {
-              message: "Unauthorized: User must be logged in",
-              code: -32001,
-              data: {
-                code: "UNAUTHORIZED",
-                httpStatus: 401,
-                path: "weight.setGoal",
-              },
+        {
+          id: 0,
+          error: {
+            message: "Unauthorized: User must be logged in",
+            code: -32001,
+            data: {
+              code: "UNAUTHORIZED",
+              httpStatus: 401,
+              path: "weight.setGoal",
             },
           },
-        ],
+        },
         { status: 401 }
       );
     }
@@ -59,29 +54,27 @@ export const weightSetGoalHandler = http.post(
       jwt.verify(token, process.env.JWT_SECRET || "your-secret-key");
     } catch {
       return HttpResponse.json(
-        [
-          {
-            id: 0,
-            error: {
-              message: "Invalid token",
-              code: -32001,
-              data: {
-                code: "UNAUTHORIZED",
-                httpStatus: 401,
-                path: "weight.setGoal",
-              },
+        {
+          id: 0,
+          error: {
+            message: "Invalid token",
+            code: -32001,
+            data: {
+              code: "UNAUTHORIZED",
+              httpStatus: 401,
+              path: "weight.setGoal",
             },
           },
-        ],
-        { status: 200 }
+        },
+        { status: 401 }
       );
     }
 
     let input: { goalWeightKg?: number } | undefined;
     let id: number = 0;
     if (Array.isArray(body)) {
-      input = (body[0] as TRPCRequestBody)?.input;
-      id = (body[0] as TRPCRequestBody)?.id ?? 0;
+      input = body[0]?.input;
+      id = body[0]?.id ?? 0;
     } else if (body && typeof body === "object" && "input" in body) {
       input = (body as TRPCRequestBody).input;
       id = (body as TRPCRequestBody).id ?? 0;
@@ -91,25 +84,23 @@ export const weightSetGoalHandler = http.post(
 
     if (!goalWeightKg || goalWeightKg <= 0) {
       return HttpResponse.json(
-        [
-          {
-            id,
-            error: {
-              message: "Goal weight must be a positive number",
-              code: -32001,
-              data: {
-                code: "BAD_REQUEST",
-                httpStatus: 400,
-                path: "weight.setGoal",
-              },
+        {
+          id,
+          error: {
+            message: "Goal weight must be a positive number",
+            code: -32001,
+            data: {
+              code: "BAD_REQUEST",
+              httpStatus: 400,
+              path: "weight.setGoal",
             },
           },
-        ],
+        },
         { status: 400 }
       );
     }
 
-    return HttpResponse.json([
+    return HttpResponse.json(
       {
         id,
         result: {
@@ -117,6 +108,7 @@ export const weightSetGoalHandler = http.post(
           data: { id: "2", goalWeightKg, goalSetAt: new Date().toISOString() },
         },
       },
-    ]);
+      { status: 200 }
+    );
   }
 );

@@ -1,3 +1,4 @@
+// netlify/functions/trpc.ts
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import type { HandlerEvent, HandlerResponse } from '@netlify/functions';
 import { appRouter } from '../../server/trpc';
@@ -10,6 +11,7 @@ export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => 
   const queryString = event.queryStringParameters
     ? new URLSearchParams(event.queryStringParameters as Record<string, string>).toString()
     : '';
+  // Preserve the procedure path (e.g., /trpc/weight.getWeights)
   const path = event.path.replace('/.netlify/functions/trpc', '/trpc');
   const url = `https://${event.headers.host || 'localhost:8888'}${path}${queryString ? `?${queryString}` : ''}`;
 
@@ -30,11 +32,7 @@ export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => 
   };
 
   if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 204,
-      headers: corsHeaders,
-      body: '',
-    };
+    return { statusCode: 204, headers: corsHeaders, body: '' };
   }
 
   try {
@@ -49,18 +47,12 @@ export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => 
       req: request,
       router: appRouter,
       createContext: () => createContext({ req: { headers } as IncomingMessage }),
-      batching: {
-        enabled: true,
-      },
+      batching: { enabled: false },
       allowMethodOverride: true,
-      responseMeta: () => ({
-        headers: corsHeaders,
-        status: 200,
-      }),
+      responseMeta: () => ({ headers: corsHeaders, status: 200 }),
     });
 
     const responseBody = await response.text();
-
     return {
       statusCode: response.status,
       headers: { ...Object.fromEntries(response.headers), ...corsHeaders },
@@ -76,7 +68,7 @@ export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => 
     return {
       statusCode,
       headers: { 'content-type': 'application/json', ...corsHeaders },
-      body: JSON.stringify([{
+      body: JSON.stringify({
         error: {
           message: trpcError.message,
           code: trpcError.code,
@@ -84,10 +76,10 @@ export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => 
             code: trpcError.code,
             httpStatus: statusCode,
             stack: trpcError.stack,
-            path: path.split('/trpc/')[1]?.split('?')[0],
+            path: path.split('/trpc/')[1]?.split('?')[0] || 'unknown',
           },
         },
-      }]),
+      }),
     };
   }
 };

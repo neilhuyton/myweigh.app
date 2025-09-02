@@ -3,18 +3,23 @@ import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { httpBatchLink } from "@trpc/client";
+import { httpLink } from "@trpc/client";
 import { trpc } from "../src/trpc";
 import "@testing-library/jest-dom";
+import { act } from "@testing-library/react";
 import { server } from "../__mocks__/server";
-import {
-  RouterProvider,
-  createRouter,
-  createMemoryHistory,
-} from "@tanstack/react-router";
-import { router } from "../src/router/router";
-import { act } from "react-dom/test-utils";
-import { resetPasswordConfirmHandler } from "../__mocks__/handlers/resetPasswordConfirm"; // Import the external handler
+import { resetPasswordConfirmHandler } from "../__mocks__/handlers/resetPasswordConfirm";
+import ConfirmResetPasswordForm from "../src/components/ConfirmResetPasswordForm";
+import { RouterProvider, createRouter, createMemoryHistory, createRootRoute, createRoute, useSearch } from "@tanstack/react-router";
+
+// Mock useSearch from @tanstack/react-router
+vi.mock("@tanstack/react-router", async () => {
+  const actual = await vi.importActual("@tanstack/react-router");
+  return {
+    ...actual,
+    useSearch: vi.fn(),
+  };
+});
 
 describe("ConfirmResetPasswordForm Component", () => {
   const queryClient = new QueryClient({
@@ -26,26 +31,41 @@ describe("ConfirmResetPasswordForm Component", () => {
 
   const trpcClient = trpc.createClient({
     links: [
-      httpBatchLink({
+      httpLink({
         url: "http://localhost:8888/.netlify/functions/trpc",
-        fetch: async (input, options) =>
-          fetch(input, { ...options }),
+        headers: () => ({
+          "content-type": "application/json",
+        }),
       }),
     ],
   });
 
-  const setup = (initialPath = "/confirm-reset-password", search = {}) => {
-    const queryString = new URLSearchParams(search).toString();
-    const initialEntry = queryString
-      ? `${initialPath}?${queryString}`
-      : initialPath;
-    const history = createMemoryHistory({ initialEntries: [initialEntry] });
-    const testRouter = createRouter({ routeTree: router.routeTree, history });
+  const setup = async (token: string = "123e4567-e89b-12d3-a456-426614174000", initialPath = "/confirm-password-reset") => {
+    vi.mocked(useSearch).mockReturnValue({ token });
 
-    // Mock router.navigate
-    vi.spyOn(testRouter, "navigate").mockImplementation(async () => {});
+    const rootRoute = createRootRoute({
+      component: () => <ConfirmResetPasswordForm />,
+    });
 
-    act(() => {
+    const confirmResetPasswordRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: "/confirm-password-reset",
+    });
+
+    const loginRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: "/login",
+    });
+
+    const routeTree = rootRoute.addChildren([confirmResetPasswordRoute, loginRoute]);
+
+    const history = createMemoryHistory({ initialEntries: [initialPath] });
+    const testRouter = createRouter({
+      routeTree,
+      history,
+    });
+
+    await act(async () => {
       render(
         <trpc.Provider client={trpcClient} queryClient={queryClient}>
           <QueryClientProvider client={queryClient}>
@@ -54,65 +74,88 @@ describe("ConfirmResetPasswordForm Component", () => {
         </trpc.Provider>
       );
     });
+
     return { history, testRouter };
   };
 
   beforeAll(() => {
     server.listen({ onUnhandledRequest: "warn" });
-    server.use(resetPasswordConfirmHandler); // Use the external handler
-    process.on("unhandledRejection", (reason) => {
-      if (
-        reason instanceof Error &&
-        (reason.message.includes("Token and new password are required") ||
-          reason.message.includes("Invalid or expired token"))
-      ) {
-        return;
-      }
-      throw reason;
-    });
+    // Suppress expected tRPC errors
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  beforeEach(() => {
+    server.use(resetPasswordConfirmHandler);
   });
 
   afterEach(() => {
     server.resetHandlers();
     queryClient.clear();
     vi.clearAllMocks();
+    document.body.innerHTML = "";
   });
 
   afterAll(() => {
     server.close();
-    process.removeAllListeners("unhandledRejection");
+    vi.restoreAllMocks();
   });
 
   it("submits valid token and new password and displays success message", async () => {
-    setup("/confirm-reset-password", {
-      token: "123e4567-e89b-12d3-a456-426614174000",
-    });
+    await setup();
 
-    await waitFor(() => {
-      expect(
-        screen.getByTestId("confirm-reset-password-form")
-      ).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("confirm-reset-password-form")).toBeInTheDocument();
+      },
+      { timeout: 2000, interval: 100 }
+    );
 
     await act(async () => {
       const passwordInput = screen.getByTestId("password-input");
+      await userEvent.clear(passwordInput);
       await userEvent.type(passwordInput, "newSecurePassword123", { delay: 10 });
+      expect(passwordInput).toHaveValue("newSecurePassword123");
       const form = screen.getByTestId("confirm-reset-password-form");
-      await form.dispatchEvent(
-        new Event("submit", { bubbles: true, cancelable: true })
-      );
+      await form.dispatchEvent(new Event("submit", { bubbles: true }));
     });
 
     await waitFor(
       () => {
-        expect(
-          screen.getByTestId("confirm-reset-password-message")
-        ).toHaveTextContent("Password reset successfully");
-        expect(
-          screen.getByTestId("confirm-reset-password-message")
-        ).toHaveClass("text-green-500");
+        expect(screen.getByTestId("confirm-reset-password-message")).toHaveTextContent("Password reset successfully");
+        expect(screen.getByTestId("confirm-reset-password-message")).toHaveClass("text-green-500");
+        expect(screen.getByTestId("password-input")).toHaveValue(""); // Verify input is cleared
       },
-      { timeout: 2000 }
+      { timeout: 2000, interval: 100 }
+    );
+  });
+
+  it("displays error message for invalid token", async () => {
+    await setup("invalid-token");
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("confirm-reset-password-form")).toBeInTheDocument();
+      },
+      { timeout: 2000, interval: 100 }
+    );
+
+    await act(async () => {
+      const passwordInput = screen.getByTestId("password-input");
+      await userEvent.clear(passwordInput);
+      await userEvent.type(passwordInput, "newSecurePassword123", { delay: 10 });
+      expect(passwordInput).toHaveValue("newSecurePassword123");
+      const form = screen.getByTestId("confirm-reset-password-form");
+      await form.dispatchEvent(new Event("submit", { bubbles: true }));
+    });
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("confirm-reset-password-message")).toHaveTextContent(
+          "Failed to reset password: Invalid or expired token"
+        );
+        expect(screen.getByTestId("confirm-reset-password-message")).toHaveClass("text-red-500");
+      },
+      { timeout: 2000, interval: 100 }
     );
   });
 });

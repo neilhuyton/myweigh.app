@@ -56,7 +56,11 @@ function WeightGoal() {
             )}
           </p>
         )}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-6"
+          data-testid="goal-weight-form" // Added test ID
+        >
           <div className="space-y-2">
             <Label
               htmlFor="goalWeight"

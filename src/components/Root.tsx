@@ -7,7 +7,7 @@ import { ThemeProvider } from "./ThemeProvider";
 import Navigation from "./Navigation";
 import ProfileIcon from "./ProfileIcon";
 import { ThemeToggle } from "./ThemeToggle";
-import { InstallPrompt } from "./InstallPrompt";
+// import { InstallPrompt } from "./InstallPrompt";
 import type { TRPCClient } from "@trpc/client";
 import type { AppRouter } from "../../server/trpc";
 
@@ -48,10 +48,10 @@ function Root({
                 <ProfileIcon />
               </header>
             )}
-            <InstallPrompt
+            {/* <InstallPrompt
               isLoggedIn={isLoggedIn}
               isPublicRoute={isPublicRoute}
-            />
+            /> */}
             <main
               className={
                 isLoggedIn && !isPublicRoute
