@@ -104,11 +104,20 @@ describe("WeightGoal Component", () => {
       () => {
         expect(screen.queryByTestId("weight-goal-loading")).not.toBeInTheDocument();
         expect(screen.getByRole("heading", { name: "Your Goals" })).toBeInTheDocument();
-        expect(screen.getByText(/Current Goal.*65 kg/i)).toBeInTheDocument();
+        expect(screen.getByTestId("current-goal-heading")).toBeInTheDocument();
+        expect(screen.getByTestId("current-goal")).toHaveTextContent(/65 kg.*28\/08\/2025/i);
+        expect(screen.getByTestId("goal-weight-form")).toBeInTheDocument();
         expect(screen.getByTestId("goal-weight-input")).toBeInTheDocument();
         expect(screen.getByTestId("submit-button")).toBeInTheDocument();
         expect(screen.getByTestId("goal-list")).toBeInTheDocument();
         expect(screen.queryByTestId("error-message")).not.toBeInTheDocument();
+
+        // Verify Card containers
+        const formCard = screen.getByTestId("goal-weight-form").closest("div");
+        expect(formCard).toHaveClass("mx-auto max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm");
+        const currentGoalCard = screen.getByTestId("current-goal").closest("div");
+        expect(currentGoalCard).toHaveClass("mx-auto max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm");
+        expect(formCard).not.toEqual(currentGoalCard); // Ensure they are different containers
       },
       { timeout: 2000, interval: 100 }
     );
@@ -120,7 +129,8 @@ describe("WeightGoal Component", () => {
     await waitFor(
       () => {
         expect(screen.queryByTestId("weight-goal-loading")).not.toBeInTheDocument();
-        expect(screen.getByText(/Current Goal.*65 kg/i)).toBeInTheDocument();
+        expect(screen.getByTestId("current-goal")).toHaveTextContent(/65 kg.*28\/08\/2025/i);
+        expect(screen.getByTestId("goal-weight-form")).toBeInTheDocument();
         expect(screen.getByTestId("goal-weight-input")).toBeInTheDocument();
         expect(screen.getByTestId("submit-button")).toBeInTheDocument();
       },

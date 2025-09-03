@@ -1,4 +1,3 @@
-// src/components/WeightGoal.tsx
 import { useWeightGoal } from "../hooks/useWeightGoal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,68 +46,79 @@ function WeightGoal() {
             Error loading goal: {error.message}
           </p>
         )}
-        {currentGoal && (
-          <p className="text-center text-sm font-medium text-foreground mb-6">
-            Current Goal: {currentGoal.goalWeightKg} kg (Set on{" "}
+        <form onSubmit={handleSubmit} data-testid="goal-weight-form">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label
+                htmlFor="goalWeight"
+                className="text-sm font-medium text-foreground"
+                data-testid="goal-weight-label"
+              >
+                Goal Weight (kg)
+              </Label>
+              <Input
+                id="goalWeight"
+                type="number"
+                value={goalWeight}
+                onChange={handleGoalWeightChange}
+                placeholder="Enter your goal weight (kg)"
+                required
+                min="0"
+                step="0.1"
+                disabled={isSettingGoal}
+                data-testid="goal-weight-input"
+                aria-describedby="goal-weight-error"
+                className="h-10 rounded-md border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              />
+            </div>
+            {message && (
+              <p
+                className={cn(
+                  "text-center text-sm font-medium",
+                  message.toLowerCase().includes("success")
+                    ? "text-success"
+                    : "text-destructive"
+                )}
+                id="goal-weight-error"
+                data-testid="goal-message"
+                role="alert"
+              >
+                {message}
+              </p>
+            )}
+            <Button
+              type="submit"
+              disabled={isSettingGoal}
+              className="w-full h-10 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring"
+              data-testid="submit-button"
+            >
+              {isSettingGoal ? "Setting Goal..." : "Set Goal"}
+            </Button>
+          </div>
+        </form>
+      </div>
+      {currentGoal && (
+        <div className="mx-auto max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm">
+          <h2
+            className="text-xl font-bold text-foreground mb-4"
+            role="heading"
+            aria-level={2}
+            data-testid="current-goal-heading"
+          >
+            Current Goal
+          </h2>
+          <p
+            className="text-center text-sm font-medium text-foreground"
+            data-testid="current-goal"
+          >
+            {currentGoal.goalWeightKg} kg (Set on{" "}
             {new Date(currentGoal.goalSetAt).toLocaleDateString("en-GB")})
             {isGoalAchieved && (
               <span className="text-success"> - Goal achieved!</span>
             )}
           </p>
-        )}
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-6"
-          data-testid="goal-weight-form" // Added test ID
-        >
-          <div className="space-y-2">
-            <Label
-              htmlFor="goalWeight"
-              className="text-sm font-medium text-foreground"
-              data-testid="goal-weight-label"
-            >
-              Goal Weight (kg)
-            </Label>
-            <Input
-              id="goalWeight"
-              type="number"
-              value={goalWeight}
-              onChange={handleGoalWeightChange}
-              placeholder="Enter your goal weight (kg)"
-              required
-              min="0"
-              step="0.1"
-              disabled={isSettingGoal}
-              data-testid="goal-weight-input"
-              aria-describedby="goal-weight-error"
-              className="h-10 rounded-md border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
-            />
-          </div>
-          <Button
-            type="submit"
-            disabled={isSettingGoal}
-            className="w-full h-10 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring"
-            data-testid="submit-button"
-          >
-            {isSettingGoal ? "Setting Goal..." : "Set Goal"}
-          </Button>
-        </form>
-        {message && (
-          <p
-            className={cn(
-              "text-center text-sm font-medium mt-6",
-              message.toLowerCase().includes("success")
-                ? "text-success"
-                : "text-destructive"
-            )}
-            id="goal-weight-error"
-            data-testid="goal-message"
-            role="alert"
-          >
-            {message}
-          </p>
-        )}
-      </div>
+        </div>
+      )}
       <div className="mx-auto max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm">
         <GoalList />
       </div>
