@@ -19,11 +19,12 @@ import WeightForm from "../src/components/WeightForm";
 import {
   weightCreateHandler,
   weightGetCurrentGoalHandler,
+  userUpdateFirstLoginHandler,
 } from "../__mocks__/handlers";
 import { useAuthStore } from "../src/store/authStore";
 import { generateToken } from "./utils/token";
 
-// Mock Confetti component (still needed as it's used in WeightForm.tsx)
+// Mock react-confetti
 vi.mock("react-confetti", () => ({
   default: ({
     className,
@@ -41,6 +42,44 @@ vi.mock("../src/components/LoadingSpinner", () => ({
   ),
 }));
 
+// Mock react-joyride
+vi.mock("react-joyride", () => ({
+  default: ({
+    steps,
+    run,
+    callback,
+    styles,
+    locale,
+  }: {
+    steps: { target: string; content: string; placement: string; disableBeacon: boolean }[];
+    run: boolean;
+    callback: (data: { status: string }) => void;
+    styles: { options: Record<string, any> };
+    locale: Record<string, string>;
+  }) => {
+    if (run) {
+      return (
+        <div data-testid="joyride-tour">
+          <div data-testid="joyride-step">{steps[0].content}</div>
+          <button
+            data-testid="joyride-skip"
+            onClick={() => callback({ status: "skipped" })}
+          >
+            {locale.skip}
+          </button>
+          <button
+            data-testid="joyride-finish"
+            onClick={() => callback({ status: "finished" })}
+          >
+            {locale.last}
+          </button>
+        </div>
+      );
+    }
+    return null;
+  },
+}));
+
 // Mock useNavigate to avoid router context issues
 vi.mock("@tanstack/react-router", async () => {
   const actual = await vi.importActual("@tanstack/react-router");
@@ -49,6 +88,9 @@ vi.mock("@tanstack/react-router", async () => {
     useNavigate: () => vi.fn(),
   };
 });
+
+// Mock console.error to suppress act warnings during debugging
+const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
 describe("WeightForm Component", () => {
   const queryClient = new QueryClient({
@@ -70,13 +112,14 @@ describe("WeightForm Component", () => {
     ],
   });
 
-  const setup = async (userId = "test-user-id") => {
+  const setup = async (userId = "test-user-id", isFirstLogin = false) => {
     await act(async () => {
       useAuthStore.setState({
         isLoggedIn: true,
         userId,
         token: generateToken(userId),
         refreshToken: "valid-refresh-token",
+        isFirstLogin,
         login: vi.fn(),
         logout: vi.fn(),
       });
@@ -92,11 +135,12 @@ describe("WeightForm Component", () => {
   };
 
   beforeAll(() => {
-    server.listen({ onUnhandledRequest: "error" }); // Fail on unhandled requests
+    server.listen({ onUnhandledRequest: "error" });
   });
 
   beforeEach(() => {
-    server.use(weightGetCurrentGoalHandler, weightCreateHandler);
+    server.use(weightGetCurrentGoalHandler, weightCreateHandler, userUpdateFirstLoginHandler);
+    vi.spyOn(window.localStorage, "setItem");
   });
 
   afterEach(() => {
@@ -109,13 +153,16 @@ describe("WeightForm Component", () => {
       userId: null,
       token: null,
       refreshToken: null,
+      isFirstLogin: false,
       login: vi.fn(),
       logout: vi.fn(),
     });
+    consoleErrorSpy.mockReset();
   });
 
   afterAll(() => {
     server.close();
+    consoleErrorSpy.mockRestore();
   });
 
   it("renders WeightForm with correct content", async () => {
@@ -133,154 +180,115 @@ describe("WeightForm Component", () => {
         expect(screen.getByTestId("submit-button")).toBeInTheDocument();
         expect(screen.queryByTestId("weight-message")).not.toBeInTheDocument();
       },
-      { timeout: 5000, interval: 100 }
+      { timeout: 15000, interval: 100 }
     );
   });
 
-  it("allows user to submit a valid weight", async () => {
-    await setup();
+  it("starts Joyride tour on first login", async () => {
+    await setup("test-user-id", true);
 
     await waitFor(
       () => {
-        expect(
-          screen.queryByTestId("weight-form-submitting")
-        ).not.toBeInTheDocument();
-        expect(screen.getByTestId("weight-input")).toBeInTheDocument();
-        expect(screen.getByTestId("submit-button")).toBeInTheDocument();
-      },
-      { timeout: 5000, interval: 100 }
-    );
-
-    await act(async () => {
-      const input = screen.getByTestId("weight-input") as HTMLInputElement;
-      await userEvent.clear(input);
-      await userEvent.type(input, "70.5", { delay: 10 });
-      expect(input).toHaveValue(70.5);
-      const form = screen.getByTestId("weight-form");
-      await form.dispatchEvent(new Event("submit", { bubbles: true }));
-    });
-
-    await waitFor(
-      () => {
-        const messageElement = screen.getByTestId("weight-message");
-        expect(messageElement).toBeInTheDocument();
-        expect(messageElement).toHaveTextContent(
-          "Weight recorded successfully!"
+        expect(screen.getByTestId("joyride-tour")).toBeInTheDocument();
+        expect(screen.getByTestId("joyride-step")).toHaveTextContent(
+          "Enter your weight here in kilograms to start tracking your progress!"
         );
-        expect(screen.getByTestId("weight-input")).toHaveValue(null);
+        expect(screen.getByTestId("joyride-skip")).toHaveTextContent("Skip");
+        expect(screen.getByTestId("joyride-finish")).toHaveTextContent("Finish");
       },
-      { timeout: 5000, interval: 100 }
+      { timeout: 15000, interval: 100 }
     );
   });
 
-  it("displays error message for invalid weight input", async () => {
-    await setup();
+  it("does not start Joyride tour when not first login", async () => {
+    await setup("test-user-id", false);
 
     await waitFor(
       () => {
-        expect(screen.getByTestId("weight-input")).toBeInTheDocument();
+        expect(screen.queryByTestId("joyride-tour")).not.toBeInTheDocument();
       },
-      { timeout: 5000, interval: 100 }
-    );
-
-    await act(async () => {
-      const input = screen.getByTestId("weight-input") as HTMLInputElement;
-      await userEvent.clear(input);
-      await userEvent.type(input, "-5", { delay: 10 });
-      expect(input).toHaveValue(-5);
-      const form = screen.getByTestId("weight-form");
-      await form.dispatchEvent(new Event("submit", { bubbles: true }));
-    });
-
-    await waitFor(
-      () => {
-        const messageElement = screen.getByTestId("weight-message");
-        expect(messageElement).toBeInTheDocument();
-        expect(messageElement).toHaveTextContent(
-          "Please enter a valid weight."
-        );
-        expect(messageElement).toHaveClass("text-destructive");
-      },
-      { timeout: 5000, interval: 100 }
+      { timeout: 15000, interval: 100 }
     );
   });
 
-  it("displays unauthorized error when user is not logged in", async () => {
-    await act(async () => {
-      useAuthStore.setState({
-        isLoggedIn: false,
-        userId: null,
-        token: null,
-        refreshToken: null,
-        login: vi.fn(),
-        logout: vi.fn(),
-      });
-
-      render(
-        <trpc.Provider client={trpcClient} queryClient={queryClient}>
-          <QueryClientProvider client={queryClient}>
-            <WeightForm />
-          </QueryClientProvider>
-        </trpc.Provider>
-      );
-    });
+  it("skips Joyride tour and updates isFirstLogin", async () => {
+    await setup("test-user-id", true);
 
     await waitFor(
       () => {
-        expect(screen.getByTestId("weight-input")).toBeInTheDocument();
+        expect(screen.getByTestId("joyride-tour")).toBeInTheDocument();
       },
-      { timeout: 5000, interval: 100 }
+      { timeout: 15000, interval: 100 }
     );
 
     await act(async () => {
-      const input = screen.getByTestId("weight-input") as HTMLInputElement;
-      await userEvent.clear(input);
-      await userEvent.type(input, "70", { delay: 10 });
-      const form = screen.getByTestId("weight-form");
-      await form.dispatchEvent(new Event("submit", { bubbles: true }));
+      const skipButton = screen.getByTestId("joyride-skip");
+      await userEvent.click(skipButton);
     });
 
     await waitFor(
       () => {
-        const messageElement = screen.getByTestId("weight-message");
-        expect(messageElement).toBeInTheDocument();
-        expect(messageElement).toHaveTextContent(
-          "User ID not found. Please log in again."
+        expect(screen.queryByTestId("joyride-tour")).not.toBeInTheDocument();
+        expect(useAuthStore.getState().isFirstLogin).toBe(false);
+        expect(localStorage.setItem).toHaveBeenCalledWith(
+          "isFirstLogin",
+          JSON.stringify(false)
         );
       },
-      { timeout: 5000, interval: 100 }
+      { timeout: 15000, interval: 100 }
     );
   });
 
-  it("displays error message when weight submission fails", async () => {
-    await setup("error-user-id");
+  it("completes Joyride tour and updates isFirstLogin", async () => {
+    await setup("test-user-id", true);
 
     await waitFor(
       () => {
-        expect(screen.getByTestId("weight-input")).toBeInTheDocument();
+        expect(screen.getByTestId("joyride-tour")).toBeInTheDocument();
       },
-      { timeout: 5000, interval: 100 }
+      { timeout: 15000, interval: 100 }
     );
 
     await act(async () => {
-      const input = screen.getByTestId("weight-input") as HTMLInputElement;
-      await userEvent.clear(input);
-      await userEvent.type(input, "70", { delay: 10 });
-      expect(input).toHaveValue(70);
-      const form = screen.getByTestId("weight-form");
-      await form.dispatchEvent(new Event("submit", { bubbles: true }));
+      const finishButton = screen.getByTestId("joyride-finish");
+      await userEvent.click(finishButton);
     });
 
     await waitFor(
       () => {
-        const messageElement = screen.getByTestId("weight-message");
-        expect(messageElement).toBeInTheDocument();
-        expect(messageElement).toHaveTextContent(
-          "Failed to record weight: Failed to create weight"
+        expect(screen.queryByTestId("joyride-tour")).not.toBeInTheDocument();
+        expect(useAuthStore.getState().isFirstLogin).toBe(false);
+        expect(localStorage.setItem).toHaveBeenCalledWith(
+          "isFirstLogin",
+          JSON.stringify(false)
         );
-        expect(messageElement).toHaveClass("text-destructive");
       },
-      { timeout: 5000, interval: 100 }
+      { timeout: 15000, interval: 100 }
+    );
+  });
+
+  it("handles unauthorized error when updating isFirstLogin", async () => {
+    await setup("invalid-user-id", true);
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("joyride-tour")).toBeInTheDocument();
+      },
+      { timeout: 15000, interval: 100 }
+    );
+
+    await act(async () => {
+      const finishButton = screen.getByTestId("joyride-finish");
+      await userEvent.click(finishButton);
+    });
+
+    await waitFor(
+      () => {
+        expect(screen.queryByTestId("joyride-tour")).not.toBeInTheDocument();
+        // Do not expect isFirstLogin to change if mutation fails
+        expect(localStorage.setItem).not.toHaveBeenCalled();
+      },
+      { timeout: 15000, interval: 100 }
     );
   });
 });

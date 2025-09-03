@@ -29,15 +29,16 @@ export const registerRouter = t.router({
 
       const hashedPassword = await bcrypt.hash(password, 10);
       const verificationToken = crypto.randomUUID();
-      const refreshToken = crypto.randomUUID(); // Generate refresh token
+      const refreshToken = crypto.randomUUID();
 
       const user = await ctx.prisma.user.create({
         data: {
           email,
           password: hashedPassword,
           verificationToken,
-          refreshToken, // Store refresh token
+          refreshToken,
           isEmailVerified: false,
+          isFirstLogin: true, // Set isFirstLogin to true for new users
         },
       });
 
@@ -46,7 +47,6 @@ export const registerRouter = t.router({
         throw new Error('Failed to send verification email');
       }
 
-      // Generate JWT access token
       const token = jwt.sign(
         { userId: user.id, email: user.email },
         process.env.JWT_SECRET || 'your-secret-key',
@@ -57,7 +57,8 @@ export const registerRouter = t.router({
         id: user.id,
         email: user.email,
         token,
-        refreshToken, // Return refresh token
+        refreshToken,
+        isFirstLogin: user.isFirstLogin, // Include isFirstLogin
         message: 'Registration successful! Please check your email to verify your account.',
       };
     }),

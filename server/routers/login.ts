@@ -3,7 +3,7 @@ import { t } from "../trpc-base";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import crypto from "crypto"; // Add crypto for refresh token
+import crypto from "crypto";
 
 export const loginRouter = t.router({
   login: t.procedure
@@ -23,7 +23,7 @@ export const loginRouter = t.router({
       });
 
       if (!user) {
-        throw new Error("Invalid email or password!!!");
+        throw new Error("Invalid email or password");
       }
 
       if (!user.isEmailVerified) {
@@ -49,6 +49,12 @@ export const loginRouter = t.router({
         data: { refreshToken },
       });
 
-      return { id: user.id, email: user.email, token, refreshToken };
+      return {
+        id: user.id,
+        email: user.email,
+        token,
+        refreshToken,
+        isFirstLogin: user.isFirstLogin, // Include isFirstLogin
+      };
     }),
 });
