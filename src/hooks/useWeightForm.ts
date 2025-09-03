@@ -1,4 +1,3 @@
-// src/hooks/useWeightForm.ts
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { trpc } from "../trpc";
@@ -19,7 +18,8 @@ export function useWeightForm() {
   const [message, setMessage] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
-  const [runTour, setRunTour] = useState(isFirstLogin); // Start tour if first login
+  const [runTour, setRunTour] = useState(isFirstLogin); // First login tour
+  const [runGoalTour, setRunGoalTour] = useState(false); // Goal-setting tour
 
   const { data: currentGoal } = trpc.weight.getCurrentGoal.useQuery(undefined, {
     enabled: !!userId,
@@ -43,6 +43,8 @@ export function useWeightForm() {
           setTimeout(() => setFadeOut(true), 6000);
           setTimeout(() => setShowConfetti(false), 7000);
         }
+      } else if (!currentGoal) {
+        setRunGoalTour(true);
       }
       queryClient.weight.getWeights.invalidate();
       queryClient.weight.getCurrentGoal.invalidate();
@@ -61,7 +63,7 @@ export function useWeightForm() {
   const updateFirstLogin = trpc.user.updateFirstLogin.useMutation({
     onSuccess: () => {
       useAuthStore.setState({ isFirstLogin: false });
-      localStorage.setItem('isFirstLogin', JSON.stringify(false));
+      localStorage.setItem("isFirstLogin", JSON.stringify(false));
     },
   });
 
@@ -103,6 +105,13 @@ export function useWeightForm() {
     }
   };
 
+  const handleGoalTourCallback = (data: { status: string }) => {
+    if (data.status === "finished") {
+      setRunGoalTour(false);
+      navigate({ to: "/goals" });
+    }
+  };
+
   return {
     weight,
     note,
@@ -111,9 +120,11 @@ export function useWeightForm() {
     showConfetti,
     fadeOut,
     runTour,
+    runGoalTour,
     handleSubmit,
     handleWeightChange,
     handleNoteChange,
     handleTourCallback,
+    handleGoalTourCallback,
   };
 }
