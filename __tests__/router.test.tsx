@@ -5,6 +5,7 @@ import { useAuthStore } from "../src/store/authStore";
 import { checkAuth } from "../src/router/routes";
 import { act } from "@testing-library/react";
 import { server } from "../__mocks__/server";
+import { router } from "../src/router/router"; // Import the router to infer its type
 
 // Mock jwt-decode
 vi.mock("jwt-decode", () => ({
@@ -24,7 +25,7 @@ vi.mock("jwt-decode", () => ({
 
 // Define the mock structure for router
 interface RouterMock {
-  router: {};
+  router: Partial<typeof router>; // Use Partial<typeof router> for type safety
   indexRoute: {
     options: {
       beforeLoad: () => Promise<void>;
