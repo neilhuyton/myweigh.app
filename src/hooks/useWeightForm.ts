@@ -12,13 +12,14 @@ type Goal = {
 };
 
 export function useWeightForm() {
-  const { userId } = useAuthStore();
+  const { userId, isFirstLogin } = useAuthStore();
   const navigate = useNavigate();
   const [weight, setWeight] = useState("");
   const [note, setNote] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
+  const [runTour, setRunTour] = useState(isFirstLogin); // Start tour if first login
 
   const { data: currentGoal } = trpc.weight.getCurrentGoal.useQuery(undefined, {
     enabled: !!userId,
@@ -30,7 +31,6 @@ export function useWeightForm() {
       setMessage("Weight recorded successfully!");
       setWeight("");
       setNote("");
-
       if (
         currentGoal &&
         variables.weightKg <= currentGoal.goalWeightKg &&
@@ -44,7 +44,6 @@ export function useWeightForm() {
           setTimeout(() => setShowConfetti(false), 7000);
         }
       }
-
       queryClient.weight.getWeights.invalidate();
       queryClient.weight.getCurrentGoal.invalidate();
       queryClient.weight.getGoals.invalidate();
@@ -56,6 +55,13 @@ export function useWeightForm() {
       } else {
         setMessage(`Failed to record weight: ${error.message}`);
       }
+    },
+  });
+
+  const updateFirstLogin = trpc.user.updateFirstLogin.useMutation({
+    onSuccess: () => {
+      useAuthStore.setState({ isFirstLogin: false });
+      localStorage.setItem('isFirstLogin', JSON.stringify(false));
     },
   });
 
@@ -71,7 +77,6 @@ export function useWeightForm() {
       setMessage("Please enter a valid weight.");
       return;
     }
-    // Validate two decimal places
     const decimalPlaces = (weight.split(".")[1]?.length || 0);
     if (decimalPlaces > 2) {
       setMessage("Weight can have up to two decimal places.");
@@ -89,6 +94,15 @@ export function useWeightForm() {
     setNote(e.target.value);
   };
 
+  const handleTourCallback = (data: { status: string }) => {
+    if (data.status === "finished" || data.status === "skipped") {
+      setRunTour(false);
+      if (isFirstLogin && userId) {
+        updateFirstLogin.mutate({ isFirstLogin: false });
+      }
+    }
+  };
+
   return {
     weight,
     note,
@@ -96,8 +110,10 @@ export function useWeightForm() {
     isSubmitting: weightMutation.isPending,
     showConfetti,
     fadeOut,
+    runTour,
     handleSubmit,
     handleWeightChange,
     handleNoteChange,
+    handleTourCallback,
   };
 }

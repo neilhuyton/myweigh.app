@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import Confetti from "react-confetti";
+import Joyride, { type Step } from "react-joyride";
 import { createPortal } from "react-dom";
 import { LoadingSpinner } from "./LoadingSpinner";
 
@@ -15,12 +16,47 @@ function WeightForm() {
     isSubmitting,
     showConfetti,
     fadeOut,
+    runTour,
     handleSubmit,
     handleWeightChange,
+    handleTourCallback,
   } = useWeightForm();
+
+  const steps: Step[] = [
+    {
+      target: '[data-testid="weight-input"]',
+      content:
+        "Enter your weight here in kilograms to start tracking your progress!",
+      placement: "top",
+      disableBeacon: true,
+    },
+  ];
 
   return (
     <>
+      <Joyride
+        steps={steps}
+        run={runTour}
+        continuous
+        showSkipButton
+        callback={handleTourCallback}
+        styles={{
+          options: {
+            zIndex: 1000,
+            primaryColor: "#3b82f6", // Tailwind blue-500
+            textColor: "#1f2937", // Tailwind gray-800
+            backgroundColor: "#ffffff",
+            overlayColor: "rgba(0, 0, 0, 0.5)",
+          },
+        }}
+        locale={{
+          back: "Back",
+          close: "Close",
+          last: "Finish",
+          next: "Next",
+          skip: "Skip",
+        }}
+      />
       {showConfetti &&
         createPortal(
           <Confetti
@@ -60,7 +96,7 @@ function WeightForm() {
                 placeholder="Enter your weight (kg)"
                 required
                 min="0"
-                step="0.01" // Changed to allow two decimal places
+                step="0.01"
                 disabled={isSubmitting}
                 data-testid="weight-input"
                 aria-describedby="weight-error"

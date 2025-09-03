@@ -7,7 +7,7 @@ import { useAuthStore } from "../store/authStore";
 import { useEffect, useState } from "react";
 import type { TRPCClientErrorLike } from "@trpc/client";
 import type { AppRouter } from "server/trpc";
-import { router } from "../router/router"; // Import the router to get its type
+import { router } from "../router/router";
 
 // Define the expected response type for the login mutation
 type LoginResponse = {
@@ -15,6 +15,7 @@ type LoginResponse = {
   email: string;
   token: string;
   refreshToken: string;
+  isFirstLogin: boolean; // Add isFirstLogin
 };
 
 const formSchema = z.object({
@@ -34,7 +35,7 @@ interface UseLoginReturn {
 }
 
 interface UseLoginProps {
-  navigate: typeof router.navigate; // Use the router's navigate type
+  navigate: typeof router.navigate;
 }
 
 export const useLogin = ({ navigate }: UseLoginProps): UseLoginReturn => {
@@ -54,9 +55,9 @@ export const useLogin = ({ navigate }: UseLoginProps): UseLoginReturn => {
     onSuccess: (data: { result: { data: LoginResponse } } | LoginResponse) => {
       const response = "result" in data ? data.result.data : data;
       setMessage("Login successful!");
-      login(response.id, response.token, response.refreshToken);
+      login(response.id, response.token, response.refreshToken, response.isFirstLogin); // Pass isFirstLogin
       form.reset();
-      navigate({ to: "/weight" }); // Redirect to /weight after successful login
+      navigate({ to: "/weight" });
     },
     onError: (error: TRPCClientErrorLike<AppRouter>) => {
       setMessage(`Login failed: ${error.message || "Unknown error"}`);
