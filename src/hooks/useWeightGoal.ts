@@ -1,3 +1,4 @@
+// src/hooks/useWeightGoal.ts
 import { useState } from "react";
 import { trpc } from "../trpc";
 import { useAuthStore } from "../store/authStore";
@@ -64,6 +65,12 @@ export function useWeightGoal() {
       setMessage("Goal weight must be a positive number");
       return;
     }
+    // Validate two decimal places
+    const decimalPlaces = (goalWeight.split(".")[1]?.length || 0);
+    if (decimalPlaces > 2) {
+      setMessage("Goal weight can have up to two decimal places.");
+      return;
+    }
     if (currentGoal) {
       await updateGoalMutation.mutateAsync({ goalId: currentGoal.id, goalWeightKg });
     } else {
@@ -74,6 +81,7 @@ export function useWeightGoal() {
   const handleGoalWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setGoalWeight(value);
+    setMessage(null); // Clear message on input change
   };
 
   return {
@@ -83,7 +91,7 @@ export function useWeightGoal() {
     goalWeight,
     message,
     isSettingGoal: setGoalMutation.isPending || updateGoalMutation.isPending,
-    isGoalAchieved: false,
+    isGoalAchieved: currentGoal?.reachedAt !== null,
     handleSubmit,
     handleGoalWeightChange,
   };

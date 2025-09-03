@@ -1,3 +1,4 @@
+// src/components/WeightList.tsx
 import { useWeightList } from "../hooks/useWeightList";
 import { Button } from "@/components/ui/button";
 import {
@@ -96,13 +97,16 @@ function WeightList() {
                 )}
               >
                 <TableCell className="p-4 text-foreground">
-                  {weight.weightKg}
+                  {weight.weightKg.toFixed(2)}
                 </TableCell>
                 <TableCell className="p-4 text-foreground">
                   {formatDate(weight.createdAt)}
                 </TableCell>
                 <TableCell className="p-4 text-right">
-                  <AlertDialog open={open && selectedWeightId === weight.id} onOpenChange={setOpen}>
+                  <AlertDialog
+                    open={open && selectedWeightId === weight.id}
+                    onOpenChange={setOpen}
+                  >
                     <AlertDialogTrigger asChild>
                       <Button
                         onClick={() => handleOpenDialog(weight.id)}
@@ -115,18 +119,26 @@ function WeightList() {
                         )}`}
                         data-testid={`delete-button-${weight.id}`}
                       >
-                        <Trash2 className="h-4 w-4" data-lucide-name="trash-2" />
+                        <Trash2
+                          className="h-4 w-4"
+                          data-lucide-name="trash-2"
+                        />
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete the weight measurement of {weight.weightKg} kg from {formatDate(weight.createdAt)}.
+                          This action cannot be undone. This will permanently
+                          delete the weight measurement of{" "}
+                          {weight.weightKg.toFixed(2)} kg from{" "}
+                          {formatDate(weight.createdAt)}.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel data-testid="cancel-delete">Cancel</AlertDialogCancel>
+                        <AlertDialogCancel data-testid="cancel-delete">
+                          Cancel
+                        </AlertDialogCancel>
                         <AlertDialogAction
                           onClick={handleConfirmDelete}
                           data-testid="confirm-delete"

@@ -1,3 +1,4 @@
+// src/components/WeightGoal.tsx
 import { useWeightGoal } from "../hooks/useWeightGoal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,7 +65,7 @@ function WeightGoal() {
                 placeholder="Enter your goal weight (kg)"
                 required
                 min="0"
-                step="0.1"
+                step="0.01" // Already correct for two decimal places
                 disabled={isSettingGoal}
                 data-testid="goal-weight-input"
                 aria-describedby="goal-weight-error"
@@ -111,7 +112,7 @@ function WeightGoal() {
             className="text-center text-sm font-medium text-foreground"
             data-testid="current-goal"
           >
-            {currentGoal.goalWeightKg} kg (Set on{" "}
+            {currentGoal.goalWeightKg.toFixed(2)} kg (Set on{" "}
             {new Date(currentGoal.goalSetAt).toLocaleDateString("en-GB")})
             {isGoalAchieved && (
               <span className="text-success"> - Goal achieved!</span>

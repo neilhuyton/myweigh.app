@@ -1,3 +1,4 @@
+// __tests__/WeightGoal.test.tsx
 import {
   describe,
   it,
@@ -23,6 +24,13 @@ import {
 } from "../__mocks__/handlers";
 import { useAuthStore } from "../src/store/authStore";
 import { generateToken } from "./utils/token";
+
+// Mock LoadingSpinner component
+vi.mock("../src/components/LoadingSpinner", () => ({
+  LoadingSpinner: ({ testId }: { testId: string }) => (
+    <div data-testid={testId}>Loading...</div>
+  ),
+}));
 
 // Mock GoalList
 vi.mock("../src/components/GoalList", () => ({
@@ -105,7 +113,7 @@ describe("WeightGoal Component", () => {
         expect(screen.queryByTestId("weight-goal-loading")).not.toBeInTheDocument();
         expect(screen.getByRole("heading", { name: "Your Goals" })).toBeInTheDocument();
         expect(screen.getByTestId("current-goal-heading")).toBeInTheDocument();
-        expect(screen.getByTestId("current-goal")).toHaveTextContent(/65 kg.*28\/08\/2025/i);
+        expect(screen.getByTestId("current-goal")).toHaveTextContent(/65\.00 kg.*28\/08\/2025/i);
         expect(screen.getByTestId("goal-weight-form")).toBeInTheDocument();
         expect(screen.getByTestId("goal-weight-input")).toBeInTheDocument();
         expect(screen.getByTestId("submit-button")).toBeInTheDocument();
@@ -129,7 +137,7 @@ describe("WeightGoal Component", () => {
     await waitFor(
       () => {
         expect(screen.queryByTestId("weight-goal-loading")).not.toBeInTheDocument();
-        expect(screen.getByTestId("current-goal")).toHaveTextContent(/65 kg.*28\/08\/2025/i);
+        expect(screen.getByTestId("current-goal")).toHaveTextContent(/65\.00 kg.*28\/08\/2025/i);
         expect(screen.getByTestId("goal-weight-form")).toBeInTheDocument();
         expect(screen.getByTestId("goal-weight-input")).toBeInTheDocument();
         expect(screen.getByTestId("submit-button")).toBeInTheDocument();
@@ -140,8 +148,8 @@ describe("WeightGoal Component", () => {
     await act(async () => {
       const input = screen.getByTestId("goal-weight-input");
       await userEvent.clear(input);
-      await userEvent.type(input, "60", { delay: 10 });
-      expect(input).toHaveValue(60);
+      await userEvent.type(input, "60.12", { delay: 10 });
+      expect(input).toHaveValue(60.12);
       const form = screen.getByTestId("goal-weight-form");
       await form.dispatchEvent(new Event("submit", { bubbles: true }));
     });
@@ -153,6 +161,66 @@ describe("WeightGoal Component", () => {
         expect(messageElement).toHaveTextContent("Goal updated successfully!");
       },
       { timeout: 5000, interval: 100 }
+    );
+  });
+
+  it("displays error for goal weight with more than two decimal places", async () => {
+    await setup();
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("goal-weight-input")).toBeInTheDocument();
+      },
+      { timeout: 2000, interval: 100 }
+    );
+
+    await act(async () => {
+      const input = screen.getByTestId("goal-weight-input");
+      await userEvent.clear(input);
+      await userEvent.type(input, "60.123", { delay: 10 });
+      expect(input).toHaveValue(60.123);
+      const form = screen.getByTestId("goal-weight-form");
+      await form.dispatchEvent(new Event("submit", { bubbles: true }));
+    });
+
+    await waitFor(
+      () => {
+        const messageElement = screen.getByTestId("goal-message");
+        expect(messageElement).toBeInTheDocument();
+        expect(messageElement).toHaveTextContent("Goal weight can have up to two decimal places.");
+        expect(messageElement).toHaveClass("text-destructive");
+      },
+      { timeout: 2000, interval: 100 }
+    );
+  });
+
+  it("displays error for invalid goal weight input", async () => {
+    await setup();
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("goal-weight-input")).toBeInTheDocument();
+      },
+      { timeout: 2000, interval: 100 }
+    );
+
+    await act(async () => {
+      const input = screen.getByTestId("goal-weight-input");
+      await userEvent.clear(input);
+      await userEvent.type(input, "-5", { delay: 10 });
+      expect(input).toHaveValue(-5);
+      const form = screen.getByTestId("goal-weight-form");
+      await form.dispatchEvent(new Event("submit", { bubbles: true }));
+    });
+
+    await waitFor(
+      () => {
+        const messageElement = screen.getByTestId("goal-message");
+        expect(messageElement).toBeInTheDocument();
+        expect(messageElement).toHaveTextContent("Goal weight must be a positive number");
+        expect(messageElement).toHaveClass("text-destructive");
+      },
+      { timeout: 2000, interval: 100 }
     );
   });
 });

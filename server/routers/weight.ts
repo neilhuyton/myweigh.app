@@ -2,13 +2,25 @@
 import { t } from "../trpc-base";
 import { z } from "zod";
 
+// Custom validator for up to two decimal places
+const twoDecimalPlaces = z
+  .number()
+  .positive({ message: "Weight must be a positive number" })
+  .refine(
+    (val) => {
+      const decimalPlaces = (val.toString().split(".")[1]?.length || 0);
+      return decimalPlaces <= 2;
+    },
+    {
+      message: "Weight can have up to two decimal places",
+    }
+  );
+
 export const weightRouter = t.router({
   create: t.procedure
     .input(
       z.object({
-        weightKg: z
-          .number()
-          .positive({ message: "Weight must be a positive number" }),
+        weightKg: twoDecimalPlaces,
         note: z.string().optional(),
       })
     )
@@ -43,7 +55,7 @@ export const weightRouter = t.router({
 
       return {
         id: weight.id,
-        weightKg: weight.weightKg,
+        weightKg: Number(input.weightKg.toFixed(2)), // Ensure two decimal places in response
         createdAt: weight.createdAt,
       };
     }),
@@ -52,10 +64,16 @@ export const weightRouter = t.router({
       throw new Error("Unauthorized: User must be logged in");
     }
 
-    return ctx.prisma.weightMeasurement.findMany({
+    const weights = await ctx.prisma.weightMeasurement.findMany({
       where: { userId: ctx.userId },
       orderBy: { createdAt: "desc" },
     });
+
+    // Format weights to two decimal places in response
+    return weights.map((weight) => ({
+      ...weight,
+      weightKg: Number(weight.weightKg.toFixed(2)),
+    }));
   }),
   delete: t.procedure
     .input(
@@ -91,9 +109,7 @@ export const weightRouter = t.router({
   setGoal: t.procedure
     .input(
       z.object({
-        goalWeightKg: z
-          .number()
-          .positive({ message: "Goal weight must be a positive number" }),
+        goalWeightKg: twoDecimalPlaces,
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -122,7 +138,7 @@ export const weightRouter = t.router({
 
       return {
         id: goal.id,
-        goalWeightKg: goal.goalWeightKg,
+        goalWeightKg: Number(input.goalWeightKg.toFixed(2)), // Ensure two decimal places in response
         goalSetAt: goal.goalSetAt,
       };
     }),
@@ -130,9 +146,7 @@ export const weightRouter = t.router({
     .input(
       z.object({
         goalId: z.string().uuid({ message: "Invalid goal ID" }),
-        goalWeightKg: z
-          .number()
-          .positive({ message: "Goal weight must be a positive number" }),
+        goalWeightKg: twoDecimalPlaces,
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -163,7 +177,7 @@ export const weightRouter = t.router({
 
       return {
         id: updatedGoal.id,
-        goalWeightKg: updatedGoal.goalWeightKg,
+        goalWeightKg: Number(input.goalWeightKg.toFixed(2)), // Ensure two decimal places in response
         goalSetAt: updatedGoal.goalSetAt,
       };
     }),
@@ -183,7 +197,7 @@ export const weightRouter = t.router({
 
     return {
       id: goal.id,
-      goalWeightKg: goal.goalWeightKg,
+      goalWeightKg: Number(goal.goalWeightKg.toFixed(2)), // Ensure two decimal places in response
       goalSetAt: goal.goalSetAt,
     };
   }),
@@ -192,9 +206,15 @@ export const weightRouter = t.router({
       throw new Error("Unauthorized: User must be logged in");
     }
 
-    return ctx.prisma.goal.findMany({
+    const goals = await ctx.prisma.goal.findMany({
       where: { userId: ctx.userId },
       orderBy: { goalSetAt: "desc" },
     });
+
+    // Format goals to two decimal places in response
+    return goals.map((goal) => ({
+      ...goal,
+      goalWeightKg: Number(goal.goalWeightKg.toFixed(2)),
+    }));
   }),
 });

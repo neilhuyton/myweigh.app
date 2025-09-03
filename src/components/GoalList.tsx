@@ -1,4 +1,4 @@
-// src/components/GoalList.tsx (unchanged)
+// src/components/GoalList.tsx
 import { useGoalList } from "../hooks/useGoalList";
 import {
   Table,
@@ -57,7 +57,7 @@ function GoalList() {
                   index === goals.length - 1 && "rounded-b-lg"
                 )}
               >
-                <TableCell>{goal.goalWeightKg.toFixed(1)}</TableCell>
+                <TableCell>{goal.goalWeightKg.toFixed(2)}</TableCell>
                 <TableCell>{formatDate(goal.goalSetAt)}</TableCell>
                 <TableCell>
                   {goal.reachedAt ? formatDate(goal.reachedAt) : "Not Reached"}
