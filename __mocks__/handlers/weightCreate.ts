@@ -1,9 +1,18 @@
 import { http, HttpResponse } from "msw";
 
-interface WeightCreateRequestBody {
-  weightKg: number | string;
-  note?: string;
+interface Goal {
+  id: string;
+  goalWeightKg: number;
+  goalSetAt: string;
+  reachedAt: string | null;
 }
+
+let goal: Goal | null = {
+  id: "1",
+  goalWeightKg: 65.0,
+  goalSetAt: "2025-08-28T00:00:00Z",
+  reachedAt: null,
+};
 
 export const weightCreateHandler = http.post(
   "http://localhost:8888/.netlify/functions/trpc/weight.create",
@@ -71,13 +80,12 @@ export const weightCreateHandler = http.post(
       );
     }
 
-    // Validate body against WeightCreateRequestBody
-    const isValidBody = (b: unknown): b is WeightCreateRequestBody =>
+    const isValidBody = (b: unknown): b is { weightKg: number | string; note?: string } =>
       b !== null &&
       typeof b === "object" &&
       "weightKg" in b &&
-      (b.weightKg === undefined || typeof b.weightKg === "number" || typeof b.weightKg === "string") &&
-      ("note" in b ? b.note === undefined || typeof b.note === "string" : true);
+      (typeof b.weightKg === "number" || typeof b.weightKg === "string") &&
+      ("note" in b ? typeof b.note === "string" || b.note === undefined : true);
 
     if (!isValidBody(body)) {
       return HttpResponse.json(
@@ -97,10 +105,9 @@ export const weightCreateHandler = http.post(
       );
     }
 
-    const weightKgInput = body.weightKg;
-    const weightKg = typeof weightKgInput === "string" ? parseFloat(weightKgInput) : weightKgInput;
+    const weightKg = typeof body.weightKg === "string" ? parseFloat(body.weightKg) : body.weightKg;
 
-    if (!weightKg || isNaN(weightKg) || weightKg <= 0) {
+    if (isNaN(weightKg) || weightKg <= 0) {
       return HttpResponse.json(
         {
           id: 0,
@@ -118,7 +125,10 @@ export const weightCreateHandler = http.post(
       );
     }
 
-    if (userId === "test-user-id") {
+    if (userId === "test-user-id" || userId === "empty-user-id") {
+      if (goal && weightKg <= goal.goalWeightKg && !goal.reachedAt) {
+        goal = { ...goal, reachedAt: "2025-09-02T00:00:00Z" };
+      }
       return HttpResponse.json(
         {
           id: 0,
@@ -158,17 +168,17 @@ export const weightCreateHandler = http.post(
     return HttpResponse.json(
       {
         id: 0,
-      error: {
-        message: "Unauthorized",
-        code: -32001,
-        data: {
-          code: "UNAUTHORIZED",
-          httpStatus: 401,
-          path: "weight.create",
+        error: {
+          message: "Unauthorized",
+          code: -32001,
+          data: {
+            code: "UNAUTHORIZED",
+            httpStatus: 401,
+            path: "weight.create",
+          },
         },
       },
-    },
-    { status: 200 }
-  );
-}
+      { status: 200 }
+    );
+  }
 );

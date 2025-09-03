@@ -1,4 +1,3 @@
-// src/components/WeightForm.tsx
 import { useWeightForm } from "../hooks/useWeightForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,12 +16,14 @@ function WeightForm() {
     showConfetti,
     fadeOut,
     runTour,
+    runGoalTour,
     handleSubmit,
     handleWeightChange,
     handleTourCallback,
+    handleGoalTourCallback,
   } = useWeightForm();
 
-  const steps: Step[] = [
+  const firstLoginSteps: Step[] = [
     {
       target: '[data-testid="weight-input"]',
       content:
@@ -32,10 +33,19 @@ function WeightForm() {
     },
   ];
 
+  const goalSteps: Step[] = [
+    {
+      target: '[data-testid="submit-button"]',
+      content: "Great job! Now set a goal to track your progress.",
+      placement: "top",
+      disableBeacon: true,
+    },
+  ];
+
   return (
     <>
       <Joyride
-        steps={steps}
+        steps={firstLoginSteps}
         run={runTour}
         continuous
         showSkipButton
@@ -43,8 +53,8 @@ function WeightForm() {
         styles={{
           options: {
             zIndex: 1000,
-            primaryColor: "#3b82f6", // Tailwind blue-500
-            textColor: "#1f2937", // Tailwind gray-800
+            primaryColor: "#3b82f6",
+            textColor: "#1f2937",
             backgroundColor: "#ffffff",
             overlayColor: "rgba(0, 0, 0, 0.5)",
           },
@@ -53,6 +63,28 @@ function WeightForm() {
           back: "Back",
           close: "Close",
           last: "Finish",
+          next: "Next",
+          skip: "Skip",
+        }}
+      />
+      <Joyride
+        steps={goalSteps}
+        run={runGoalTour}
+        continuous
+        callback={handleGoalTourCallback}
+        styles={{
+          options: {
+            zIndex: 1000,
+            primaryColor: "#3b82f6",
+            textColor: "#1f2937",
+            backgroundColor: "#ffffff",
+            overlayColor: "rgba(0, 0, 0, 0.5)",
+          },
+        }}
+        locale={{
+          back: "Back",
+          close: "Close",
+          last: "OK",
           next: "Next",
           skip: "Skip",
         }}
@@ -90,6 +122,7 @@ function WeightForm() {
               </Label>
               <Input
                 id="weight"
+                name="weight"
                 type="number"
                 value={weight}
                 onChange={handleWeightChange}

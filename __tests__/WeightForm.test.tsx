@@ -48,13 +48,17 @@ vi.mock("react-joyride", () => ({
     steps,
     run,
     callback,
-    styles,
     locale,
   }: {
-    steps: { target: string; content: string; placement: string; disableBeacon: boolean }[];
+    steps: {
+      target: string;
+      content: string;
+      placement: string;
+      disableBeacon: boolean;
+    }[];
     run: boolean;
     callback: (data: { status: string }) => void;
-    styles: { options: Record<string, any> };
+    styles: { options: Record<string, unknown> }; // Changed from Record<string, any>
     locale: Record<string, string>;
   }) => {
     if (run) {
@@ -80,12 +84,13 @@ vi.mock("react-joyride", () => ({
   },
 }));
 
-// Mock useNavigate to avoid router context issues
+// Mock useNavigate to track navigation calls
+const mockNavigate = vi.fn();
 vi.mock("@tanstack/react-router", async () => {
   const actual = await vi.importActual("@tanstack/react-router");
   return {
     ...actual,
-    useNavigate: () => vi.fn(),
+    useNavigate: () => mockNavigate,
   };
 });
 
@@ -139,8 +144,13 @@ describe("WeightForm Component", () => {
   });
 
   beforeEach(() => {
-    server.use(weightGetCurrentGoalHandler, weightCreateHandler, userUpdateFirstLoginHandler);
+    server.use(
+      weightGetCurrentGoalHandler,
+      weightCreateHandler,
+      userUpdateFirstLoginHandler
+    );
     vi.spyOn(window.localStorage, "setItem");
+    mockNavigate.mockReset();
   });
 
   afterEach(() => {
@@ -194,7 +204,9 @@ describe("WeightForm Component", () => {
           "Enter your weight here in kilograms to start tracking your progress!"
         );
         expect(screen.getByTestId("joyride-skip")).toHaveTextContent("Skip");
-        expect(screen.getByTestId("joyride-finish")).toHaveTextContent("Finish");
+        expect(screen.getByTestId("joyride-finish")).toHaveTextContent(
+          "Finish"
+        );
       },
       { timeout: 15000, interval: 100 }
     );
@@ -285,10 +297,100 @@ describe("WeightForm Component", () => {
     await waitFor(
       () => {
         expect(screen.queryByTestId("joyride-tour")).not.toBeInTheDocument();
-        // Do not expect isFirstLogin to change if mutation fails
         expect(localStorage.setItem).not.toHaveBeenCalled();
       },
       { timeout: 15000, interval: 100 }
     );
+  });
+
+  it("shows goal-setting Joyride tour after first weight submission when no goal exists and navigates to /goals", async () => {
+    await setup("empty-user-id", false);
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("weight-input")).toBeInTheDocument();
+        expect(screen.queryByTestId("joyride-tour")).not.toBeInTheDocument();
+      },
+      { timeout: 15000, interval: 100 }
+    );
+
+    await act(async () => {
+      const input = screen.getByTestId("weight-input") as HTMLInputElement;
+      await userEvent.clear(input);
+      await userEvent.type(input, "70.5", { delay: 10 });
+      expect(input).toHaveValue(70.5);
+      const form = screen.getByTestId("weight-form");
+      await form.dispatchEvent(new Event("submit", { bubbles: true }));
+    });
+
+    await act(async () => {
+      await waitFor(
+        () => {
+          const messageElement = screen.queryByTestId("weight-message");
+          if (messageElement) {
+            expect(messageElement).toHaveTextContent("Weight recorded successfully!");
+          } else {
+            throw new Error("Weight message not found");
+          }
+          expect(screen.getByTestId("joyride-tour")).toBeInTheDocument();
+          expect(screen.getByTestId("joyride-step")).toHaveTextContent(
+            "Great job! Now set a goal to track your progress."
+          );
+          expect(screen.getByTestId("joyride-finish")).toHaveTextContent("OK");
+        },
+        { timeout: 30000, interval: 100 }
+      );
+    });
+
+    await act(async () => {
+      const okButton = screen.getByTestId("joyride-finish");
+      await userEvent.click(okButton);
+    });
+
+    await act(async () => {
+      await waitFor(
+        () => {
+          expect(screen.queryByTestId("joyride-tour")).not.toBeInTheDocument();
+          expect(mockNavigate).toHaveBeenCalledWith({ to: "/goals" });
+        },
+        { timeout: 15000, interval: 100 }
+      );
+    });
+  });
+
+  it("does not show goal-setting Joyride tour when a goal exists", async () => {
+    await setup("test-user-id", false);
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("weight-input")).toBeInTheDocument();
+        expect(screen.queryByTestId("joyride-tour")).not.toBeInTheDocument();
+      },
+      { timeout: 15000, interval: 100 }
+    );
+
+    await act(async () => {
+      const input = screen.getByTestId("weight-input") as HTMLInputElement;
+      await userEvent.clear(input);
+      await userEvent.type(input, "70.5", { delay: 10 });
+      expect(input).toHaveValue(70.5);
+      const form = screen.getByTestId("weight-form");
+      await form.dispatchEvent(new Event("submit", { bubbles: true }));
+    });
+
+    await act(async () => {
+      await waitFor(
+        () => {
+          const messageElement = screen.queryByTestId("weight-message");
+          if (messageElement) {
+            expect(messageElement).toHaveTextContent("Weight recorded successfully!");
+          } else {
+            throw new Error("Weight message not found");
+          }
+          expect(screen.queryByTestId("joyride-tour")).not.toBeInTheDocument();
+        },
+        { timeout: 30000, interval: 100 }
+      );
+    });
   });
 });
