@@ -11,7 +11,7 @@ import Weight from "../../src/pages/Weight";
 import { useAuthStore } from "../../src/store/authStore";
 import { generateToken } from "../utils/token";
 
-// Mock WeightForm and WeightList to isolate Weight component
+// Mock WeightForm, WeightList, and WeightChangeMessage
 vi.mock("../../src/components/WeightForm", () => ({
   default: () => <div data-testid="weight-form">Mocked WeightForm</div>,
 }));
@@ -20,9 +20,22 @@ vi.mock("../../src/components/WeightList", () => ({
   default: () => <div data-testid="weight-list">Mocked WeightList</div>,
 }));
 
+vi.mock("../../src/components/WeightChangeMessage", () => ({
+  default: () => <div data-testid="weight-change-message">Mocked WeightChangeMessage</div>,
+}));
+
 // Mock useNavigate to avoid RouterProvider requirement
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => vi.fn(),
+}));
+
+// Mock useWeightChange to control message output
+vi.mock("../../src/hooks/useWeightChange", () => ({
+  useWeightChange: vi.fn(() => ({
+    message: null,
+    isLoading: false,
+    error: null,
+  })),
 }));
 
 describe("Weight Component", () => {
@@ -89,7 +102,7 @@ describe("Weight Component", () => {
     server.close();
   });
 
-  it("renders with heading, WeightForm, and WeightList", async () => {
+  it("renders with heading, WeightForm, WeightChangeMessage, and WeightList", async () => {
     await setup();
     await waitFor(() => {
       // Verify the heading
@@ -99,10 +112,14 @@ describe("Weight Component", () => {
       });
       expect(heading).toBeInTheDocument();
 
-      // Verify WeightForm and WeightList are rendered
+      // Verify WeightForm, WeightChangeMessage, and WeightList are rendered
       expect(screen.getByTestId("weight-form")).toBeInTheDocument();
       expect(screen.getByTestId("weight-form")).toHaveTextContent(
         "Mocked WeightForm"
+      );
+      expect(screen.getByTestId("weight-change-message")).toBeInTheDocument();
+      expect(screen.getByTestId("weight-change-message")).toHaveTextContent(
+        "Mocked WeightChangeMessage"
       );
       expect(screen.getByTestId("weight-list")).toBeInTheDocument();
       expect(screen.getByTestId("weight-list")).toHaveTextContent(
