@@ -60,6 +60,10 @@ function WeightList() {
     );
   }
 
+  if (weights.length === 0) {
+    return;
+  }
+
   return (
     <div className="mx-auto max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm">
       <h1
