@@ -14,6 +14,7 @@ import { userUpdateEmailHandler } from "./userUpdateEmail";
 import { weightCreateHandler } from "./weightCreate";
 
 export const handlers = [
+  weightGetGoalsHandler,
   verifyEmailHandler,
   loginHandler,
   weightDeleteHandler,
@@ -21,7 +22,6 @@ export const handlers = [
   weightGetCurrentGoalHandler,
   weightSetGoalHandler,
   weightUpdateGoalHandler,
-  weightGetGoalsHandler,
   refreshTokenHandler,
   resetPasswordConfirmHandler,
   resetPasswordRequestHandler,
@@ -31,6 +31,7 @@ export const handlers = [
 ];
 
 export {
+  weightGetGoalsHandler,
   verifyEmailHandler,
   loginHandler,
   weightDeleteHandler,
@@ -38,7 +39,6 @@ export {
   weightGetCurrentGoalHandler,
   weightSetGoalHandler,
   weightUpdateGoalHandler,
-  weightGetGoalsHandler,
   refreshTokenHandler,
   resetPasswordConfirmHandler,
   resetPasswordRequestHandler,

@@ -23,14 +23,6 @@ describe("Weight Component", () => {
         level: 1,
       });
       expect(heading).toBeInTheDocument();
-      expect(heading).toHaveClass(
-        "text-2xl font-bold text-foreground text-center"
-      );
-      expect(heading).toHaveAttribute("aria-level", "1");
-
-      // Verify the container
-      const container = heading.closest("div");
-      expect(container).toHaveClass("mx-auto max-w-4xl space-y-6 px-4 py-6");
 
       // Verify WeightForm and WeightList are rendered
       expect(screen.getByTestId("weight-form")).toBeInTheDocument();

@@ -24,27 +24,18 @@ interface DecodedToken {
 }
 
 export const checkAuth = () => {
-  console.log("AAA");
   const { isLoggedIn, token } = useAuthStore.getState();
   if (!isLoggedIn || !token) {
-    console.log("BBB");
-
     throw redirect({ to: "/login" });
   }
   try {
-    console.log("CCC");
-
     const decoded = jwtDecode<DecodedToken>(token);
     const now = Math.floor(Date.now() / 1000);
     if (decoded.exp < now) {
-      console.log("DDD");
-
       return false; // Let trpcClient handle refresh
     }
     return true;
   } catch {
-    console.log("EEE");
-
     throw redirect({ to: "/login" });
   }
 };

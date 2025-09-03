@@ -32,7 +32,6 @@ export const weightCreateHandler = http.post(
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
       userId = payload.userId;
-      console.log("Extracted userId:", userId); // Debug logging
     } catch {
       return HttpResponse.json(
         {
@@ -54,7 +53,6 @@ export const weightCreateHandler = http.post(
     let body: unknown;
     try {
       body = await request.json();
-      console.log("Raw request body:", JSON.stringify(body, null, 2)); // Debug logging
     } catch {
       return HttpResponse.json(
         {
@@ -82,7 +80,6 @@ export const weightCreateHandler = http.post(
       ("note" in b ? b.note === undefined || typeof b.note === "string" : true);
 
     if (!isValidBody(body)) {
-      console.log("Invalid body structure:", body); // Debug logging
       return HttpResponse.json(
         {
           id: 0,
@@ -102,8 +99,6 @@ export const weightCreateHandler = http.post(
 
     const weightKgInput = body.weightKg;
     const weightKg = typeof weightKgInput === "string" ? parseFloat(weightKgInput) : weightKgInput;
-
-    console.log("weightKgInput:", weightKgInput, "parsed weightKg:", weightKg); // Debug logging
 
     if (!weightKg || isNaN(weightKg) || weightKg <= 0) {
       return HttpResponse.json(

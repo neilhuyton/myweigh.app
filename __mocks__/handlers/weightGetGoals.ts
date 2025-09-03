@@ -1,180 +1,103 @@
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
+import jwt from "jsonwebtoken";
 
-interface TRPCRequestBody {
-  id: number;
-  path?: string;
-  method?: string;
-  [key: string]: unknown; // Changed from `any` to `unknown`
-}
-
-export const weightGetGoalsHandler = http.post(
-  'http://localhost:8888/.netlify/functions/trpc/:path',
-  async ({ request, params }) => {
-    const clonedRequest = request.clone();
-    let requestBody: unknown;
-    try {
-      requestBody = await clonedRequest.json();
-    } catch {
+export const weightGetGoalsHandler = http.get(
+  "http://localhost:8888/.netlify/functions/trpc/weight.getGoals",
+  async ({ request }) => {
+    const authHeader = request.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return HttpResponse.json(
-        [
-          {
-            id: 0,
-            error: {
-              message: 'Invalid request body',
-              code: -32000,
-              data: { code: 'BAD_REQUEST', httpStatus: 400, path: params.path ?? 'weight.getGoals' },
-            },
+        {
+          id: 0,
+          error: {
+            message: "Unauthorized",
+            code: -32001,
+            data: { code: "UNAUTHORIZED", httpStatus: 401, path: "weight.getGoals" },
           },
-        ],
-        { status: 200 }
+        },
+        { status: 200, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    const procedurePath = Array.isArray(requestBody)
-      ? (requestBody[0] as TRPCRequestBody)?.path
-      : (requestBody as TRPCRequestBody)?.path;
-
-    if (procedurePath !== 'weight.getGoals') {
-      return; // Pass to next handler
-    }
-
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return HttpResponse.json(
-        [
-          {
-            id: 0,
-            error: {
-              message: 'Unauthorized',
-              code: -32001,
-              data: {
-                code: 'UNAUTHORIZED',
-                httpStatus: 401,
-                path: params.path ?? 'weight.getGoals',
-              },
-            },
-          },
-        ],
-        { status: 200 }
-      );
-    }
-
-    const token = authHeader.replace('Bearer ', '');
+    const token = authHeader.split(" ")[1];
     let userId: string | null = null;
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      userId = payload.userId as string | null;
+      const decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET || "your-secret-key"
+      ) as { userId: string };
+      userId = decoded.userId;
     } catch {
       return HttpResponse.json(
-        [
-          {
-            id: 0,
-            error: {
-              message: 'Invalid token',
-              code: -32001,
-              data: {
-                code: 'UNAUTHORIZED',
-                httpStatus: 401,
-                path: params.path ?? 'weight.getGoals',
+        {
+          id: 0,
+          error: {
+            message: "Invalid token",
+            code: -32001,
+            data: { code: "UNAUTHORIZED", httpStatus: 401, path: "weight.getGoals" },
+          },
+        },
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    if (userId === "test-user-id") {
+      return HttpResponse.json(
+        {
+          id: 0,
+          result: {
+            type: "data",
+            data: [
+              {
+                id: "1",
+                goalWeightKg: 65.0,
+                goalSetAt: "2025-08-28T00:00:00Z",
+                reachedAt: null,
               },
-            },
-          },
-        ],
-        { status: 200 }
-      );
-    }
-
-    if (userId === 'test-user-id') {
-      return HttpResponse.json(
-        [
-          {
-            id: 0,
-            result: {
-              type: 'data',
-              data: [
-                {
-                  id: '1',
-                  goalWeightKg: 65.0,
-                  goalSetAt: '2025-08-28T00:00:00Z',
-                  reachedAt: null,
-                },
-                {
-                  id: '2',
-                  goalWeightKg: 70.0,
-                  goalSetAt: '2025-08-27T00:00:00Z',
-                  reachedAt: '2025-08-27T12:00:00Z',
-                },
-              ],
-            },
-          },
-        ],
-        { status: 200 }
-      );
-    }
-
-    if (userId === 'empty-user-id') {
-      return HttpResponse.json(
-        [{ id: 0, result: { type: 'data', data: [] } }],
-        { status: 200 }
-      );
-    }
-
-    if (userId === 'error-user-id') {
-      return HttpResponse.json(
-        [
-          {
-            id: 0,
-            error: {
-              message: 'Failed to fetch goals',
-              code: -32002,
-              data: {
-                code: 'INTERNAL_SERVER_ERROR',
-                httpStatus: 500,
-                path: params.path?.includes('weight.getGoals') ? 'weight.getGoals' : 'unknown',
+              {
+                id: "2",
+                goalWeightKg: 70.0,
+                goalSetAt: "2025-08-27T00:00:00Z",
+                reachedAt: "2025-08-27T12:00:00Z",
               },
-            },
+            ],
           },
-        ],
-        { status: 200 }
+        },
+        { status: 200, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    if (userId === 'invalid-user-id') {
+    if (userId === "empty-user-id") {
       return HttpResponse.json(
-        [
-          {
-            id: 0,
-            error: {
-              message: 'Invalid token',
-              code: -32001,
-              data: {
-                code: 'UNAUTHORIZED',
-                httpStatus: 401,
-                path: params.path ?? 'weight.getGoals',
-              },
-            },
+        { id: 0, result: { type: "data", data: [] } },
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    if (userId === "error-user-id") {
+      return HttpResponse.json(
+        {
+          id: 0,
+          error: {
+            message: "Failed to fetch goals",
+            code: -32002,
+            data: { code: "INTERNAL_SERVER_ERROR", httpStatus: 500, path: "weight.getGoals" },
           },
-        ],
-        { status: 200 }
+        },
+        { status: 200, headers: { "Content-Type": "application/json" } }
       );
     }
 
     return HttpResponse.json(
-      [
-        {
-          id: 0,
-          error: {
-            message: 'Unauthorized',
-            code: -32001,
-            data: {
-              code: 'UNAUTHORIZED',
-              httpStatus: 401,
-              path: params.path ?? 'weight.getGoals',
-            },
-          },
+      {
+        id: 0,
+        error: {
+          message: "Unauthorized",
+          code: -32001,
+          data: { code: "UNAUTHORIZED", httpStatus: 401, path: "weight.getGoals" },
         },
-      ],
-      { status: 200 }
+      },
+      { status: 200, headers: { "Content-Type": "application/json" } }
     );
   }
 );
