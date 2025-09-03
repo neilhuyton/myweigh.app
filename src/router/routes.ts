@@ -1,8 +1,8 @@
 // src/router/routes.ts
 import { createRoute, redirect, type RootRoute } from "@tanstack/react-router";
-import Weight from "../components/Weight";
-import WeightChart from "../components/WeightChart";
-import WeightGoal from "../components/WeightGoal";
+import Weight from "../pages/Weight";
+import WeightChart from "../pages/Stats";
+import WeightGoal from "../pages/Goals";
 import Register from "../components/Register";
 import LoginForm from "../components/LoginForm";
 import ResetPasswordForm from "../components/ResetPasswordForm";

@@ -1,9 +1,9 @@
 // src/components/WeightGoal.tsx
-import GoalForm from "./GoalForm";
-import CurrentGoal from "./CurrentGoal";
-import GoalList from "./GoalList";
+import GoalForm from "../components/GoalForm";
+import CurrentGoal from "../components/CurrentGoal";
+import GoalList from "../components/GoalList";
 
-function WeightGoal() {
+function Goals() {
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-6">
       <h1
@@ -20,4 +20,4 @@ function WeightGoal() {
   );
 }
 
-export default WeightGoal;
+export default Goals;

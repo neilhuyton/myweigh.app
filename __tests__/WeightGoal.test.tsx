@@ -16,7 +16,7 @@ import { trpc } from "../src/trpc";
 import { server } from "../__mocks__/server";
 import "@testing-library/jest-dom";
 import { act } from "@testing-library/react";
-import WeightGoal from "../src/components/WeightGoal";
+import WeightGoal from "../src/pages/Goals";
 import {
   weightGetCurrentGoalHandler,
   weightSetGoalHandler,
@@ -83,7 +83,11 @@ describe("WeightGoal Component", () => {
   });
 
   beforeEach(() => {
-    server.use(weightGetCurrentGoalHandler, weightSetGoalHandler, weightUpdateGoalHandler);
+    server.use(
+      weightGetCurrentGoalHandler,
+      weightSetGoalHandler,
+      weightUpdateGoalHandler
+    );
   });
 
   afterEach(() => {
@@ -110,10 +114,16 @@ describe("WeightGoal Component", () => {
 
     await waitFor(
       () => {
-        expect(screen.queryByTestId("weight-goal-loading")).not.toBeInTheDocument();
-        expect(screen.getByRole("heading", { name: "Your Goals" })).toBeInTheDocument();
+        expect(
+          screen.queryByTestId("weight-goal-loading")
+        ).not.toBeInTheDocument();
+        expect(
+          screen.getByRole("heading", { name: "Your Goals" })
+        ).toBeInTheDocument();
         expect(screen.getByTestId("current-goal-heading")).toBeInTheDocument();
-        expect(screen.getByTestId("current-goal")).toHaveTextContent(/65\.00 kg.*28\/08\/2025/i);
+        expect(screen.getByTestId("current-goal")).toHaveTextContent(
+          /65\.00 kg.*28\/08\/2025/i
+        );
         expect(screen.getByTestId("goal-weight-form")).toBeInTheDocument();
         expect(screen.getByTestId("goal-weight-input")).toBeInTheDocument();
         expect(screen.getByTestId("submit-button")).toBeInTheDocument();
@@ -122,9 +132,15 @@ describe("WeightGoal Component", () => {
 
         // Verify Card containers
         const formCard = screen.getByTestId("goal-weight-form").closest("div");
-        expect(formCard).toHaveClass("mx-auto max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm");
-        const currentGoalCard = screen.getByTestId("current-goal").closest("div");
-        expect(currentGoalCard).toHaveClass("mx-auto max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm");
+        expect(formCard).toHaveClass(
+          "mx-auto max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm"
+        );
+        const currentGoalCard = screen
+          .getByTestId("current-goal")
+          .closest("div");
+        expect(currentGoalCard).toHaveClass(
+          "mx-auto max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm"
+        );
         expect(formCard).not.toEqual(currentGoalCard); // Ensure they are different containers
       },
       { timeout: 2000, interval: 100 }
@@ -136,8 +152,12 @@ describe("WeightGoal Component", () => {
 
     await waitFor(
       () => {
-        expect(screen.queryByTestId("weight-goal-loading")).not.toBeInTheDocument();
-        expect(screen.getByTestId("current-goal")).toHaveTextContent(/65\.00 kg.*28\/08\/2025/i);
+        expect(
+          screen.queryByTestId("weight-goal-loading")
+        ).not.toBeInTheDocument();
+        expect(screen.getByTestId("current-goal")).toHaveTextContent(
+          /65\.00 kg.*28\/08\/2025/i
+        );
         expect(screen.getByTestId("goal-weight-form")).toBeInTheDocument();
         expect(screen.getByTestId("goal-weight-input")).toBeInTheDocument();
         expect(screen.getByTestId("submit-button")).toBeInTheDocument();
@@ -187,7 +207,9 @@ describe("WeightGoal Component", () => {
       () => {
         const messageElement = screen.getByTestId("goal-message");
         expect(messageElement).toBeInTheDocument();
-        expect(messageElement).toHaveTextContent("Goal weight can have up to two decimal places.");
+        expect(messageElement).toHaveTextContent(
+          "Goal weight can have up to two decimal places."
+        );
         expect(messageElement).toHaveClass("text-destructive");
       },
       { timeout: 2000, interval: 100 }
@@ -217,7 +239,9 @@ describe("WeightGoal Component", () => {
       () => {
         const messageElement = screen.getByTestId("goal-message");
         expect(messageElement).toBeInTheDocument();
-        expect(messageElement).toHaveTextContent("Goal weight must be a positive number");
+        expect(messageElement).toHaveTextContent(
+          "Goal weight must be a positive number"
+        );
         expect(messageElement).toHaveClass("text-destructive");
       },
       { timeout: 2000, interval: 100 }

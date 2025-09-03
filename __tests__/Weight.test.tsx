@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
-import Weight from "../src/components/Weight";
+import Weight from "../src/pages/Weight";
 import "@testing-library/jest-dom";
 
 // Mock WeightForm and WeightList to isolate Weight component
