@@ -10,17 +10,17 @@ import {
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpLink } from "@trpc/client";
-import { trpc } from "../src/trpc";
-import { server } from "../__mocks__/server";
+import { trpc } from "../../src/trpc";
+import { server } from "../../__mocks__/server";
 import "@testing-library/jest-dom";
 import { act } from "react";
-import WeightChart from "../src/pages/Stats";
-import { useAuthStore } from "../src/store/authStore";
-import { generateToken } from "./utils/token";
+import WeightChart from "../../src/pages/Stats";
+import { useAuthStore } from "../../src/store/authStore";
+import { generateToken } from "../utils/token";
 import {
   weightGetWeightsHandler,
   weightGetCurrentGoalHandler,
-} from "../__mocks__/handlers";
+} from "../../__mocks__/handlers";
 
 // Mock lucide-react icons
 vi.mock("lucide-react", async () => {

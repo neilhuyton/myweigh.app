@@ -1,4 +1,4 @@
-// src/components/WeightGoal.tsx
+// src/pages/Goals.tsx
 import GoalForm from "../components/GoalForm";
 import CurrentGoal from "../components/CurrentGoal";
 import GoalList from "../components/GoalList";
