@@ -1,3 +1,4 @@
+// src/hooks/useLogin.ts
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,6 +7,7 @@ import { useAuthStore } from "../store/authStore";
 import { useEffect, useState } from "react";
 import type { TRPCClientErrorLike } from "@trpc/client";
 import type { AppRouter } from "server/trpc";
+import { router } from "../router/router"; // Import the router to get its type
 
 // Define the expected response type for the login mutation
 type LoginResponse = {
@@ -31,7 +33,11 @@ interface UseLoginReturn {
   handleSubmit: (data: FormValues) => Promise<void>;
 }
 
-export const useLogin = (): UseLoginReturn => {
+interface UseLoginProps {
+  navigate: typeof router.navigate; // Use the router's navigate type
+}
+
+export const useLogin = ({ navigate }: UseLoginProps): UseLoginReturn => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: { email: "", password: "" },
@@ -50,6 +56,7 @@ export const useLogin = (): UseLoginReturn => {
       setMessage("Login successful!");
       login(response.id, response.token, response.refreshToken);
       form.reset();
+      navigate({ to: "/weight" }); // Redirect to /weight after successful login
     },
     onError: (error: TRPCClientErrorLike<AppRouter>) => {
       setMessage(`Login failed: ${error.message || "Unknown error"}`);

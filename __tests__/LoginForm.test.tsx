@@ -19,6 +19,13 @@ import { server } from "../__mocks__/server";
 import { loginHandler, refreshTokenHandler } from "../__mocks__/handlers";
 import { act } from "@testing-library/react";
 import LoginForm from "../src/components/LoginForm";
+import {
+  RouterProvider,
+  createRouter,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+} from "@tanstack/react-router";
 
 describe("LoginForm Component", () => {
   const queryClient = new QueryClient({
@@ -26,15 +33,40 @@ describe("LoginForm Component", () => {
   });
 
   const setup = async () => {
+    // Create a minimal router
+    const rootRoute = createRootRoute({
+      component: () => <LoginForm />,
+    });
+
+    const loginRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: "/login",
+    });
+
+    const weightRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: "/weight",
+    });
+
+    const routeTree = rootRoute.addChildren([loginRoute, weightRoute]);
+
+    const history = createMemoryHistory({ initialEntries: ["/login"] });
+    const testRouter = createRouter({
+      routeTree,
+      history,
+    });
+
     await act(async () => {
       render(
         <trpc.Provider client={trpcClient} queryClient={queryClient}>
           <QueryClientProvider client={queryClient}>
-            <LoginForm />
+            <RouterProvider router={testRouter} />
           </QueryClientProvider>
         </trpc.Provider>
       );
     });
+
+    return { history, testRouter };
   };
 
   beforeAll(() => {
@@ -94,9 +126,9 @@ describe("LoginForm Component", () => {
     });
   });
 
-  it("handles successful login and updates auth state", async () => {
+  it("handles successful login, updates auth state, and redirects to /weight", async () => {
     server.use(loginHandler, refreshTokenHandler);
-    await setup();
+    const { history } = await setup();
 
     await waitFor(() => {
       expect(screen.getByTestId("login-form")).toBeInTheDocument();
@@ -125,6 +157,7 @@ describe("LoginForm Component", () => {
         expect(screen.getByTestId("login-message")).toHaveClass(
           "text-green-500"
         );
+        expect(history.location.pathname).toBe("/weight"); // Verify redirect
       },
       { timeout: 5000, interval: 100 }
     );
