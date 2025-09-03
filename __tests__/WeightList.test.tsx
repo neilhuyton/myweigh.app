@@ -17,6 +17,7 @@ import "@testing-library/jest-dom";
 import WeightList from "../src/components/WeightList";
 import { weightGetWeightsHandler } from "../__mocks__/handlers/weightGetWeights";
 import { weightDeleteHandler } from "../__mocks__/handlers/weightDelete";
+import { resetWeights } from "../__mocks__/handlers/weightsData"; // Import resetWeights
 import { useAuthStore } from "../src/store/authStore";
 import { generateToken } from "./utils/token";
 import { act } from "@testing-library/react";
@@ -122,7 +123,6 @@ describe("WeightList Component", () => {
   beforeAll(() => {
     server.listen({ onUnhandledRequest: "error" });
     server.use(weightGetWeightsHandler, weightDeleteHandler);
-    vi.spyOn(window, "confirm").mockImplementation(() => true);
   });
 
   afterEach(() => {
@@ -138,6 +138,7 @@ describe("WeightList Component", () => {
       login: vi.fn(),
       logout: vi.fn(),
     });
+    resetWeights(); // Reset weights data after each test
   });
 
   afterAll(() => {
@@ -164,7 +165,7 @@ describe("WeightList Component", () => {
     );
   });
 
-  it("deletes a weight measurement when delete button is clicked", async () => {
+  it("deletes a weight measurement when delete button is clicked and confirmed", async () => {
     await setup();
 
     await waitFor(
@@ -175,20 +176,32 @@ describe("WeightList Component", () => {
         expect(screen.getByText("70")).toBeInTheDocument();
         expect(screen.getByText("69.9")).toBeInTheDocument();
         expect(
-          screen.getByRole("button", {
-            name: /Delete weight measurement from 01\/10\/2023/i,
-          })
+          screen.getByTestId("delete-button-1")
         ).toBeInTheDocument();
         expect(screen.queryByTestId("error-message")).not.toBeInTheDocument();
       },
       { timeout: 2000 }
     );
 
-    const deleteButton = screen.getByRole("button", {
-      name: /Delete weight measurement from 01\/10\/2023/i,
-    });
+    const deleteButton = screen.getByTestId("delete-button-1");
     await act(async () => {
       await userEvent.click(deleteButton);
+    });
+
+    await waitFor(
+      () => {
+        expect(screen.getByText("Are you sure?")).toBeInTheDocument();
+        expect(
+          screen.getByText(/This action cannot be undone/)
+        ).toBeInTheDocument();
+        expect(screen.getByTestId("cancel-delete")).toBeInTheDocument();
+        expect(screen.getByTestId("confirm-delete")).toBeInTheDocument();
+      },
+      { timeout: 1000 }
+    );
+
+    await act(async () => {
+      await userEvent.click(screen.getByTestId("confirm-delete"));
     });
 
     await waitFor(
@@ -198,6 +211,56 @@ describe("WeightList Component", () => {
         expect(screen.queryByTestId("error-message")).not.toBeInTheDocument();
       },
       { timeout: 2000 }
+    );
+  });
+
+  it("cancels deletion when cancel button is clicked", async () => {
+    await setup();
+
+    await waitFor(
+      () => {
+        expect(
+          screen.queryByTestId("weight-list-loading")
+        ).not.toBeInTheDocument();
+        expect(screen.getByText("70")).toBeInTheDocument();
+        expect(screen.getByText("69.9")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("delete-button-1")
+        ).toBeInTheDocument();
+        expect(screen.queryByTestId("error-message")).not.toBeInTheDocument();
+      },
+      { timeout: 2000 }
+    );
+
+    const deleteButton = screen.getByTestId("delete-button-1");
+    await act(async () => {
+      await userEvent.click(deleteButton);
+    });
+
+    await waitFor(
+      () => {
+        expect(screen.getByText("Are you sure?")).toBeInTheDocument();
+        expect(
+          screen.getByText(/This action cannot be undone/)
+        ).toBeInTheDocument();
+        expect(screen.getByTestId("cancel-delete")).toBeInTheDocument();
+        expect(screen.getByTestId("confirm-delete")).toBeInTheDocument();
+      },
+      { timeout: 1000 }
+    );
+
+    await act(async () => {
+      await userEvent.click(screen.getByTestId("cancel-delete"));
+    });
+
+    await waitFor(
+      () => {
+        expect(screen.getByText("70")).toBeInTheDocument();
+        expect(screen.getByText("69.9")).toBeInTheDocument();
+        expect(screen.queryByText("Are you sure?")).not.toBeInTheDocument();
+        expect(screen.queryByTestId("error-message")).not.toBeInTheDocument();
+      },
+      { timeout: 1000 }
     );
   });
 });
