@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useResetPassword } from "../hooks/useResetPassword";
-import { router } from "../router/router";
+import { useNavigate } from "@tanstack/react-router"; // Import useNavigate
 import { Logo } from "./Logo";
 import { LoadingSpinner } from "./LoadingSpinner";
 
@@ -21,6 +21,7 @@ interface ResetPasswordFormProps {
 
 function ResetPasswordForm({ className }: ResetPasswordFormProps) {
   const { form, message, isPending, handleSubmit } = useResetPassword();
+  const navigate = useNavigate(); // Use hook for navigation
 
   return (
     <div
@@ -113,7 +114,7 @@ function ResetPasswordForm({ className }: ResetPasswordFormProps) {
                   role="link"
                   onClick={(e) => {
                     e.preventDefault();
-                    router.navigate({ to: "/login" });
+                    navigate({ to: "/login" }); // Use navigate instead of router.navigate
                   }}
                   className="underline underline-offset-4"
                   data-testid="back-to-login-link"

@@ -1,4 +1,5 @@
-import { createRouter, createRootRoute } from "@tanstack/react-router";
+// src/router/router.tsx
+import { createRouter, createRootRoute, createRoute, redirect } from "@tanstack/react-router";
 import Root from "../components/Root";
 import { queryClient, trpcClient } from "../client";
 import {
@@ -12,6 +13,7 @@ import {
   verifyEmailRoute,
   profileRoute,
 } from "./routes";
+import { checkAuth } from "./routes";
 
 // Define root route
 const rootRoute = createRootRoute({
@@ -23,8 +25,20 @@ const rootRoute = createRootRoute({
   ),
 });
 
+// Define index route for /
+export const indexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/",
+  beforeLoad: () => {
+    if (checkAuth()) {
+      throw redirect({ to: "/weight", statusCode: 307 });
+    }
+  },
+});
+
 // Create route tree
 const routeTree = rootRoute.addChildren([
+  indexRoute,
   registerRoute(rootRoute),
   loginRoute(rootRoute),
   resetPasswordRoute(rootRoute),
