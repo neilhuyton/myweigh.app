@@ -1,5 +1,13 @@
 // __tests__/router.test.tsx
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  afterEach,
+  vi,
+} from "vitest";
 import { redirect } from "@tanstack/react-router";
 import { useAuthStore } from "../src/store/authStore";
 import { checkAuth } from "../src/router/routes";
@@ -137,11 +145,34 @@ describe("Router", () => {
         refreshToken: "mock-refresh-token",
       });
 
-      const mockedRouter = vi.mocked<RouterMock>(await vi.importMock("../src/router/router"));
+      const mockedRouter = vi.mocked<RouterMock>(
+        await vi.importMock("../src/router/router")
+      );
       try {
         await mockedRouter.indexRoute.options.beforeLoad();
       } catch (error) {
         expect(error).toHaveProperty("options.to", "/weight");
+        expect(error).toHaveProperty("options.statusCode", 307);
+      }
+    });
+  });
+
+  it("redirects to /login from root path when unauthenticated", async () => {
+    await act(async () => {
+      useAuthStore.setState({
+        isLoggedIn: false,
+        userId: null,
+        token: null,
+        refreshToken: null,
+      });
+
+      const mockedRouter = vi.mocked<RouterMock>(
+        await vi.importMock("../src/router/router")
+      );
+      try {
+        await mockedRouter.indexRoute.options.beforeLoad();
+      } catch (error) {
+        expect(error).toHaveProperty("options.to", "/login");
         expect(error).toHaveProperty("options.statusCode", 307);
       }
     });
