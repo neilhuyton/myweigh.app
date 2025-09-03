@@ -1,6 +1,7 @@
-// src/components/Weight.tsx
+// src/pages/Weight.tsx
 import WeightForm from "../components/WeightForm";
 import WeightList from "../components/WeightList";
+import WeightChangeMessage from "../components/WeightChangeMessage";
 
 function Weight() {
   return (
@@ -13,6 +14,7 @@ function Weight() {
         Your Weight
       </h1>
       <WeightForm />
+      <WeightChangeMessage />
       <WeightList />
     </div>
   );

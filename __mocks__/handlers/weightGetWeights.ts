@@ -1,6 +1,7 @@
+// __mocks__/handlers/weightGetWeights.ts
 import { http, HttpResponse } from "msw";
 import jwt from "jsonwebtoken";
-import { weights } from "./weightsData";
+import { weights, noChangeWeights, gainWeights, singleWeight } from "./weightsData";
 
 export const weightGetWeightsHandler = http.get(
   "http://localhost:8888/.netlify/functions/trpc/weight.getWeights",
@@ -71,6 +72,27 @@ export const weightGetWeightsHandler = http.get(
     if (userId === "empty-user-id") {
       return HttpResponse.json(
         { id: 0, result: { type: "data", data: [] } },
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    if (userId === "no-change-user-id") {
+      return HttpResponse.json(
+        { id: 0, result: { type: "data", data: noChangeWeights } },
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    if (userId === "gain-user-id") {
+      return HttpResponse.json(
+        { id: 0, result: { type: "data", data: gainWeights } },
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    if (userId === "single-user-id") {
+      return HttpResponse.json(
+        { id: 0, result: { type: "data", data: singleWeight } },
         { status: 200, headers: { "Content-Type": "application/json" } }
       );
     }
