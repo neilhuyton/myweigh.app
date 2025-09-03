@@ -12,8 +12,10 @@ import { verifyEmailHandler } from "./verifyEmail";
 import { authLogoutHandler } from "./authLogout";
 import { userUpdateEmailHandler } from "./userUpdateEmail";
 import { weightCreateHandler } from "./weightCreate";
+import { userUpdateFirstLoginHandler } from "./updateFirstLogin";
 
 export const handlers = [
+  userUpdateFirstLoginHandler,
   weightGetGoalsHandler,
   verifyEmailHandler,
   loginHandler,
@@ -31,6 +33,7 @@ export const handlers = [
 ];
 
 export {
+  userUpdateFirstLoginHandler,
   weightGetGoalsHandler,
   verifyEmailHandler,
   loginHandler,
