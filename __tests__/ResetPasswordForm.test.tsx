@@ -1,3 +1,5 @@
+// __tests__/ResetPasswordForm.test.tsx
+
 import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -9,6 +11,13 @@ import { act } from 'react-dom/test-utils';
 import { resetPasswordRequestHandler } from '../__mocks__/handlers/resetPasswordRequest';
 import ResetPasswordForm from '../src/components/ResetPasswordForm';
 import { trpcClient, queryClient } from '../src/client';
+import {
+  RouterProvider,
+  createRouter,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+} from '@tanstack/react-router';
 
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({
@@ -48,7 +57,7 @@ vi.mock('../src/components/Logo', () => ({
   ),
 }));
 
-// Mock router
+// Mock router navigate function
 vi.mock('../src/router/router', () => ({
   router: {
     navigate: vi.fn(),
@@ -77,15 +86,40 @@ describe('ResetPasswordForm Component', () => {
       ),
     }));
 
+    // Create a minimal router
+    const rootRoute = createRootRoute({
+      component: () => <ResetPasswordForm />,
+    });
+
+    const resetPasswordRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/reset-password',
+    });
+
+    const loginRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/login',
+    });
+
+    const routeTree = rootRoute.addChildren([resetPasswordRoute, loginRoute]);
+
+    const history = createMemoryHistory({ initialEntries: ['/reset-password'] });
+    const testRouter = createRouter({
+      routeTree,
+      history,
+    });
+
     await act(async () => {
       render(
         <trpc.Provider client={trpcClient} queryClient={queryClient}>
           <QueryClientProvider client={queryClient}>
-            <ResetPasswordForm />
+            <RouterProvider router={testRouter} />
           </QueryClientProvider>
         </trpc.Provider>
       );
     });
+
+    return { history, testRouter };
   };
 
   beforeAll(() => {

@@ -4,12 +4,11 @@ import { useNavigate } from "@tanstack/react-router";
 import { trpc } from "../trpc";
 import { useAuthStore } from "../store/authStore";
 
-// Define Goal type to match weightRouter.ts and Prisma schema
 type Goal = {
   id: string;
   goalWeightKg: number;
   goalSetAt: string;
-  reachedAt: string | null; // Use string to match serialized Date from server
+  reachedAt: string | null;
 };
 
 export function useWeightForm() {
@@ -21,12 +20,9 @@ export function useWeightForm() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
 
-  // Fetch user's current (unreached) weight goal
   const { data: currentGoal } = trpc.weight.getCurrentGoal.useQuery(undefined, {
     enabled: !!userId,
   }) as { data: Goal | null };
-
-  // Redirect to login if not logged in
 
   const queryClient = trpc.useContext();
   const weightMutation = trpc.weight.create.useMutation({
@@ -35,26 +31,20 @@ export function useWeightForm() {
       setWeight("");
       setNote("");
 
-      // Check if the current goal exists and was just reached
       if (
         currentGoal &&
         variables.weightKg <= currentGoal.goalWeightKg &&
         !currentGoal.reachedAt
       ) {
-        // Verify goal status after submission by refetching
         const updatedGoal = await queryClient.weight.getCurrentGoal.fetch();
         if (!updatedGoal) {
-          // If getCurrentGoal returns null, the goal was marked as reached
           setShowConfetti(true);
           setFadeOut(false);
-          // Start fade-out 1 second before the end
           setTimeout(() => setFadeOut(true), 6000);
-          // Hide confetti after 7 seconds
           setTimeout(() => setShowConfetti(false), 7000);
         }
       }
 
-      // Invalidate queries to refresh goal and weight data
       queryClient.weight.getWeights.invalidate();
       queryClient.weight.getCurrentGoal.invalidate();
       queryClient.weight.getGoals.invalidate();
@@ -81,11 +71,18 @@ export function useWeightForm() {
       setMessage("Please enter a valid weight.");
       return;
     }
+    // Validate two decimal places
+    const decimalPlaces = (weight.split(".")[1]?.length || 0);
+    if (decimalPlaces > 2) {
+      setMessage("Weight can have up to two decimal places.");
+      return;
+    }
     weightMutation.mutate({ weightKg, note: note || undefined });
   };
 
   const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setWeight(e.target.value);
+    setMessage(null);
   };
 
   const handleNoteChange = (e: React.ChangeEvent<HTMLInputElement>) => {

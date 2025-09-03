@@ -11,14 +11,12 @@ import { LoadingSpinner } from "./LoadingSpinner";
 function WeightForm() {
   const {
     weight,
-    // note,
     message,
     isSubmitting,
     showConfetti,
     fadeOut,
     handleSubmit,
     handleWeightChange,
-    // handleNoteChange,
   } = useWeightForm();
 
   return (
@@ -62,32 +60,13 @@ function WeightForm() {
                 placeholder="Enter your weight (kg)"
                 required
                 min="0"
-                step="0.1"
+                step="0.01" // Changed to allow two decimal places
                 disabled={isSubmitting}
                 data-testid="weight-input"
                 aria-describedby="weight-error"
                 className="h-10 rounded-md border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
-            {/* <div className="space-y-2">
-              <Label
-                htmlFor="note"
-                className="text-sm font-medium text-foreground"
-                data-testid="note-label"
-              >
-                Optional Note
-              </Label>
-              <Input
-                id="note"
-                type="text"
-                value={note}
-                onChange={handleNoteChange}
-                placeholder="Optional note"
-                disabled={isSubmitting}
-                data-testid="note-input"
-                className="h-10 rounded-md border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
-              />
-            </div> */}
             {isSubmitting && (
               <div className="flex justify-center">
                 <LoadingSpinner size="md" testId="weight-form-submitting" />

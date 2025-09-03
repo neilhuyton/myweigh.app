@@ -1,3 +1,4 @@
+// __mocks__/handlers/weightUpdateGoal.ts
 import { http, HttpResponse } from "msw";
 import jwt from "jsonwebtoken";
 
@@ -91,7 +92,46 @@ export const weightUpdateGoalHandler = http.post(
       id = typedBody.id ?? 0;
     }
 
-    if (userId === "test-user-id" && goalId && goalWeightKg && goalWeightKg > 0) {
+    if (!goalId || !goalWeightKg || goalWeightKg <= 0) {
+      return HttpResponse.json(
+        {
+          id,
+          error: {
+            message: "Goal ID and valid weight are required",
+            code: -32001,
+            data: {
+              code: "BAD_REQUEST",
+              httpStatus: 400,
+              path: "weight.updateGoal",
+            },
+          },
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate two decimal places
+    const goalWeightStr = goalWeightKg.toString();
+    const decimalPlaces = (goalWeightStr.split(".")[1]?.length || 0);
+    if (decimalPlaces > 2) {
+      return HttpResponse.json(
+        {
+          id,
+          error: {
+            message: "Goal weight can have up to two decimal places",
+            code: -32001,
+            data: {
+              code: "BAD_REQUEST",
+              httpStatus: 400,
+              path: "weight.updateGoal",
+            },
+          },
+        },
+        { status: 400 }
+      );
+    }
+
+    if (userId === "test-user-id") {
       return HttpResponse.json(
         {
           id,

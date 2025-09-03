@@ -1,3 +1,4 @@
+// __mocks__/handlers/weightSetGoal.ts
 import { http, HttpResponse } from "msw";
 import jwt from "jsonwebtoken";
 
@@ -50,8 +51,10 @@ export const weightSetGoalHandler = http.post(
     }
 
     const token = authHeader.split(" ")[1];
+    let userId: string | null = null;
     try {
-      jwt.verify(token, process.env.JWT_SECRET || "your-secret-key");
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || "your-secret-key") as { userId: string };
+      userId = decoded.userId;
     } catch {
       return HttpResponse.json(
         {
@@ -100,15 +103,58 @@ export const weightSetGoalHandler = http.post(
       );
     }
 
+    // Validate two decimal places
+    const goalWeightStr = goalWeightKg.toString();
+    const decimalPlaces = (goalWeightStr.split(".")[1]?.length || 0);
+    if (decimalPlaces > 2) {
+      return HttpResponse.json(
+        {
+          id,
+          error: {
+            message: "Goal weight can have up to two decimal places",
+            code: -32001,
+            data: {
+              code: "BAD_REQUEST",
+              httpStatus: 400,
+              path: "weight.setGoal",
+            },
+          },
+        },
+        { status: 400 }
+      );
+    }
+
+    if (userId === "test-user-id") {
+      return HttpResponse.json(
+        {
+          id,
+          result: {
+            type: "data",
+            data: {
+              id: "2",
+              goalWeightKg: Number(goalWeightKg.toFixed(2)), // Format to two decimal places
+              goalSetAt: new Date().toISOString(),
+            },
+          },
+        },
+        { status: 200 }
+      );
+    }
+
     return HttpResponse.json(
       {
         id,
-        result: {
-          type: "data",
-          data: { id: "2", goalWeightKg, goalSetAt: new Date().toISOString() },
+        error: {
+          message: "Unauthorized: Invalid user ID",
+          code: -32001,
+          data: {
+            code: "UNAUTHORIZED",
+            httpStatus: 401,
+            path: "weight.setGoal",
+          },
         },
       },
-      { status: 200 }
+      { status: 401 }
     );
   }
 );
