@@ -1,4 +1,3 @@
-// __tests__/WeightForm.test.tsx
 import {
   describe,
   it,
@@ -17,15 +16,22 @@ import { server } from "../__mocks__/server";
 import "@testing-library/jest-dom";
 import { act } from "@testing-library/react";
 import WeightForm from "../src/components/WeightForm";
-import { weightCreateHandler, weightGetCurrentGoalHandler } from "../__mocks__/handlers";
+import {
+  weightCreateHandler,
+  weightGetCurrentGoalHandler,
+} from "../__mocks__/handlers";
 import { useAuthStore } from "../src/store/authStore";
 import { generateToken } from "./utils/token";
 
 // Mock Confetti component (still needed as it's used in WeightForm.tsx)
 vi.mock("react-confetti", () => ({
-  default: ({ className, ...props }: { className: string; "data-testid": string }) => (
-    <div className={className} data-testid={props["data-testid"]} />
-  ),
+  default: ({
+    className,
+    ...props
+  }: {
+    className: string;
+    "data-testid": string;
+  }) => <div className={className} data-testid={props["data-testid"]} />,
 }));
 
 // Mock LoadingSpinner component
@@ -117,8 +123,12 @@ describe("WeightForm Component", () => {
 
     await waitFor(
       () => {
-        expect(screen.queryByTestId("weight-form-submitting")).not.toBeInTheDocument();
-        expect(screen.getByTestId("weight-label")).toHaveTextContent("Weight (kg)");
+        expect(
+          screen.queryByTestId("weight-form-submitting")
+        ).not.toBeInTheDocument();
+        expect(screen.getByTestId("weight-label")).toHaveTextContent(
+          "Weight (kg)"
+        );
         expect(screen.getByTestId("weight-input")).toBeInTheDocument();
         expect(screen.getByTestId("submit-button")).toBeInTheDocument();
         expect(screen.queryByTestId("weight-message")).not.toBeInTheDocument();
@@ -132,7 +142,9 @@ describe("WeightForm Component", () => {
 
     await waitFor(
       () => {
-        expect(screen.queryByTestId("weight-form-submitting")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("weight-form-submitting")
+        ).not.toBeInTheDocument();
         expect(screen.getByTestId("weight-input")).toBeInTheDocument();
         expect(screen.getByTestId("submit-button")).toBeInTheDocument();
       },
@@ -143,7 +155,6 @@ describe("WeightForm Component", () => {
       const input = screen.getByTestId("weight-input") as HTMLInputElement;
       await userEvent.clear(input);
       await userEvent.type(input, "70.5", { delay: 10 });
-      console.log("Input value before submission:", input.value); // Debug
       expect(input).toHaveValue(70.5);
       const form = screen.getByTestId("weight-form");
       await form.dispatchEvent(new Event("submit", { bubbles: true }));
@@ -153,7 +164,9 @@ describe("WeightForm Component", () => {
       () => {
         const messageElement = screen.getByTestId("weight-message");
         expect(messageElement).toBeInTheDocument();
-        expect(messageElement).toHaveTextContent("Weight recorded successfully!");
+        expect(messageElement).toHaveTextContent(
+          "Weight recorded successfully!"
+        );
         expect(screen.getByTestId("weight-input")).toHaveValue(null);
       },
       { timeout: 5000, interval: 100 }
@@ -174,7 +187,6 @@ describe("WeightForm Component", () => {
       const input = screen.getByTestId("weight-input") as HTMLInputElement;
       await userEvent.clear(input);
       await userEvent.type(input, "-5", { delay: 10 });
-      console.log("Input value before submission:", input.value); // Debug
       expect(input).toHaveValue(-5);
       const form = screen.getByTestId("weight-form");
       await form.dispatchEvent(new Event("submit", { bubbles: true }));
@@ -184,7 +196,9 @@ describe("WeightForm Component", () => {
       () => {
         const messageElement = screen.getByTestId("weight-message");
         expect(messageElement).toBeInTheDocument();
-        expect(messageElement).toHaveTextContent("Please enter a valid weight.");
+        expect(messageElement).toHaveTextContent(
+          "Please enter a valid weight."
+        );
         expect(messageElement).toHaveClass("text-destructive");
       },
       { timeout: 5000, interval: 100 }
@@ -222,7 +236,6 @@ describe("WeightForm Component", () => {
       const input = screen.getByTestId("weight-input") as HTMLInputElement;
       await userEvent.clear(input);
       await userEvent.type(input, "70", { delay: 10 });
-      console.log("Input value before submission:", input.value); // Debug
       const form = screen.getByTestId("weight-form");
       await form.dispatchEvent(new Event("submit", { bubbles: true }));
     });
@@ -231,7 +244,9 @@ describe("WeightForm Component", () => {
       () => {
         const messageElement = screen.getByTestId("weight-message");
         expect(messageElement).toBeInTheDocument();
-        expect(messageElement).toHaveTextContent("User ID not found. Please log in again.");
+        expect(messageElement).toHaveTextContent(
+          "User ID not found. Please log in again."
+        );
       },
       { timeout: 5000, interval: 100 }
     );
@@ -251,7 +266,6 @@ describe("WeightForm Component", () => {
       const input = screen.getByTestId("weight-input") as HTMLInputElement;
       await userEvent.clear(input);
       await userEvent.type(input, "70", { delay: 10 });
-      console.log("Input value before submission:", input.value); // Debug
       expect(input).toHaveValue(70);
       const form = screen.getByTestId("weight-form");
       await form.dispatchEvent(new Event("submit", { bubbles: true }));
@@ -261,7 +275,9 @@ describe("WeightForm Component", () => {
       () => {
         const messageElement = screen.getByTestId("weight-message");
         expect(messageElement).toBeInTheDocument();
-        expect(messageElement).toHaveTextContent("Failed to record weight: Failed to create weight");
+        expect(messageElement).toHaveTextContent(
+          "Failed to record weight: Failed to create weight"
+        );
         expect(messageElement).toHaveClass("text-destructive");
       },
       { timeout: 5000, interval: 100 }

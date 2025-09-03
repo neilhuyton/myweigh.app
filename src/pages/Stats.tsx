@@ -9,7 +9,7 @@ import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { useWeightChart } from "../hooks/useWeightChart";
 
-function WeightChart() {
+function Stats() {
   const {
     weights,
     isLoading,
@@ -197,4 +197,4 @@ function WeightChart() {
   );
 }
 
-export default WeightChart;
+export default Stats;

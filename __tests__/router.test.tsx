@@ -1,11 +1,19 @@
 // __tests__/router.test.tsx
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  afterEach,
+  vi,
+} from "vitest";
 import { redirect } from "@tanstack/react-router";
 import { useAuthStore } from "../src/store/authStore";
 import { checkAuth } from "../src/router/routes";
 import { act } from "@testing-library/react";
 import { server } from "../__mocks__/server";
-import { router } from "../src/router/router"; // Import the router to infer its type
+import { router } from "../src/router/router";
 
 // Mock jwt-decode
 vi.mock("jwt-decode", () => ({
@@ -17,15 +25,14 @@ vi.mock("jwt-decode", () => ({
       return {
         userId: "test-user-1",
         exp: Math.floor(Date.now() / 1000) + 3600,
-      }; // Valid token
+      };
     }
     throw new Error("Invalid token");
   }),
 }));
 
-// Define the mock structure for router
 interface RouterMock {
-  router: Partial<typeof router>; // Use Partial<typeof router> for type safety
+  router: Partial<typeof router>;
   indexRoute: {
     options: {
       beforeLoad: () => Promise<void>;
@@ -33,7 +40,6 @@ interface RouterMock {
   };
 }
 
-// Mock router.tsx to avoid import errors
 vi.mock("../src/router/router", () => ({
   router: {},
   indexRoute: {
@@ -90,7 +96,6 @@ describe("Router", () => {
       try {
         await checkAuth();
       } catch (error) {
-        console.log("Unauthenticated error:", error);
         expect(error).toHaveProperty("options.to", "/login");
         expect(error).toHaveProperty("options.statusCode", 307);
       }
@@ -108,7 +113,7 @@ describe("Router", () => {
       });
 
       const result = await checkAuth();
-      expect(result).toBe(true); // Valid token
+      expect(result).toBe(true);
     });
   });
 
@@ -124,7 +129,6 @@ describe("Router", () => {
       try {
         await checkAuth();
       } catch (error) {
-        console.log("Invalid token error:", error);
         expect(error).toHaveProperty("options.to", "/login");
         expect(error).toHaveProperty("options.statusCode", 307);
       }
@@ -141,12 +145,34 @@ describe("Router", () => {
         refreshToken: "mock-refresh-token",
       });
 
-      const mockedRouter = vi.mocked<RouterMock>(await vi.importMock("../src/router/router"));
+      const mockedRouter = vi.mocked<RouterMock>(
+        await vi.importMock("../src/router/router")
+      );
       try {
         await mockedRouter.indexRoute.options.beforeLoad();
       } catch (error) {
-        console.log("Root redirect error:", error);
         expect(error).toHaveProperty("options.to", "/weight");
+        expect(error).toHaveProperty("options.statusCode", 307);
+      }
+    });
+  });
+
+  it("redirects to /login from root path when unauthenticated", async () => {
+    await act(async () => {
+      useAuthStore.setState({
+        isLoggedIn: false,
+        userId: null,
+        token: null,
+        refreshToken: null,
+      });
+
+      const mockedRouter = vi.mocked<RouterMock>(
+        await vi.importMock("../src/router/router")
+      );
+      try {
+        await mockedRouter.indexRoute.options.beforeLoad();
+      } catch (error) {
+        expect(error).toHaveProperty("options.to", "/login");
         expect(error).toHaveProperty("options.statusCode", 307);
       }
     });

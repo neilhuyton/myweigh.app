@@ -1,8 +1,8 @@
 // src/router/routes.ts
 import { createRoute, redirect, type RootRoute } from "@tanstack/react-router";
-import Weight from "../components/Weight";
-import WeightChart from "../components/WeightChart";
-import WeightGoal from "../components/WeightGoal";
+import Weight from "../pages/Weight";
+import WeightChart from "../pages/Stats";
+import WeightGoal from "../pages/Goals";
 import Register from "../components/Register";
 import LoginForm from "../components/LoginForm";
 import ResetPasswordForm from "../components/ResetPasswordForm";
@@ -24,27 +24,18 @@ interface DecodedToken {
 }
 
 export const checkAuth = () => {
-  console.log("AAA");
   const { isLoggedIn, token } = useAuthStore.getState();
   if (!isLoggedIn || !token) {
-    console.log("BBB");
-
     throw redirect({ to: "/login" });
   }
   try {
-    console.log("CCC");
-
     const decoded = jwtDecode<DecodedToken>(token);
     const now = Math.floor(Date.now() / 1000);
     if (decoded.exp < now) {
-      console.log("DDD");
-
       return false; // Let trpcClient handle refresh
     }
     return true;
   } catch {
-    console.log("EEE");
-
     throw redirect({ to: "/login" });
   }
 };

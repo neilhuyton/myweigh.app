@@ -1,6 +1,6 @@
 // src/components/Weight.tsx
-import WeightForm from "./WeightForm";
-import WeightList from "./WeightList";
+import WeightForm from "../components/WeightForm";
+import WeightList from "../components/WeightList";
 
 function Weight() {
   return (

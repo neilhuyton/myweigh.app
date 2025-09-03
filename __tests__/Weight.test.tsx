@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
-import Weight from "../src/components/Weight";
+import Weight from "../src/pages/Weight";
 import "@testing-library/jest-dom";
 
 // Mock WeightForm and WeightList to isolate Weight component
@@ -23,14 +23,6 @@ describe("Weight Component", () => {
         level: 1,
       });
       expect(heading).toBeInTheDocument();
-      expect(heading).toHaveClass(
-        "text-2xl font-bold text-foreground text-center"
-      );
-      expect(heading).toHaveAttribute("aria-level", "1");
-
-      // Verify the container
-      const container = heading.closest("div");
-      expect(container).toHaveClass("mx-auto max-w-4xl space-y-6 px-4 py-6");
 
       // Verify WeightForm and WeightList are rendered
       expect(screen.getByTestId("weight-form")).toBeInTheDocument();

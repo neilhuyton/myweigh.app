@@ -1,4 +1,3 @@
-// __mocks__/handlers.ts
 import { http, HttpResponse } from "msw";
 
 interface Goal {
@@ -18,11 +17,8 @@ let goal: Goal | null = {
 export const weightGetCurrentGoalHandler = http.get(
   "http://localhost:8888/.netlify/functions/trpc/weight.getCurrentGoal",
   async ({ request, params }) => {
-    console.log("Handling weight.getCurrentGoal"); // Debug
     const authHeader = request.headers.get("Authorization");
-    console.log("Authorization header:", authHeader); // Debug
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      console.log("No valid Authorization header"); // Debug
       return HttpResponse.json(
         {
           id: 0,
@@ -45,9 +41,7 @@ export const weightGetCurrentGoalHandler = http.get(
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
       userId = payload.userId;
-      console.log("Extracted userId:", userId); // Debug
     } catch {
-      console.log("Invalid token"); // Debug
       return HttpResponse.json(
         {
           id: 0,
@@ -65,7 +59,6 @@ export const weightGetCurrentGoalHandler = http.get(
       );
     }
 
-    console.log("Returning goal:", JSON.stringify(goal, null, 2)); // Debug
     if (userId === "test-user-id") {
       return HttpResponse.json(
         {
@@ -130,7 +123,6 @@ export const weightGetCurrentGoalHandler = http.get(
       );
     }
 
-    console.log("Unauthorized userId:", userId); // Debug
     return HttpResponse.json(
       {
         id: 0,
@@ -152,11 +144,8 @@ export const weightGetCurrentGoalHandler = http.get(
 export const weightCreateHandler = http.post(
   "http://localhost:8888/.netlify/functions/trpc/weight.create",
   async ({ request }) => {
-    console.log("Handling weight.create"); // Debug
     const authHeader = request.headers.get("Authorization");
-    console.log("Authorization header:", authHeader); // Debug
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      console.log("No valid Authorization header"); // Debug
       return HttpResponse.json(
         {
           id: 0,
@@ -179,9 +168,7 @@ export const weightCreateHandler = http.post(
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
       userId = payload.userId;
-      console.log("Extracted userId:", userId); // Debug
     } catch {
-      console.log("Invalid token"); // Debug
       return HttpResponse.json(
         {
           id: 0,
@@ -202,9 +189,7 @@ export const weightCreateHandler = http.post(
     let body: unknown;
     try {
       body = await request.json();
-      console.log("Raw request body:", JSON.stringify(body, null, 2)); // Debug
     } catch {
-      console.log("Failed to parse request body"); // Debug
       return HttpResponse.json(
         {
           id: 0,
@@ -230,7 +215,6 @@ export const weightCreateHandler = http.post(
       ("note" in b ? typeof b.note === "string" || b.note === undefined : true);
 
     if (!isValidBody(body)) {
-      console.log("Invalid body structure:", body); // Debug
       return HttpResponse.json(
         {
           id: 0,
@@ -249,10 +233,8 @@ export const weightCreateHandler = http.post(
     }
 
     const weightKg = typeof body.weightKg === "string" ? parseFloat(body.weightKg) : body.weightKg;
-    console.log("weightKgInput:", body.weightKg, "parsed weightKg:", weightKg); // Debug
 
     if (isNaN(weightKg) || weightKg <= 0) {
-      console.log("Invalid weight value:", weightKg); // Debug
       return HttpResponse.json(
         {
           id: 0,
@@ -273,9 +255,7 @@ export const weightCreateHandler = http.post(
     if (userId === "test-user-id") {
       if (goal && weightKg <= goal.goalWeightKg && !goal.reachedAt) {
         goal = { ...goal, reachedAt: "2025-09-02T00:00:00Z" };
-        console.log("Goal updated with reachedAt:", goal); // Debug
       }
-      console.log("Returning success for userId:", userId); // Debug
       return HttpResponse.json(
         {
           id: 0,
@@ -295,7 +275,6 @@ export const weightCreateHandler = http.post(
     }
 
     if (userId === "error-user-id") {
-      console.log("Returning error for userId:", userId); // Debug
       return HttpResponse.json(
         {
           id: 0,
@@ -313,7 +292,6 @@ export const weightCreateHandler = http.post(
       );
     }
 
-    console.log("Unauthorized userId:", userId); // Debug
     return HttpResponse.json(
       {
         id: 0,

@@ -32,6 +32,8 @@ export const indexRoute = createRoute({
   beforeLoad: () => {
     if (checkAuth()) {
       throw redirect({ to: "/weight", statusCode: 307 });
+    } else {
+      throw redirect({ to: "/login", statusCode: 307 });
     }
   },
 });
