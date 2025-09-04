@@ -6,7 +6,7 @@ import {
   createTRPCErrorResponse,
   withBodyParsing,
   type AuthenticatedUser,
-} from "../utils";
+} from "../../utils";
 
 const twoDecimalPlaces = z
   .number()

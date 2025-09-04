@@ -1,6 +1,6 @@
 import { http, HttpResponse } from "msw";
 import { z } from "zod";
-import { verifyJWT, createTRPCErrorResponse, withBodyParsing } from "../utils";
+import { verifyJWT, createTRPCErrorResponse, withBodyParsing } from "../../utils";
 
 const updateEmailInputSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),

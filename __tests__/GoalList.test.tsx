@@ -9,12 +9,12 @@ import {
 } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import { act } from "@testing-library/react";
-import GoalList from "../src/components/GoalList";
-import { weightGetGoalsHandler } from "../__mocks__/handlers/weightGetGoals";
+import GoalList from "../src/components/weight/GoalList";
 import { useAuthStore } from "../src/authStore";
 import { renderWithProviders, setupAuthStore } from "./utils/setup";
 import { server } from "../__mocks__/server";
 import "@testing-library/jest-dom";
+import { weightGetGoalsHandler } from "../__mocks__/handlers";
 
 // Mock LoadingSpinner component
 vi.mock("../src/components/LoadingSpinner", () => ({

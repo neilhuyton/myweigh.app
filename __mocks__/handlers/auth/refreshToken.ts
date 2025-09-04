@@ -1,6 +1,6 @@
 import { http, HttpResponse } from "msw";
 import jwt from "jsonwebtoken";
-import { mockUsers, type MockUser } from "../mockUsers";
+import { mockUsers, type MockUser } from "../../mockUsers";
 
 interface RefreshTokenInput {
   json: { refreshToken: string };

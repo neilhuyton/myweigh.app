@@ -14,7 +14,7 @@ import { useAuthStore } from "../src/authStore";
 import "@testing-library/jest-dom";
 import { server } from "../__mocks__/server";
 import { loginHandler, refreshTokenHandler } from "../__mocks__/handlers";
-import LoginForm from "../src/components/LoginForm";
+import LoginForm from "../src/components/auth/LoginForm";
 import {
   RouterProvider,
   createRouter,

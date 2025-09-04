@@ -9,11 +9,11 @@ import Root from "./components/Root";
 import Weight from "./pages/Weight";
 import WeightChart from "./pages/Stats";
 import WeightGoal from "./pages/Goals";
-import Register from "./components/Register";
-import LoginForm from "./components/LoginForm";
-import ResetPasswordForm from "./components/ResetPasswordForm";
-import ConfirmResetPasswordForm from "./components/ConfirmResetPasswordForm";
-import VerifyEmail from "./components/VerifyEmail";
+import Register from "./components/auth/Register";
+import LoginForm from "./components/auth/LoginForm";
+import ResetPasswordForm from "./components/auth/ResetPasswordForm";
+import ConfirmResetPasswordForm from "./components/auth/ConfirmResetPasswordForm";
+import VerifyEmail from "./components/auth/VerifyEmail";
 import Profile from "./components/Profile";
 import { useAuthStore } from "./authStore";
 import {

@@ -1,6 +1,6 @@
 import { http, HttpResponse } from "msw";
 import { z } from "zod";
-import { createTRPCErrorResponse, withBodyParsing } from "../utils";
+import { createTRPCErrorResponse, withBodyParsing } from "../../utils";
 
 const resetPasswordConfirmInputSchema = z.object({
   token: z.string().uuid({ message: "Invalid token format" }),

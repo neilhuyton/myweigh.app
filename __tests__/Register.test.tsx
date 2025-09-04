@@ -13,7 +13,7 @@ import { server } from "../__mocks__/server";
 import "@testing-library/jest-dom";
 import { renderWithProviders } from "./utils/setup";
 import { registerHandler } from "../__mocks__/handlers";
-import Register from "../src/components/Register";
+import Register from "../src/components/auth/Register";
 import {
   RouterProvider,
   createRouter,

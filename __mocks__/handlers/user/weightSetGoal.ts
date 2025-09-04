@@ -1,3 +1,4 @@
+// __mocks__/handlers/weightSetGoal.ts
 import { http, HttpResponse } from "msw";
 import { z } from "zod";
 import {
@@ -5,7 +6,7 @@ import {
   createTRPCErrorResponse,
   withBodyParsing,
   type AuthenticatedUser,
-} from "../utils";
+} from "../../utils";
 
 const twoDecimalPlaces = z
   .number()
@@ -18,20 +19,21 @@ const twoDecimalPlaces = z
     { message: "Weight can have up to two decimal places" }
   );
 
-const weightInputSchema = z.object({
-  weightKg: twoDecimalPlaces,
-  note: z.string().optional(),
+const goalInputSchema = z.object({
+  goalWeightKg: twoDecimalPlaces,
 });
 
-export const weightCreateHandler = http.post(
-  "http://localhost:8888/.netlify/functions/trpc/weight.create",
-  withBodyParsing(weightInputSchema, "weight.create", async (body, request) => {
-    const authResult = authenticateRequest(request, "weight.create");
+export const weightSetGoalHandler = http.post(
+  "http://localhost:8888/.netlify/functions/trpc/weight.setGoal",
+  withBodyParsing(goalInputSchema, "weight.setGoal", async (body, request) => {
+    // Use the reusable authentication utility
+    const authResult = authenticateRequest(request, "weight.setGoal");
     if (authResult instanceof HttpResponse) {
-      return authResult;
+      return authResult; // Return error response if authentication fails
     }
     const { userId } = authResult as AuthenticatedUser;
-    const { weightKg, note } = body;
+
+    const { goalWeightKg } = body;
 
     if (userId === "test-user-id" || userId === "empty-user-id") {
       return HttpResponse.json(
@@ -40,25 +42,17 @@ export const weightCreateHandler = http.post(
           result: {
             type: "data",
             data: {
-              id: "550e8400-e29b-41d4-a716-446655440000",
-              userId,
-              weightKg: Number(weightKg.toFixed(2)),
-              note: note || null,
-              createdAt: new Date().toISOString(),
+              id:
+                userId === "test-user-id"
+                  ? "550e8400-e29b-41d4-a716-446655440000"
+                  : "123e4567-e89b-12d3-a456-426614174000",
+              goalWeightKg: Number(goalWeightKg.toFixed(2)),
+              goalSetAt: new Date().toISOString(),
+              reachedAt: null,
             },
           },
         },
         { status: 200 }
-      );
-    }
-
-    if (userId === "error-user-id") {
-      return createTRPCErrorResponse(
-        0,
-        "Failed to create weight",
-        -32002,
-        500,
-        "weight.create"
       );
     }
 
@@ -67,7 +61,7 @@ export const weightCreateHandler = http.post(
       "Unauthorized: Invalid user ID",
       -32001,
       401,
-      "weight.create"
+      "weight.setGoal"
     );
   })
 );

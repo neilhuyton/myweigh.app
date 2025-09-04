@@ -6,7 +6,7 @@ import {
   createTRPCErrorResponse,
   withBodyParsing,
   type AuthenticatedUser,
-} from "../utils";
+} from "../../utils";
 
 const updateFirstLoginInputSchema = z.object({
   isFirstLogin: z.boolean({ message: "isFirstLogin must be a boolean" }),

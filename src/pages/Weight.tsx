@@ -1,7 +1,7 @@
 // src/pages/Weight.tsx
-import WeightForm from "../components/WeightForm";
-import WeightList from "../components/WeightList";
-import WeightChangeMessage from "../components/WeightChangeMessage";
+import WeightForm from "../components/weight/WeightForm";
+import WeightList from "../components/weight/WeightList";
+import WeightChangeMessage from "../components/weight/WeightChangeMessage";
 
 function Weight() {
   return (

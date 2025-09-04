@@ -1,4 +1,4 @@
-// src/components/Register.tsx
+// src/components/LoginForm.tsx
 import { cn } from "@/lib/utils";
 import {
   Form,
@@ -10,44 +10,32 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useRegister } from "../hooks/useRegister";
+import { useLogin } from "../../hooks/useLogin";
 import { useRouter } from "@tanstack/react-router";
-import { Logo } from "./Logo";
-import { LoadingSpinner } from "./LoadingSpinner";
 
-interface RegisterProps {
-  className?: string;
-}
-
-function Register({ className }: RegisterProps) {
-  const { form, message, isRegistering, handleRegister } = useRegister();
+function LoginForm() {
   const router = useRouter();
+  const { form, message, isPending, handleSubmit } = useLogin({
+    navigate: router.navigate,
+  });
 
   return (
-    <div
-      className={cn(
-        "min-h-[100dvh] flex flex-col items-center p-1 sm:p-2 lg:p-3",
-        className
-      )}
-    >
-      <div className="pt-14">
-        <Logo />
-      </div>
+    <div className="min-h-[100dvh] flex flex-col items-center p-1 sm:p-2 lg:p-3">
       <div className="w-full max-w-md bg-background rounded-lg p-4 flex flex-col items-center mt-16 sm:mt-20">
         <h1
           className="text-2xl font-bold text-center mb-4"
           role="heading"
           aria-level={1}
         >
-          Create an account
+          Login to your account
         </h1>
         <p className="text-muted-foreground text-center mb-6">
-          Enter your details below to create an account
+          Enter your email below to login to your account
         </p>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(handleRegister)}
-            data-testid="register-form"
+            onSubmit={form.handleSubmit(handleSubmit)}
+            data-testid="login-form"
             className="w-full"
           >
             <div className="flex flex-col gap-6">
@@ -67,7 +55,7 @@ function Register({ className }: RegisterProps) {
                           placeholder="m@example.com"
                           required
                           data-testid="email-input"
-                          disabled={isRegistering}
+                          disabled={isPending}
                           tabIndex={1}
                           {...field}
                         />
@@ -83,9 +71,23 @@ function Register({ className }: RegisterProps) {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <Label htmlFor="password" data-testid="password-label">
-                        Password
-                      </Label>
+                      <div className="flex items-center justify-between leading-none mb-0">
+                        <Label htmlFor="password" data-testid="password-label">
+                          Password
+                        </Label>
+                        <a
+                          href="#"
+                          className="inline-block text-sm underline-offset-0 hover:underline"
+                          data-testid="forgot-password-link"
+                          tabIndex={3}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            router.navigate({ to: "/reset-password" });
+                          }}
+                        >
+                          Forgot your password?
+                        </a>
+                      </div>
                       <FormControl>
                         <Input
                           id="password"
@@ -93,7 +95,8 @@ function Register({ className }: RegisterProps) {
                           placeholder="Enter your password"
                           required
                           data-testid="password-input"
-                          disabled={isRegistering}
+                          disabled={isPending}
+                          className="w-full"
                           tabIndex={2}
                           {...field}
                         />
@@ -103,14 +106,9 @@ function Register({ className }: RegisterProps) {
                   )}
                 />
               </div>
-              {isRegistering && (
-                <div className="flex justify-center py-4">
-                  <LoadingSpinner size="md" testId="register-loading" />
-                </div>
-              )}
               {message && (
                 <p
-                  data-testid="register-message"
+                  data-testid="login-message"
                   className={cn(
                     "text-sm text-center",
                     message.includes("failed")
@@ -124,26 +122,26 @@ function Register({ className }: RegisterProps) {
               <Button
                 type="submit"
                 className="w-full mt-4"
-                data-testid="register-button"
-                disabled={isRegistering}
-                tabIndex={3}
+                data-testid="login-button"
+                disabled={isPending}
+                tabIndex={5}
               >
-                {isRegistering ? "Registering..." : "Register"}
+                {isPending ? "Logging in..." : "Login"}
               </Button>
               <div className="mt-4 text-center text-sm">
-                Already have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <a
                   href="#"
                   role="link"
+                  className="underline underline-offset-4"
+                  data-testid="signup-link"
+                  tabIndex={4}
                   onClick={(e) => {
                     e.preventDefault();
-                    router.navigate({ to: "/login" });
+                    router.navigate({ to: "/register" });
                   }}
-                  className="underline underline-offset-4"
-                  data-testid="login-link"
-                  tabIndex={4}
                 >
-                  Login
+                  Sign up
                 </a>
               </div>
             </div>
@@ -154,4 +152,4 @@ function Register({ className }: RegisterProps) {
   );
 }
 
-export default Register;
+export default LoginForm;
