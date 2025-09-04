@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { DashboardCard } from "../src/components/DashboardCard";
+import { DashboardCard } from "../src/components/StatsCard";
 import { ScaleIcon } from "lucide-react";
 import "@testing-library/jest-dom";
 import { act } from "react";

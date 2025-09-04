@@ -2,7 +2,7 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import type { HandlerEvent, HandlerResponse } from "@netlify/functions";
 import { appRouter } from "../../server/trpc";
-import { createContext } from "../../server/context";
+import { createContext } from "../../server/trpc";
 import type { IncomingMessage } from "http";
 import { TRPCError } from "@trpc/server";
 import { getHTTPStatusCodeFromError } from "@trpc/server/http";

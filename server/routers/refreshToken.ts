@@ -25,7 +25,7 @@ export const refreshTokenRouter = t.router({
 
       return {
         token: newAccessToken,
-        refreshToken, // Return the same refresh token
+        refreshToken,
       };
     }),
 });
