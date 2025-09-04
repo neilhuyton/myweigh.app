@@ -34,7 +34,7 @@ function WeightList() {
   }
 
   if (weights.length === 0) {
-    return null; // Simplified from `return;`
+    return null;
   }
 
   return (
@@ -82,11 +82,7 @@ function WeightList() {
                 <TableCell className="p-4 text-right">
                   <Button
                     onClick={(e) => {
-                      e.stopPropagation(); // Prevent event bubbling
-                      console.log(
-                        "Delete button clicked for weightId:",
-                        weight.id
-                      );
+                      e.stopPropagation();
                       handleDelete(weight.id);
                     }}
                     disabled={isDeleting}
@@ -106,7 +102,7 @@ function WeightList() {
           ) : (
             <TableRow className="hover:bg-muted/50 rounded-b-lg">
               <TableCell
-                colSpan={3} // Adjusted to match 3 columns
+                colSpan={3}
                 className="p-4 text-center text-muted-foreground"
               >
                 No weight measurements found

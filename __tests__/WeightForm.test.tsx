@@ -1,4 +1,4 @@
-// __tests__/WeightForm.test.tsx
+import { screen, waitFor, fireEvent } from "@testing-library/react";
 import {
   describe,
   it,
@@ -8,7 +8,6 @@ import {
   afterEach,
   vi,
 } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
 import { server } from "../__mocks__/server";
 import "@testing-library/jest-dom";
 import WeightForm from "../src/components/WeightForm";
@@ -19,7 +18,6 @@ import {
 } from "../__mocks__/handlers";
 import { renderWithProviders } from "./utils/setup";
 
-// Mock react-confetti
 vi.mock("react-confetti", () => ({
   default: ({
     className,
@@ -30,14 +28,12 @@ vi.mock("react-confetti", () => ({
   }) => <div className={className} data-testid={props["data-testid"]} />,
 }));
 
-// Mock LoadingSpinner component
 vi.mock("../src/components/LoadingSpinner", () => ({
   LoadingSpinner: ({ testId }: { testId: string }) => (
     <div data-testid={testId}>Loading...</div>
   ),
 }));
 
-// Mock useNavigate to track navigation calls
 const mockNavigate = vi.fn();
 vi.mock("@tanstack/react-router", async () => {
   const actual = await vi.importActual("@tanstack/react-router");
@@ -47,8 +43,10 @@ vi.mock("@tanstack/react-router", async () => {
   };
 });
 
-// Mock console.error to suppress act warnings during debugging
-const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+const mockUseAuthStore = vi.fn(() => ({ userId: "test-user-id" }));
+vi.mock("../store/authStore", () => ({
+  useAuthStore: mockUseAuthStore,
+}));
 
 describe("WeightForm Component", () => {
   beforeAll(() => {
@@ -63,18 +61,17 @@ describe("WeightForm Component", () => {
     );
     vi.spyOn(window.localStorage, "setItem");
     mockNavigate.mockReset();
+    mockUseAuthStore.mockReturnValue({ userId: "test-user-id" });
   });
 
   afterEach(() => {
     server.resetHandlers();
     vi.clearAllMocks();
     document.body.innerHTML = "";
-    consoleErrorSpy.mockReset();
   });
 
   afterAll(() => {
     server.close();
-    consoleErrorSpy.mockRestore();
   });
 
   it("renders WeightForm with correct content", async () => {
@@ -90,6 +87,115 @@ describe("WeightForm Component", () => {
         );
         expect(screen.getByTestId("weight-input")).toBeInTheDocument();
         expect(screen.getByTestId("submit-button")).toBeInTheDocument();
+        expect(screen.queryByTestId("weight-message")).not.toBeInTheDocument();
+      },
+      { timeout: 2000, interval: 100 }
+    );
+  });
+
+  it("successfully submits a weight measurement and shows success message", async () => {
+    renderWithProviders(<WeightForm />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("weight-label")).toHaveTextContent(
+        "Weight (kg)"
+      );
+      expect(screen.getByTestId("weight-input")).toBeInTheDocument();
+      expect(screen.getByTestId("submit-button")).toBeInTheDocument();
+    });
+
+    const weightInput = screen.getByTestId("weight-input");
+    fireEvent.change(weightInput, { target: { value: "65.00" } });
+
+    const form = screen.getByTestId("weight-form");
+    await form.dispatchEvent(new Event("submit", { bubbles: true }));
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("weight-message")).toHaveTextContent(
+          "Weight recorded successfully!"
+        );
+        expect(weightInput).toHaveValue(null);
+        expect(mockNavigate).not.toHaveBeenCalled();
+      },
+      { timeout: 2000, interval: 100 }
+    );
+  });
+
+  it("displays error for negative weight submission", async () => {
+    renderWithProviders(<WeightForm />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("weight-form")).toBeInTheDocument();
+    });
+
+    const weightInput = screen.getByTestId("weight-input");
+    fireEvent.change(weightInput, { target: { value: "-1" } });
+
+    const form = screen.getByTestId("weight-form");
+    await form.dispatchEvent(new Event("submit", { bubbles: true }));
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("weight-message")).toHaveTextContent(
+          "Please enter a valid weight."
+        );
+        expect(mockNavigate).not.toHaveBeenCalled();
+      },
+      { timeout: 2000, interval: 100 }
+    );
+  });
+
+  it("displays error for weight with too many decimal places", async () => {
+    renderWithProviders(<WeightForm />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("weight-form")).toBeInTheDocument();
+    });
+
+    const weightInput = screen.getByTestId("weight-input");
+    fireEvent.change(weightInput, { target: { value: "65.123" } });
+
+    const form = screen.getByTestId("weight-form");
+    await form.dispatchEvent(new Event("submit", { bubbles: true }));
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("weight-message")).toHaveTextContent(
+          "Weight can have up to two decimal places."
+        );
+        expect(mockNavigate).not.toHaveBeenCalled();
+      },
+      { timeout: 2000, interval: 100 }
+    );
+  });
+
+  it("clears error message on input change", async () => {
+    renderWithProviders(<WeightForm />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("weight-form")).toBeInTheDocument();
+    });
+
+    const weightInput = screen.getByTestId("weight-input");
+    fireEvent.change(weightInput, { target: { value: "-1" } });
+
+    const form = screen.getByTestId("weight-form");
+    await form.dispatchEvent(new Event("submit", { bubbles: true }));
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("weight-message")).toHaveTextContent(
+          "Please enter a valid weight."
+        );
+      },
+      { timeout: 2000, interval: 100 }
+    );
+
+    fireEvent.change(weightInput, { target: { value: "65.00" } });
+
+    await waitFor(
+      () => {
         expect(screen.queryByTestId("weight-message")).not.toBeInTheDocument();
       },
       { timeout: 2000, interval: 100 }

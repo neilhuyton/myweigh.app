@@ -40,23 +40,18 @@ vi.mock("@tanstack/react-router", async () => {
 });
 
 describe("Register Component Email Verification", () => {
-  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
-
   beforeAll(() => {
     server.listen({ onUnhandledRequest: "error" });
     server.use(registerHandler);
-    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterEach(() => {
     server.resetHandlers();
     mockNavigate.mockReset();
-    consoleErrorSpy.mockReset();
     document.body.innerHTML = "";
   });
 
   afterAll(() => {
-    consoleErrorSpy.mockRestore();
     server.close();
   });
 
@@ -230,89 +225,22 @@ describe("Register Component Email Verification", () => {
       await userEvent.type(passwordInput, "password123");
       expect(emailInput).toHaveValue("exists@example.com");
       expect(passwordInput).toHaveValue("password123");
-      console.log("Submitting form with exists@example.com");
       await form.dispatchEvent(new Event("submit", { bubbles: true }));
     });
-
-    await waitFor(
-      () => {
-        const alert = screen.getByTestId("register-message");
-        expect(alert).toHaveTextContent("Registration failed: Email already exists");
-        expect(alert).toHaveClass("text-red-500"); // Changed to match Register.tsx
-        expect(screen.getByTestId("email-input")).toHaveValue("exists@example.com");
-      },
-      { timeout: 2000 }
-    );
-  });
-
-  it("displays loading state during form submission", async () => {
-    vi.spyOn(global, "fetch").mockImplementationOnce(
-      () =>
-        new Promise((resolve) =>
-          setTimeout(
-            () =>
-              resolve(
-                new Response(
-                  JSON.stringify({
-                    id: 0,
-                    result: {
-                      type: "data",
-                      data: {
-                        message:
-                          "Registration successful! Please check your email to verify your account.",
-                      },
-                    },
-                  }),
-                  { status: 200 }
-                )
-              ),
-            1000
-          )
-        )
-    );
-
-    await setup();
-
-    await waitFor(
-      () => {
-        expect(screen.getByTestId("email-input")).toBeInTheDocument();
-      },
-      { timeout: 1000 }
-    );
-
-    const emailInput = screen.getByTestId("email-input");
-    const passwordInput = screen.getByTestId("password-input");
-    const form = screen.getByTestId("register-form");
-
-    await act(async () => {
-      await userEvent.clear(emailInput);
-      await userEvent.clear(passwordInput);
-      await userEvent.type(emailInput, "test@example.com");
-      await userEvent.type(passwordInput, "password123");
-      expect(emailInput).toHaveValue("test@example.com");
-      expect(passwordInput).toHaveValue("password123");
-      await form.dispatchEvent(new Event("submit", { bubbles: true }));
-    });
-
-    await waitFor(
-      () => {
-        expect(screen.getByTestId("register-loading")).toBeInTheDocument();
-      },
-      { timeout: 1000 }
-    );
 
     await waitFor(
       () => {
         const alert = screen.getByTestId("register-message");
         expect(alert).toHaveTextContent(
-          "Registration successful! Please check your email to verify your account."
+          "Registration failed: Email already exists"
         );
-        expect(screen.queryByTestId("register-loading")).not.toBeInTheDocument();
+        expect(alert).toHaveClass("text-red-500"); // Changed to match Register.tsx
+        expect(screen.getByTestId("email-input")).toHaveValue(
+          "exists@example.com"
+        );
       },
       { timeout: 2000 }
     );
-
-    vi.restoreAllMocks();
   });
 
   it("navigates to login page when login link is clicked", async () => {

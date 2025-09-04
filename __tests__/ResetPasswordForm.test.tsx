@@ -35,36 +35,6 @@ vi.mock("../src/components/LoadingSpinner", () => ({
   ),
 }));
 
-// Mock Logo component
-vi.mock("../src/components/Logo", () => ({
-  Logo: () => (
-    <div className="flex flex-col items-center">
-      <svg
-        aria-label="My Weigh App Logo"
-        fill="none"
-        height="48"
-        role="img"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-        viewBox="0 0 24 24"
-        width="48"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path d="M12 2a10 10 0 0 1 10 10c0 2.757-1.12 5.248-2.93 7.048M12 2a10 10 0 0 0-10 10c0 2.757 1.12 5.248 2.93 7.048M12 2v2m0 16v2" />
-        <path d="M12 6a6 6 0 0 0-6 6c0 1.657.672 3.157 1.757 4.243M12 6a6 6 0 0 1 6 6c0 1.657-.672 3.157-1.757 4.243" />
-        <circle cx="12" cy="12" r="2" />
-      </svg>
-      <h2
-        className="text-xl font-semibold text-center mt-2"
-        data-testid="app-name"
-      >
-        My Weigh
-      </h2>
-    </div>
-  ),
-}));
 
 // Mock useNavigate to track navigation calls
 const mockNavigate = vi.fn();

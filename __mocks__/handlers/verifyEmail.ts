@@ -1,4 +1,3 @@
-// __mocks__/handlers/verifyEmail.ts
 import { http, HttpResponse } from "msw";
 import { z } from "zod";
 import { createTRPCErrorResponse, withBodyParsing } from "../utils";
@@ -14,15 +13,12 @@ export const verifyEmailHandler = http.post(
     verifyEmailInputSchema,
     "verifyEmail",
     async (body) => {
-      console.log("verifyEmail handler called");
-
       const { token } = body;
 
       const user = mockUsers.find(
         (u: MockUser) => u.verificationToken === token
       );
       if (!user) {
-        console.error("Invalid or expired verification token:", token);
         return createTRPCErrorResponse(
           0,
           "Invalid or expired verification token",
@@ -33,7 +29,6 @@ export const verifyEmailHandler = http.post(
       }
 
       if (user.isEmailVerified) {
-        console.error("Email already verified for user:", user.id);
         return createTRPCErrorResponse(
           0,
           "Email already verified",
@@ -46,7 +41,6 @@ export const verifyEmailHandler = http.post(
       user.isEmailVerified = true;
       user.verificationToken = null;
       user.updatedAt = new Date().toISOString();
-      console.log("Email verified for user:", user.id);
 
       return HttpResponse.json(
         {
@@ -59,6 +53,5 @@ export const verifyEmailHandler = http.post(
         { status: 200 }
       );
     },
-    false
-  ) // Disable Parsed body logging
+  )
 );

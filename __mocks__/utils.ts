@@ -14,7 +14,6 @@ export async function parseBody<T>(
 ): Promise<T> {
   try {
     const rawBody = await request.text();
-    console.log(`Raw body for ${procedure}:`, rawBody || "Empty body");
     if (!rawBody) {
       throw new Error("Empty body");
     }
@@ -79,15 +78,11 @@ export function withBodyParsing<T>(
   schema: z.ZodType<T>,
   procedure: string,
   handler: (body: T, request: Request) => Promise<Response>,
-  logBody: boolean = true // Default to true for backward compatibility
 ) {
   return async ({ request }: { request: Request }): Promise<Response> => {
     let body: T;
     try {
       body = await parseBody(request, schema, procedure);
-      if (logBody) {
-        console.log("Parsed body:", JSON.stringify(body));
-      }
     } catch (error: unknown) {
       const message =
         error instanceof Error

@@ -1,4 +1,3 @@
-// __mocks__/handlers/userUpdateEmail.ts
 import { http, HttpResponse } from "msw";
 import { z } from "zod";
 import { verifyJWT, createTRPCErrorResponse, withBodyParsing } from "../utils";
@@ -13,11 +12,8 @@ export const userUpdateEmailHandler = http.post(
     updateEmailInputSchema,
     "user.updateEmail",
     async (body, request) => {
-      console.log("user.updateEmail handler called");
-
       const authHeader = request.headers.get("Authorization");
       if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        console.error("Missing or invalid Authorization header");
         return createTRPCErrorResponse(
           0,
           "Unauthorized: User must be logged in",
@@ -30,7 +26,6 @@ export const userUpdateEmailHandler = http.post(
       const token = authHeader.split(" ")[1];
       const decoded = verifyJWT(token);
       if (!decoded) {
-        console.error("Invalid token");
         return createTRPCErrorResponse(
           0,
           "Invalid token",
@@ -40,12 +35,10 @@ export const userUpdateEmailHandler = http.post(
         );
       }
       const { userId } = decoded;
-      console.log("Decoded userId:", userId);
 
       const { email } = body;
 
       if (email === "existing@example.com") {
-        console.error("Email already in use:", email);
         return createTRPCErrorResponse(
           0,
           "Email already in use",
@@ -56,12 +49,6 @@ export const userUpdateEmailHandler = http.post(
       }
 
       if (userId === "test-user-id" && email === "newemail@example.com") {
-        console.log(
-          "Returning success response for userId:",
-          userId,
-          "and email:",
-          email
-        );
         return HttpResponse.json(
           {
             id: 0,
@@ -74,7 +61,6 @@ export const userUpdateEmailHandler = http.post(
         );
       }
 
-      console.error("User not found for userId:", userId);
       return createTRPCErrorResponse(
         0,
         "User not found",
@@ -82,7 +68,6 @@ export const userUpdateEmailHandler = http.post(
         404,
         "user.updateEmail"
       );
-    },
-    false
-  ) // Disable Parsed body logging
+    }
+  )
 );
