@@ -13,18 +13,6 @@ import {
 import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LoadingSpinner } from "./LoadingSpinner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { useState } from "react";
 
 function WeightList() {
   const {
@@ -36,21 +24,6 @@ function WeightList() {
     handleDelete,
     isDeleting,
   } = useWeightList();
-  const [open, setOpen] = useState(false);
-  const [selectedWeightId, setSelectedWeightId] = useState<string | null>(null);
-
-  const handleOpenDialog = (weightId: string) => {
-    setSelectedWeightId(weightId);
-    setOpen(true);
-  };
-
-  const handleConfirmDelete = () => {
-    if (selectedWeightId) {
-      handleDelete(selectedWeightId);
-    }
-    setOpen(false);
-    setSelectedWeightId(null);
-  };
 
   if (isLoading) {
     return (
@@ -61,7 +34,7 @@ function WeightList() {
   }
 
   if (weights.length === 0) {
-    return;
+    return null; // Simplified from `return;`
   }
 
   return (
@@ -107,59 +80,33 @@ function WeightList() {
                   {formatDate(weight.createdAt)}
                 </TableCell>
                 <TableCell className="p-4 text-right">
-                  <AlertDialog
-                    open={open && selectedWeightId === weight.id}
-                    onOpenChange={setOpen}
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent event bubbling
+                      console.log(
+                        "Delete button clicked for weightId:",
+                        weight.id
+                      );
+                      handleDelete(weight.id);
+                    }}
+                    disabled={isDeleting}
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:text-destructive/90 focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label={`Delete weight measurement from ${formatDate(
+                      weight.createdAt
+                    )}`}
+                    data-testid={`delete-button-${weight.id}`}
                   >
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        onClick={() => handleOpenDialog(weight.id)}
-                        disabled={isDeleting}
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive/90 focus-visible:ring-2 focus-visible:ring-ring"
-                        aria-label={`Delete weight measurement from ${formatDate(
-                          weight.createdAt
-                        )}`}
-                        data-testid={`delete-button-${weight.id}`}
-                      >
-                        <Trash2
-                          className="h-4 w-4"
-                          data-lucide-name="trash-2"
-                        />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently
-                          delete the weight measurement of{" "}
-                          {weight.weightKg.toFixed(2)} kg from{" "}
-                          {formatDate(weight.createdAt)}.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel data-testid="cancel-delete">
-                          Cancel
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={handleConfirmDelete}
-                          data-testid="confirm-delete"
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                    <Trash2 className="h-4 w-4" data-lucide-name="trash-2" />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))
           ) : (
             <TableRow className="hover:bg-muted/50 rounded-b-lg">
               <TableCell
-                colSpan={4}
+                colSpan={3} // Adjusted to match 3 columns
                 className="p-4 text-center text-muted-foreground"
               >
                 No weight measurements found

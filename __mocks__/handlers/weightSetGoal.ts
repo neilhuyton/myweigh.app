@@ -1,139 +1,54 @@
 // __mocks__/handlers/weightSetGoal.ts
 import { http, HttpResponse } from "msw";
-import jwt from "jsonwebtoken";
+import { z } from "zod";
+import {
+  authenticateRequest,
+  createTRPCErrorResponse,
+  withBodyParsing,
+  type AuthenticatedUser,
+} from "../utils";
 
-interface TRPCRequestBody {
-  id?: number;
-  input?: { goalWeightKg?: number };
-}
+const twoDecimalPlaces = z
+  .number()
+  .positive({ message: "Weight must be a positive number" })
+  .refine(
+    (val) => {
+      const decimalPlaces = val.toString().split(".")[1]?.length || 0;
+      return decimalPlaces <= 2;
+    },
+    { message: "Weight can have up to two decimal places" }
+  );
+
+const goalInputSchema = z.object({
+  goalWeightKg: twoDecimalPlaces,
+});
 
 export const weightSetGoalHandler = http.post(
   "http://localhost:8888/.netlify/functions/trpc/weight.setGoal",
-  async ({ request }) => {
-    let body;
-    try {
-      body = await request.json();
-    } catch {
+  withBodyParsing(goalInputSchema, "weight.setGoal", async (body, request) => {
+    // Use the reusable authentication utility
+    const authResult = authenticateRequest(request, "weight.setGoal");
+    if (authResult instanceof HttpResponse) {
+      return authResult; // Return error response if authentication fails
+    }
+    const { userId } = authResult as AuthenticatedUser;
+
+    const { goalWeightKg } = body;
+
+    if (userId === "test-user-id" || userId === "empty-user-id") {
       return HttpResponse.json(
         {
           id: 0,
-          error: {
-            message: "Invalid request body",
-            code: -32600,
-            data: {
-              code: "BAD_REQUEST",
-              httpStatus: 400,
-              path: "weight.setGoal",
-            },
-          },
-        },
-        { status: 400 }
-      );
-    }
-
-    const authHeader = request.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Unauthorized: User must be logged in",
-            code: -32001,
-            data: {
-              code: "UNAUTHORIZED",
-              httpStatus: 401,
-              path: "weight.setGoal",
-            },
-          },
-        },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.split(" ")[1];
-    let userId: string | null = null;
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || "your-secret-key") as { userId: string };
-      userId = decoded.userId;
-    } catch {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Invalid token",
-            code: -32001,
-            data: {
-              code: "UNAUTHORIZED",
-              httpStatus: 401,
-              path: "weight.setGoal",
-            },
-          },
-        },
-        { status: 401 }
-      );
-    }
-
-    let input: { goalWeightKg?: number } | undefined;
-    let id: number = 0;
-    if (Array.isArray(body)) {
-      input = body[0]?.input;
-      id = body[0]?.id ?? 0;
-    } else if (body && typeof body === "object" && "input" in body) {
-      input = (body as TRPCRequestBody).input;
-      id = (body as TRPCRequestBody).id ?? 0;
-    }
-
-    const goalWeightKg = input?.goalWeightKg;
-
-    if (!goalWeightKg || goalWeightKg <= 0) {
-      return HttpResponse.json(
-        {
-          id,
-          error: {
-            message: "Goal weight must be a positive number",
-            code: -32001,
-            data: {
-              code: "BAD_REQUEST",
-              httpStatus: 400,
-              path: "weight.setGoal",
-            },
-          },
-        },
-        { status: 400 }
-      );
-    }
-
-    // Validate two decimal places
-    const goalWeightStr = goalWeightKg.toString();
-    const decimalPlaces = (goalWeightStr.split(".")[1]?.length || 0);
-    if (decimalPlaces > 2) {
-      return HttpResponse.json(
-        {
-          id,
-          error: {
-            message: "Goal weight can have up to two decimal places",
-            code: -32001,
-            data: {
-              code: "BAD_REQUEST",
-              httpStatus: 400,
-              path: "weight.setGoal",
-            },
-          },
-        },
-        { status: 400 }
-      );
-    }
-
-    if (userId === "test-user-id") {
-      return HttpResponse.json(
-        {
-          id,
           result: {
             type: "data",
             data: {
-              id: "2",
-              goalWeightKg: Number(goalWeightKg.toFixed(2)), // Format to two decimal places
+              id:
+                userId === "test-user-id"
+                  ? "550e8400-e29b-41d4-a716-446655440000"
+                  : "123e4567-e89b-12d3-a456-426614174000",
+              goalWeightKg: Number(goalWeightKg.toFixed(2)),
               goalSetAt: new Date().toISOString(),
+              reachedAt: null,
             },
           },
         },
@@ -141,20 +56,12 @@ export const weightSetGoalHandler = http.post(
       );
     }
 
-    return HttpResponse.json(
-      {
-        id,
-        error: {
-          message: "Unauthorized: Invalid user ID",
-          code: -32001,
-          data: {
-            code: "UNAUTHORIZED",
-            httpStatus: 401,
-            path: "weight.setGoal",
-          },
-        },
-      },
-      { status: 401 }
+    return createTRPCErrorResponse(
+      0,
+      "Unauthorized: Invalid user ID",
+      -32001,
+      401,
+      "weight.setGoal"
     );
-  }
+  })
 );

@@ -8,7 +8,7 @@ const twoDecimalPlaces = z
   .positive({ message: "Weight must be a positive number" })
   .refine(
     (val) => {
-      const decimalPlaces = (val.toString().split(".")[1]?.length || 0);
+      const decimalPlaces = val.toString().split(".")[1]?.length || 0;
       return decimalPlaces <= 2;
     },
     {

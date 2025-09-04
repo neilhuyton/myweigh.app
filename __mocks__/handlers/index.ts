@@ -1,51 +1,46 @@
-import { loginHandler } from "./login";
-import { weightDeleteHandler } from "./weightDelete";
-import { weightGetWeightsHandler } from "./weightGetWeights";
-import { weightGetCurrentGoalHandler } from "./weightGetCurrentGoal";
-import { weightSetGoalHandler } from "./weightSetGoal";
-import { weightUpdateGoalHandler } from "./weightUpdateGoal";
-import { weightGetGoalsHandler } from "./weightGetGoals";
-import { refreshTokenHandler } from "./refreshToken";
+// __mocks__/handlers/index.ts
+import { registerHandler } from "./register";
 import { resetPasswordConfirmHandler } from "./resetPasswordConfirm";
 import { resetPasswordRequestHandler } from "./resetPasswordRequest";
-import { verifyEmailHandler } from "./verifyEmail";
-import { authLogoutHandler } from "./authLogout";
 import { userUpdateEmailHandler } from "./userUpdateEmail";
+import { userUpdateFirstLoginHandler } from "./userUpdateFirstLogin";
+import { verifyEmailHandler } from "./verifyEmail";
 import { weightCreateHandler } from "./weightCreate";
-import { userUpdateFirstLoginHandler } from "./updateFirstLogin";
+import { weightDeleteHandler } from "./weightDelete";
+import { weightGetCurrentGoalHandler } from "./weightGetCurrentGoal";
+import { weightGetGoalsHandler } from "./weightGetGoals";
+import { weightGetWeightsHandler } from "./weightGetWeights";
+import { weightSetGoalHandler } from "./weightSetGoal";
+import { weightUpdateGoalHandler } from "./weightUpdateGoal";
 
 export const handlers = [
-  userUpdateFirstLoginHandler,
-  weightGetGoalsHandler,
-  verifyEmailHandler,
-  loginHandler,
-  weightDeleteHandler,
-  weightGetWeightsHandler,
-  weightGetCurrentGoalHandler,
-  weightSetGoalHandler,
-  weightUpdateGoalHandler,
-  refreshTokenHandler,
+  registerHandler,
   resetPasswordConfirmHandler,
   resetPasswordRequestHandler,
-  authLogoutHandler,
   userUpdateEmailHandler,
+  userUpdateFirstLoginHandler,
+  verifyEmailHandler,
   weightCreateHandler,
+  weightDeleteHandler,
+  weightGetCurrentGoalHandler,
+  weightGetGoalsHandler,
+  weightGetWeightsHandler,
+  weightSetGoalHandler,
+  weightUpdateGoalHandler,
 ];
 
 export {
-  userUpdateFirstLoginHandler,
-  weightGetGoalsHandler,
-  verifyEmailHandler,
-  loginHandler,
-  weightDeleteHandler,
-  weightGetWeightsHandler,
-  weightGetCurrentGoalHandler,
-  weightSetGoalHandler,
-  weightUpdateGoalHandler,
-  refreshTokenHandler,
+  registerHandler,
   resetPasswordConfirmHandler,
   resetPasswordRequestHandler,
-  authLogoutHandler,
   userUpdateEmailHandler,
+  userUpdateFirstLoginHandler,
+  verifyEmailHandler,
   weightCreateHandler,
+  weightDeleteHandler,
+  weightGetCurrentGoalHandler,
+  weightGetGoalsHandler,
+  weightGetWeightsHandler,
+  weightSetGoalHandler,
+  weightUpdateGoalHandler,
 };

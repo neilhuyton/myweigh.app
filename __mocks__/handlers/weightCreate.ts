@@ -1,145 +1,57 @@
+// __mocks__/handlers/weightCreate.ts
 import { http, HttpResponse } from "msw";
+import { z } from "zod";
+import {
+  authenticateRequest,
+  createTRPCErrorResponse,
+  withBodyParsing,
+  type AuthenticatedUser,
+} from "../utils";
 
-interface Goal {
-  id: string;
-  goalWeightKg: number;
-  goalSetAt: string;
-  reachedAt: string | null;
-}
+const twoDecimalPlaces = z
+  .number()
+  .positive({ message: "Weight must be a positive number" })
+  .refine(
+    (val) => {
+      const decimalPlaces = val.toString().split(".")[1]?.length || 0;
+      return decimalPlaces <= 2;
+    },
+    { message: "Weight can have up to two decimal places" }
+  );
 
-let goal: Goal | null = {
-  id: "1",
-  goalWeightKg: 65.0,
-  goalSetAt: "2025-08-28T00:00:00Z",
-  reachedAt: null,
-};
+const weightInputSchema = z.object({
+  weightKg: twoDecimalPlaces,
+  note: z.string().optional(),
+});
 
 export const weightCreateHandler = http.post(
   "http://localhost:8888/.netlify/functions/trpc/weight.create",
-  async ({ request }) => {
-    const authHeader = request.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Unauthorized",
-            code: -32001,
-            data: {
-              code: "UNAUTHORIZED",
-              httpStatus: 401,
-              path: "weight.create",
-            },
-          },
-        },
-        { status: 200 }
-      );
+  withBodyParsing(weightInputSchema, "weight.create", async (body, request) => {
+    console.log("weight.create handler called");
+
+    // Use the reusable authentication utility
+    const authResult = authenticateRequest(request, "weight.create");
+    if (authResult instanceof HttpResponse) {
+      return authResult; // Return error response if authentication fails
     }
+    const { userId } = authResult as AuthenticatedUser;
+    console.log("Decoded userId:", userId);
 
-    const token = authHeader.replace("Bearer ", "");
-    let userId: string | null = null;
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      userId = payload.userId;
-    } catch {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Invalid token",
-            code: -32001,
-            data: {
-              code: "UNAUTHORIZED",
-              httpStatus: 401,
-              path: "weight.create",
-            },
-          },
-        },
-        { status: 200 }
-      );
-    }
-
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Invalid request body",
-            code: -32000,
-            data: {
-              code: "BAD_REQUEST",
-              httpStatus: 400,
-              path: "weight.create",
-            },
-          },
-        },
-        { status: 200 }
-      );
-    }
-
-    const isValidBody = (b: unknown): b is { weightKg: number | string; note?: string } =>
-      b !== null &&
-      typeof b === "object" &&
-      "weightKg" in b &&
-      (typeof b.weightKg === "number" || typeof b.weightKg === "string") &&
-      ("note" in b ? typeof b.note === "string" || b.note === undefined : true);
-
-    if (!isValidBody(body)) {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Invalid request body: missing or invalid weightKg",
-            code: -32000,
-            data: {
-              code: "BAD_REQUEST",
-              httpStatus: 400,
-              path: "weight.create",
-            },
-          },
-        },
-        { status: 200 }
-      );
-    }
-
-    const weightKg = typeof body.weightKg === "string" ? parseFloat(body.weightKg) : body.weightKg;
-
-    if (isNaN(weightKg) || weightKg <= 0) {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Invalid weight value",
-            code: -32000,
-            data: {
-              code: "BAD_REQUEST",
-              httpStatus: 400,
-              path: "weight.create",
-            },
-          },
-        },
-        { status: 200 }
-      );
-    }
+    const { weightKg, note } = body;
 
     if (userId === "test-user-id" || userId === "empty-user-id") {
-      if (goal && weightKg <= goal.goalWeightKg && !goal.reachedAt) {
-        goal = { ...goal, reachedAt: "2025-09-02T00:00:00Z" };
-      }
+      console.log("Returning success response for userId:", userId);
       return HttpResponse.json(
         {
           id: 0,
           result: {
             type: "data",
             data: {
-              id: "weight-1",
+              id: "550e8400-e29b-41d4-a716-446655440000",
               userId,
-              weightKg,
-              note: body.note || null,
-              createdAt: "2025-09-02T00:00:00Z",
+              weightKg: Number(weightKg.toFixed(2)),
+              note: note || null,
+              createdAt: new Date().toISOString(),
             },
           },
         },
@@ -148,37 +60,23 @@ export const weightCreateHandler = http.post(
     }
 
     if (userId === "error-user-id") {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Failed to create weight",
-            code: -32002,
-            data: {
-              code: "INTERNAL_SERVER_ERROR",
-              httpStatus: 500,
-              path: "weight.create",
-            },
-          },
-        },
-        { status: 200 }
+      console.error("Simulating server error for userId:", userId);
+      return createTRPCErrorResponse(
+        0,
+        "Failed to create weight",
+        -32002,
+        500,
+        "weight.create"
       );
     }
 
-    return HttpResponse.json(
-      {
-        id: 0,
-        error: {
-          message: "Unauthorized",
-          code: -32001,
-          data: {
-            code: "UNAUTHORIZED",
-            httpStatus: 401,
-            path: "weight.create",
-          },
-        },
-      },
-      { status: 200 }
+    console.error("Unauthorized userId:", userId);
+    return createTRPCErrorResponse(
+      0,
+      "Unauthorized: Invalid user ID",
+      -32001,
+      401,
+      "weight.create"
     );
-  }
+  })
 );

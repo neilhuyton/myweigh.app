@@ -1,17 +1,32 @@
+// src/hooks/useWeightList.ts
 import { trpc } from "../trpc";
 import { format } from "date-fns";
 
 export const useWeightList = () => {
-  const { data, isLoading, error, isError } = trpc.weight.getWeights.useQuery(undefined, {});
+  const {
+    data: weightsData,
+    isLoading: weightsLoading,
+    isError: weightsError,
+    error: weightsErrorObj,
+  } = trpc.weight.getWeights.useQuery();
 
   const utils = trpc.useUtils();
   const mutation = trpc.weight.delete.useMutation({
     onSuccess: async () => {
+      console.log("Delete mutation succeeded, invalidating weights query");
       await utils.weight.getWeights.invalidate();
+    },
+    onError: (err) => {
+      console.error("Delete mutation error:", err.message);
     },
   });
 
-  const handleDelete = async (weightId: string) => {
+  const handleDelete = (weightId: string) => {
+    if (mutation.isPending) {
+      console.log("Mutation already in progress, skipping:", weightId);
+      return;
+    }
+    console.log("Calling handleDelete with weightId:", weightId);
     mutation.mutate({ weightId });
   };
 
@@ -20,10 +35,10 @@ export const useWeightList = () => {
   };
 
   return {
-    weights: data ?? [],
-    isLoading,
-    error,
-    isError,
+    weights: weightsData ?? [],
+    isLoading: weightsLoading,
+    isError: weightsError,
+    error: weightsErrorObj,
     formatDate,
     handleDelete,
     isDeleting: mutation.isPending,
