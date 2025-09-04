@@ -1,6 +1,10 @@
 // __mocks__/handlers/weightGetWeights.ts
 import { http, HttpResponse } from "msw";
-import { verifyJWT, createTRPCErrorResponse } from "../utils";
+import {
+  authenticateRequest,
+  createTRPCErrorResponse,
+  type AuthenticatedUser,
+} from "../utils";
 import {
   weights,
   noChangeWeights,
@@ -11,37 +15,14 @@ import {
 export const weightGetWeightsHandler = http.get(
   "http://localhost:8888/.netlify/functions/trpc/weight.getWeights",
   async ({ request }) => {
-    console.log("weight.getWeights handler called");
-
-    const authHeader = request.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      console.error("Missing or invalid Authorization header");
-      return createTRPCErrorResponse(
-        0,
-        "Unauthorized",
-        -32001,
-        401,
-        "weight.getWeights"
-      );
+    // Use the reusable authentication utility
+    const authResult = authenticateRequest(request, "weight.getWeights");
+    if (authResult instanceof HttpResponse) {
+      return authResult; // Return error response if authentication fails
     }
-
-    const token = authHeader.split(" ")[1];
-    const decoded = verifyJWT(token);
-    if (!decoded) {
-      console.error("Invalid token");
-      return createTRPCErrorResponse(
-        0,
-        "Invalid token",
-        -32001,
-        401,
-        "weight.getWeights"
-      );
-    }
-    const { userId } = decoded;
-    console.log("Decoded userId:", userId);
+    const { userId } = authResult as AuthenticatedUser;
 
     if (userId === "error-user-id") {
-      console.error("Failed to fetch weights for userId:", userId);
       return createTRPCErrorResponse(
         0,
         "Failed to fetch weights",
@@ -52,7 +33,6 @@ export const weightGetWeightsHandler = http.get(
     }
 
     if (userId === "empty-user-id") {
-      console.log("Returning empty weights for userId:", userId);
       return HttpResponse.json(
         {
           id: 0,
@@ -66,7 +46,6 @@ export const weightGetWeightsHandler = http.get(
     }
 
     if (userId === "no-change-user-id") {
-      console.log("Returning no-change weights for userId:", userId);
       return HttpResponse.json(
         {
           id: 0,
@@ -80,7 +59,6 @@ export const weightGetWeightsHandler = http.get(
     }
 
     if (userId === "gain-user-id") {
-      console.log("Returning gain weights for userId:", userId);
       return HttpResponse.json(
         {
           id: 0,
@@ -94,7 +72,6 @@ export const weightGetWeightsHandler = http.get(
     }
 
     if (userId === "single-user-id") {
-      console.log("Returning single weight for userId:", userId);
       return HttpResponse.json(
         {
           id: 0,
@@ -107,7 +84,6 @@ export const weightGetWeightsHandler = http.get(
       );
     }
 
-    console.log("Returning default weights for userId:", userId);
     return HttpResponse.json(
       {
         id: 0,

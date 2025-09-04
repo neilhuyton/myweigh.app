@@ -1,4 +1,3 @@
-// __tests__/WeightList.test.tsx
 import {
   describe,
   it,
@@ -21,6 +20,7 @@ import { weightDeleteHandler } from "../__mocks__/handlers/weightDelete";
 import { useAuthStore } from "../src/store/authStore";
 import { generateToken } from "./utils/token";
 import { resetWeights } from "../__mocks__/handlers/weightsData";
+import type { ButtonHTMLAttributes } from "react";
 
 // Mock LoadingSpinner component
 vi.mock("../src/components/LoadingSpinner", () => ({
@@ -36,8 +36,14 @@ vi.mock("lucide-react", () => ({
 
 // Mock Button component
 vi.mock("@/components/ui/button", () => ({
-  Button: ({ onClick, ...props }: any) => (
-    <button onClick={onClick} {...props} />
+  Button: ({
+    onClick,
+    children,
+    ...props
+  }: ButtonHTMLAttributes<HTMLButtonElement>) => (
+    <button onClick={onClick} {...props}>
+      {children}
+    </button>
   ),
 }));
 

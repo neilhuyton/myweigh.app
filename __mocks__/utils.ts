@@ -3,6 +3,10 @@ import { HttpResponse } from "msw";
 import { z } from "zod";
 import * as jwt from "jsonwebtoken";
 
+export interface AuthenticatedUser {
+  userId: string;
+}
+
 export async function parseBody<T>(
   request: Request,
   schema: z.ZodType<T>,
@@ -69,4 +73,55 @@ export function verifyJWT(token: string): { userId: string } | null {
     console.error("JWT verification failed for token:", token);
     return null;
   }
+}
+
+export function withBodyParsing<T>(
+  schema: z.ZodType<T>,
+  procedure: string,
+  handler: (body: T, request: Request) => Promise<Response>,
+  logBody: boolean = true // Default to true for backward compatibility
+) {
+  return async ({ request }: { request: Request }): Promise<Response> => {
+    let body: T;
+    try {
+      body = await parseBody(request, schema, procedure);
+      if (logBody) {
+        console.log("Parsed body:", JSON.stringify(body));
+      }
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unknown error parsing request body";
+      console.error(message);
+      return createTRPCErrorResponse(0, message, -32600, 400, procedure);
+    }
+    return handler(body, request);
+  };
+}
+
+export function authenticateRequest(
+  request: Request,
+  procedure: string
+): AuthenticatedUser | Response {
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    console.error(`Missing or invalid Authorization header for ${procedure}`);
+    return createTRPCErrorResponse(
+      0,
+      "Unauthorized: User must be logged in",
+      -32001,
+      401,
+      procedure
+    );
+  }
+
+  const token = authHeader.split(" ")[1];
+  const decoded = verifyJWT(token);
+  if (!decoded) {
+    console.error(`Invalid token for ${procedure}`);
+    return createTRPCErrorResponse(0, "Invalid token", -32001, 401, procedure);
+  }
+
+  return decoded;
 }

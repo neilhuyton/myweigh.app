@@ -111,7 +111,7 @@ describe("GoalForm Component", () => {
     ],
   });
 
-  const setup = async (userId = "test-user-id", hasGoal = false) => {
+  const setup = async (userId = "test-user-id") => {
     await act(async () => {
       useAuthStore.setState({
         isLoggedIn: true,
@@ -181,7 +181,7 @@ describe("GoalForm Component", () => {
   });
 
   it("shows Joyride tour after first goal submission and navigates to /stats", async () => {
-    await setup("empty-user-id", false);
+    await setup("empty-user-id");
 
     await waitFor(
       () => {
@@ -237,7 +237,7 @@ describe("GoalForm Component", () => {
   });
 
   it("does not show Joyride tour when updating an existing goal", async () => {
-    await setup("test-user-id", true);
+    await setup("test-user-id");
 
     await waitFor(
       () => {

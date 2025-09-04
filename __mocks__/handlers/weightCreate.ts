@@ -1,7 +1,12 @@
 // __mocks__/handlers/weightCreate.ts
 import { http, HttpResponse } from "msw";
 import { z } from "zod";
-import { parseBody, createTRPCErrorResponse, verifyJWT } from "../utils";
+import {
+  authenticateRequest,
+  createTRPCErrorResponse,
+  withBodyParsing,
+  type AuthenticatedUser,
+} from "../utils";
 
 const twoDecimalPlaces = z
   .number()
@@ -21,47 +26,15 @@ const weightInputSchema = z.object({
 
 export const weightCreateHandler = http.post(
   "http://localhost:8888/.netlify/functions/trpc/weight.create",
-  async ({ request }) => {
+  withBodyParsing(weightInputSchema, "weight.create", async (body, request) => {
     console.log("weight.create handler called");
 
-    let body: { weightKg: number; note?: string };
-    try {
-      body = await parseBody(request, weightInputSchema, "weight.create");
-      console.log("Parsed body:", JSON.stringify(body));
-    } catch (error: unknown) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Unknown error parsing request body";
-      console.error(message);
-      return createTRPCErrorResponse(0, message, -32600, 400, "weight.create");
+    // Use the reusable authentication utility
+    const authResult = authenticateRequest(request, "weight.create");
+    if (authResult instanceof HttpResponse) {
+      return authResult; // Return error response if authentication fails
     }
-
-    const authHeader = request.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      console.error("Missing or invalid Authorization header");
-      return createTRPCErrorResponse(
-        0,
-        "Unauthorized: User must be logged in",
-        -32001,
-        401,
-        "weight.create"
-      );
-    }
-
-    const token = authHeader.split(" ")[1];
-    const decoded = verifyJWT(token);
-    if (!decoded) {
-      console.error("Invalid token");
-      return createTRPCErrorResponse(
-        0,
-        "Invalid token",
-        -32001,
-        401,
-        "weight.create"
-      );
-    }
-    const { userId } = decoded;
+    const { userId } = authResult as AuthenticatedUser;
     console.log("Decoded userId:", userId);
 
     const { weightKg, note } = body;
@@ -105,5 +78,5 @@ export const weightCreateHandler = http.post(
       401,
       "weight.create"
     );
-  }
+  })
 );

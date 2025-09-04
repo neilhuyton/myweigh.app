@@ -1,41 +1,22 @@
 // __mocks__/handlers/weightGetGoals.ts
 import { http, HttpResponse } from "msw";
-import { createTRPCErrorResponse, verifyJWT } from "../utils";
+import {
+  authenticateRequest,
+  createTRPCErrorResponse,
+  type AuthenticatedUser,
+} from "../utils";
 
 export const weightGetGoalsHandler = http.get(
   "http://localhost:8888/.netlify/functions/trpc/weight.getGoals",
   async ({ request }) => {
-    console.log("weight.getGoals handler called");
-
-    const authHeader = request.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      console.error("Missing or invalid Authorization header");
-      return createTRPCErrorResponse(
-        0,
-        "Unauthorized: User must be logged in",
-        -32001,
-        401,
-        "weight.getGoals"
-      );
+    // Use the reusable authentication utility
+    const authResult = authenticateRequest(request, "weight.getGoals");
+    if (authResult instanceof HttpResponse) {
+      return authResult; // Return error response if authentication fails
     }
-
-    const token = authHeader.split(" ")[1];
-    const decoded = verifyJWT(token);
-    if (!decoded) {
-      console.error("Invalid token");
-      return createTRPCErrorResponse(
-        0,
-        "Invalid token",
-        -32001,
-        401,
-        "weight.getGoals"
-      );
-    }
-    const { userId } = decoded;
-    console.log("Decoded userId:", userId);
+    const { userId } = authResult as AuthenticatedUser;
 
     if (userId === "test-user-id") {
-      console.log("Returning goals for userId:", userId);
       return HttpResponse.json(
         {
           id: 0,
@@ -62,7 +43,6 @@ export const weightGetGoalsHandler = http.get(
     }
 
     if (userId === "empty-user-id") {
-      console.log("No goals for userId:", userId);
       return HttpResponse.json(
         {
           id: 0,
@@ -76,7 +56,6 @@ export const weightGetGoalsHandler = http.get(
     }
 
     if (userId === "error-user-id") {
-      console.error("Simulating server error for userId:", userId);
       return createTRPCErrorResponse(
         0,
         "Failed to fetch goals",
@@ -86,7 +65,6 @@ export const weightGetGoalsHandler = http.get(
       );
     }
 
-    console.error("Unauthorized userId:", userId);
     return createTRPCErrorResponse(
       0,
       "Unauthorized: Invalid user ID",
