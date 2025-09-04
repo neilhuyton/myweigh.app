@@ -1,7 +1,7 @@
 import { http, HttpResponse } from "msw";
 import { z } from "zod";
-import { createTRPCErrorResponse, withBodyParsing } from "../utils";
-import { mockUsers, type MockUser } from "../mockUsers";
+import { createTRPCErrorResponse, withBodyParsing } from "../../utils";
+import { mockUsers, type MockUser } from "../../mockUsers";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 

@@ -14,7 +14,7 @@ import { server } from "../__mocks__/server";
 import "@testing-library/jest-dom";
 import { renderWithProviders } from "./utils/setup";
 import { resetPasswordRequestHandler } from "../__mocks__/handlers";
-import ResetPasswordForm from "../src/components/ResetPasswordForm";
+import ResetPasswordForm from "../src/components/auth/ResetPasswordForm";
 import {
   RouterProvider,
   createRouter,

@@ -1,6 +1,6 @@
 import { http, HttpResponse } from "msw";
 import { z } from "zod";
-import { createTRPCErrorResponse, withBodyParsing } from "../utils";
+import { createTRPCErrorResponse, withBodyParsing } from "../../utils";
 
 const resetPasswordInputSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),

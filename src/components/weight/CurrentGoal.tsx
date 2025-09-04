@@ -1,5 +1,5 @@
 // src/components/CurrentGoal.tsx
-import { useWeightGoal } from "../hooks/useWeightGoal";
+import { useWeightGoal } from "../../hooks/useWeightGoal";
 
 function CurrentGoal() {
   const { currentGoal, isGoalAchieved } = useWeightGoal();

@@ -11,10 +11,10 @@ import {
 import { screen, waitFor } from "@testing-library/react";
 import { server } from "../__mocks__/server";
 import "@testing-library/jest-dom";
-import WeightChangeMessage from "../src/components/WeightChangeMessage";
+import WeightChangeMessage from "../src/components/weight/WeightChangeMessage";
 import { weightGetWeightsHandler } from "../__mocks__/handlers";
-import { resetWeights } from "../__mocks__/handlers/weightsData";
 import { renderWithProviders } from "./utils/setup";
+import { resetWeights } from "../__mocks__/handlers/user/weightsData";
 
 describe("WeightChangeMessage Component", () => {
   beforeAll(() => {

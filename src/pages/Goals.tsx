@@ -1,7 +1,7 @@
 // src/pages/Goals.tsx
-import GoalForm from "../components/GoalForm";
-import CurrentGoal from "../components/CurrentGoal";
-import GoalList from "../components/GoalList";
+import GoalForm from "../components/weight/GoalForm";
+import CurrentGoal from "../components/weight/CurrentGoal";
+import GoalList from "../components/weight/GoalList";
 
 function Goals() {
   return (

@@ -1,10 +1,10 @@
 // src/components/VerifyEmail.tsx
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
-import { Logo } from "./Logo";
+import { Logo } from "../Logo";
 import { cn } from "@/lib/utils";
-import { useVerifyEmail } from "../hooks/useVerifyEmail";
-import { LoadingSpinner } from "./LoadingSpinner";
+import { useVerifyEmail } from "../../hooks/useVerifyEmail";
+import { LoadingSpinner } from "../LoadingSpinner";
 
 function VerifyEmail() {
   const { message, isVerifying, isSuccess } = useVerifyEmail();

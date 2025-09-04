@@ -13,8 +13,6 @@ import { server } from "../__mocks__/server";
 import "@testing-library/jest-dom";
 import { act } from "@testing-library/react";
 import Profile from "../src/components/Profile";
-import { resetPasswordRequestHandler } from "../__mocks__/handlers/resetPasswordRequest";
-import { userUpdateEmailHandler } from "../__mocks__/handlers/userUpdateEmail";
 import {
   RouterProvider,
   createRouter,
@@ -25,6 +23,10 @@ import {
 } from "@tanstack/react-router";
 import { renderWithProviders, setupAuthStore } from "./utils/setup";
 import { useAuthStore } from "../src/authStore";
+import {
+  resetPasswordRequestHandler,
+  userUpdateEmailHandler,
+} from "../__mocks__/handlers";
 
 // Mock lucide-react icons
 vi.mock("lucide-react", () => ({

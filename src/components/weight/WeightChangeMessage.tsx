@@ -1,6 +1,6 @@
 // src/components/WeightChangeMessage.tsx
 import { Card, CardContent } from "@/components/ui/card"; // Adjust import based on your UI library
-import { useWeightChange } from "../hooks/useWeightChange";
+import { useWeightChange } from "../../hooks/useWeightChange";
 
 export default function WeightChangeMessage() {
   const { message, error } = useWeightChange();

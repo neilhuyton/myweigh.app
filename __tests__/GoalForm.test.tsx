@@ -10,7 +10,7 @@ import {
 import { screen, waitFor } from "@testing-library/react";
 import { server } from "../__mocks__/server";
 import "@testing-library/jest-dom";
-import GoalForm from "../src/components/GoalForm";
+import GoalForm from "../src/components/weight/GoalForm";
 import { weightGetCurrentGoalHandler } from "../__mocks__/handlers";
 import { renderWithProviders } from "./utils/setup";
 

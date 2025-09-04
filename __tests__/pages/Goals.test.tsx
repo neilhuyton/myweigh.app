@@ -20,15 +20,15 @@ import { useAuthStore } from "../../src/authStore";
 import { generateToken } from "../utils/token";
 
 // Mock child components to isolate Goals component
-vi.mock("../../src/components/GoalForm", () => ({
+vi.mock("../../src/components/weight/GoalForm", () => ({
   default: () => <div data-testid="goal-form">Mocked GoalForm</div>,
 }));
 
-vi.mock("../../src/components/CurrentGoal", () => ({
+vi.mock("../../src/components/weight/CurrentGoal", () => ({
   default: () => <div data-testid="current-goal">Mocked CurrentGoal</div>,
 }));
 
-vi.mock("../../src/components/GoalList", () => ({
+vi.mock("../../src/components/weight/GoalList", () => ({
   default: () => <div data-testid="goal-list">Mocked GoalList</div>,
 }));
 

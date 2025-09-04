@@ -11,12 +11,12 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { server } from "../__mocks__/server";
 import "@testing-library/jest-dom";
-import ConfirmResetPasswordForm from "../src/components/ConfirmResetPasswordForm";
-import { resetPasswordConfirmHandler } from "../__mocks__/handlers/resetPasswordConfirm";
+import ConfirmResetPasswordForm from "../src/components/auth/ConfirmResetPasswordForm";
 import { renderWithProviders } from "./utils/setup";
 
 // Mock useSearch from @tanstack/react-router
 import { useSearch } from "@tanstack/react-router";
+import { resetPasswordConfirmHandler } from "../__mocks__/handlers";
 vi.mock("@tanstack/react-router", async () => {
   const actual = await vi.importActual("@tanstack/react-router");
   return {

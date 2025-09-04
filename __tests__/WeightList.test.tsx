@@ -3,13 +3,13 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { server } from "../__mocks__/server";
 import "@testing-library/jest-dom";
-import WeightList from "../src/components/WeightList";
+import WeightList from "../src/components/weight/WeightList";
 import {
   weightGetWeightsHandler,
   weightDeleteHandler,
 } from "../__mocks__/handlers";
-import { resetWeights } from "../__mocks__/handlers/weightsData";
 import { renderWithProviders } from "./utils/setup";
+import { resetWeights } from "../__mocks__/handlers/user/weightsData";
 
 describe("WeightList Component", () => {
   beforeAll(() => {

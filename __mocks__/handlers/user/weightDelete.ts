@@ -6,7 +6,7 @@ import {
   createTRPCErrorResponse,
   withBodyParsing,
   type AuthenticatedUser,
-} from "../utils";
+} from "../../utils";
 import { weights } from "./weightsData";
 
 const weightDeleteInputSchema = z.object({

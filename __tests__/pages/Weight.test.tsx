@@ -20,15 +20,15 @@ import { useAuthStore } from "../../src/authStore";
 import { generateToken } from "../utils/token";
 
 // Mock WeightForm, WeightList, and WeightChangeMessage
-vi.mock("../../src/components/WeightForm", () => ({
+vi.mock("../../src/components/weight/WeightForm", () => ({
   default: () => <div data-testid="weight-form">Mocked WeightForm</div>,
 }));
 
-vi.mock("../../src/components/WeightList", () => ({
+vi.mock("../../src/components/weight/WeightList", () => ({
   default: () => <div data-testid="weight-list">Mocked WeightList</div>,
 }));
 
-vi.mock("../../src/components/WeightChangeMessage", () => ({
+vi.mock("../../src/components/weight/WeightChangeMessage", () => ({
   default: () => (
     <div data-testid="weight-change-message">Mocked WeightChangeMessage</div>
   ),

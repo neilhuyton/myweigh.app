@@ -1,4 +1,4 @@
-// src/components/LoginForm.tsx
+// src/components/Register.tsx
 import { cn } from "@/lib/utils";
 import {
   Form,
@@ -10,32 +10,44 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useLogin } from "../hooks/useLogin";
+import { useRegister } from "../../hooks/useRegister";
 import { useRouter } from "@tanstack/react-router";
+import { Logo } from "../Logo";
+import { LoadingSpinner } from "../LoadingSpinner";
 
-function LoginForm() {
+interface RegisterProps {
+  className?: string;
+}
+
+function Register({ className }: RegisterProps) {
+  const { form, message, isRegistering, handleRegister } = useRegister();
   const router = useRouter();
-  const { form, message, isPending, handleSubmit } = useLogin({
-    navigate: router.navigate,
-  });
 
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center p-1 sm:p-2 lg:p-3">
+    <div
+      className={cn(
+        "min-h-[100dvh] flex flex-col items-center p-1 sm:p-2 lg:p-3",
+        className
+      )}
+    >
+      <div className="pt-14">
+        <Logo />
+      </div>
       <div className="w-full max-w-md bg-background rounded-lg p-4 flex flex-col items-center mt-16 sm:mt-20">
         <h1
           className="text-2xl font-bold text-center mb-4"
           role="heading"
           aria-level={1}
         >
-          Login to your account
+          Create an account
         </h1>
         <p className="text-muted-foreground text-center mb-6">
-          Enter your email below to login to your account
+          Enter your details below to create an account
         </p>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            data-testid="login-form"
+            onSubmit={form.handleSubmit(handleRegister)}
+            data-testid="register-form"
             className="w-full"
           >
             <div className="flex flex-col gap-6">
@@ -55,7 +67,7 @@ function LoginForm() {
                           placeholder="m@example.com"
                           required
                           data-testid="email-input"
-                          disabled={isPending}
+                          disabled={isRegistering}
                           tabIndex={1}
                           {...field}
                         />
@@ -71,23 +83,9 @@ function LoginForm() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <div className="flex items-center justify-between leading-none mb-0">
-                        <Label htmlFor="password" data-testid="password-label">
-                          Password
-                        </Label>
-                        <a
-                          href="#"
-                          className="inline-block text-sm underline-offset-0 hover:underline"
-                          data-testid="forgot-password-link"
-                          tabIndex={3}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            router.navigate({ to: "/reset-password" });
-                          }}
-                        >
-                          Forgot your password?
-                        </a>
-                      </div>
+                      <Label htmlFor="password" data-testid="password-label">
+                        Password
+                      </Label>
                       <FormControl>
                         <Input
                           id="password"
@@ -95,8 +93,7 @@ function LoginForm() {
                           placeholder="Enter your password"
                           required
                           data-testid="password-input"
-                          disabled={isPending}
-                          className="w-full"
+                          disabled={isRegistering}
                           tabIndex={2}
                           {...field}
                         />
@@ -106,9 +103,14 @@ function LoginForm() {
                   )}
                 />
               </div>
+              {isRegistering && (
+                <div className="flex justify-center py-4">
+                  <LoadingSpinner size="md" testId="register-loading" />
+                </div>
+              )}
               {message && (
                 <p
-                  data-testid="login-message"
+                  data-testid="register-message"
                   className={cn(
                     "text-sm text-center",
                     message.includes("failed")
@@ -122,26 +124,26 @@ function LoginForm() {
               <Button
                 type="submit"
                 className="w-full mt-4"
-                data-testid="login-button"
-                disabled={isPending}
-                tabIndex={5}
+                data-testid="register-button"
+                disabled={isRegistering}
+                tabIndex={3}
               >
-                {isPending ? "Logging in..." : "Login"}
+                {isRegistering ? "Registering..." : "Register"}
               </Button>
               <div className="mt-4 text-center text-sm">
-                Don&apos;t have an account?{" "}
+                Already have an account?{" "}
                 <a
                   href="#"
                   role="link"
-                  className="underline underline-offset-4"
-                  data-testid="signup-link"
-                  tabIndex={4}
                   onClick={(e) => {
                     e.preventDefault();
-                    router.navigate({ to: "/register" });
+                    router.navigate({ to: "/login" });
                   }}
+                  className="underline underline-offset-4"
+                  data-testid="login-link"
+                  tabIndex={4}
                 >
-                  Sign up
+                  Login
                 </a>
               </div>
             </div>
@@ -152,4 +154,4 @@ function LoginForm() {
   );
 }
 
-export default LoginForm;
+export default Register;

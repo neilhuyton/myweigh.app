@@ -10,10 +10,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useResetPassword } from "../hooks/useResetPassword";
+import { useResetPassword } from "../../hooks/useResetPassword";
 import { useNavigate } from "@tanstack/react-router"; // Import useNavigate
-import { Logo } from "./Logo";
-import { LoadingSpinner } from "./LoadingSpinner";
+import { Logo } from "../Logo";
+import { LoadingSpinner } from "../LoadingSpinner";
 
 interface ResetPasswordFormProps {
   className?: string;

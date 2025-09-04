@@ -1,14 +1,14 @@
 /* src/index.css */
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "./themes/default.css";
-@import "./themes/red.css";
-@import "./themes/rose.css";
-@import "./themes/orange.css";
-@import "./themes/green.css";
-@import "./themes/blue.css";
-@import "./themes/yellow.css";
-@import "./themes/violet.css";
+@import "./default.css";
+@import "./red.css";
+@import "./rose.css";
+@import "./orange.css";
+@import "./green.css";
+@import "./blue.css";
+@import "./yellow.css";
+@import "./violet.css";
 
 @custom-variant dark (&:is(.dark *));
 

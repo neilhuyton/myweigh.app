@@ -9,10 +9,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useConfirmResetPassword } from "../hooks/useConfirmResetPassword";
-import { router } from "../router";
-import { Logo } from "./Logo";
-import { LoadingSpinner } from "./LoadingSpinner";
+import { useConfirmResetPassword } from "../../hooks/useConfirmResetPassword";
+import { router } from "../../router";
+import { Logo } from "./../Logo";
+import { LoadingSpinner } from "../LoadingSpinner";
 
 function ConfirmResetPasswordForm() {
   const { form, message, isPending, handleSubmit } = useConfirmResetPassword();

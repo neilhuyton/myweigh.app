@@ -10,7 +10,7 @@ import {
 } from "vitest";
 import { server } from "../__mocks__/server";
 import "@testing-library/jest-dom";
-import WeightForm from "../src/components/WeightForm";
+import WeightForm from "../src/components/weight/WeightForm";
 import {
   weightCreateHandler,
   weightGetCurrentGoalHandler,

@@ -4,7 +4,7 @@ import {
   authenticateRequest,
   createTRPCErrorResponse,
   type AuthenticatedUser,
-} from "../utils";
+} from "../../utils";
 
 export const weightGetGoalsHandler = http.get(
   "http://localhost:8888/.netlify/functions/trpc/weight.getGoals",

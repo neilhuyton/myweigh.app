@@ -4,7 +4,7 @@ import {
   authenticateRequest,
   createTRPCErrorResponse,
   type AuthenticatedUser,
-} from "../utils";
+} from "../../utils";
 import {
   weights,
   noChangeWeights,
