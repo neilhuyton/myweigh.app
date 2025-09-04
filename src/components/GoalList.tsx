@@ -3,7 +3,6 @@ import { useGoalList } from "../hooks/useGoalList";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
