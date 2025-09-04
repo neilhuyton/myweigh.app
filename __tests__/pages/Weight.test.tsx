@@ -1,5 +1,13 @@
 // __tests__/pages/Weight.test.tsx
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  afterEach,
+  vi,
+} from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpLink } from "@trpc/client";
@@ -8,7 +16,7 @@ import { server } from "../../__mocks__/server";
 import "@testing-library/jest-dom";
 import { act } from "react";
 import Weight from "../../src/pages/Weight";
-import { useAuthStore } from "../../src/store/authStore";
+import { useAuthStore } from "../../src/authStore";
 import { generateToken } from "../utils/token";
 
 // Mock WeightForm, WeightList, and WeightChangeMessage
@@ -21,7 +29,9 @@ vi.mock("../../src/components/WeightList", () => ({
 }));
 
 vi.mock("../../src/components/WeightChangeMessage", () => ({
-  default: () => <div data-testid="weight-change-message">Mocked WeightChangeMessage</div>,
+  default: () => (
+    <div data-testid="weight-change-message">Mocked WeightChangeMessage</div>
+  ),
 }));
 
 // Mock useNavigate to avoid RouterProvider requirement

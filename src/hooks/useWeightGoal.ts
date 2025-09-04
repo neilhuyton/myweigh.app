@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { trpc } from "../trpc";
-import { useAuthStore } from "../store/authStore";
+import { useAuthStore } from "../authStore";
 import type { TRPCClientErrorLike } from "@trpc/client";
 import type { AppRouter } from "server/trpc";
 
@@ -65,13 +65,16 @@ export function useWeightGoal() {
       return;
     }
     // Validate two decimal places
-    const decimalPlaces = (goalWeight.split(".")[1]?.length || 0);
+    const decimalPlaces = goalWeight.split(".")[1]?.length || 0;
     if (decimalPlaces > 2) {
       setMessage("Goal weight can have up to two decimal places.");
       return;
     }
     if (currentGoal) {
-      await updateGoalMutation.mutateAsync({ goalId: currentGoal.id, goalWeightKg });
+      await updateGoalMutation.mutateAsync({
+        goalId: currentGoal.id,
+        goalWeightKg,
+      });
     } else {
       await setGoalMutation.mutateAsync({ goalWeightKg });
     }

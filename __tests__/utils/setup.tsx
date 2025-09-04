@@ -2,7 +2,7 @@ import { render, type RenderOptions } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpLink } from "@trpc/client";
 import { trpc } from "../../src/trpc";
-import { useAuthStore } from "../../src/store/authStore";
+import { useAuthStore } from "../../src/authStore";
 import { generateToken } from "./token";
 import { vi } from "vitest";
 import type { ReactNode } from "react";

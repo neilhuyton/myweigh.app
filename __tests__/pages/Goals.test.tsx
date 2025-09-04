@@ -1,5 +1,13 @@
 // __tests__/pages/Goals.test.tsx
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  afterEach,
+  vi,
+} from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpLink } from "@trpc/client";
@@ -8,7 +16,7 @@ import { server } from "../../__mocks__/server";
 import "@testing-library/jest-dom";
 import { act } from "react";
 import Goals from "../../src/pages/Goals";
-import { useAuthStore } from "../../src/store/authStore";
+import { useAuthStore } from "../../src/authStore";
 import { generateToken } from "../utils/token";
 
 // Mock child components to isolate Goals component

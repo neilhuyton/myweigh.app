@@ -2,7 +2,7 @@
 import { useLocation, Outlet } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { trpc } from "../trpc";
-import { useAuthStore } from "../store/authStore";
+import { useAuthStore } from "../authStore";
 import { ThemeProvider } from "./ThemeProvider";
 import Navigation from "./Navigation";
 import ProfileIcon from "./ProfileIcon";

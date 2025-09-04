@@ -24,7 +24,7 @@ import {
   useNavigate,
 } from "@tanstack/react-router";
 import { renderWithProviders, setupAuthStore } from "./utils/setup";
-import { useAuthStore } from "../src/store/authStore";
+import { useAuthStore } from "../src/authStore";
 
 // Mock lucide-react icons
 vi.mock("lucide-react", () => ({

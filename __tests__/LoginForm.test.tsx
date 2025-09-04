@@ -10,7 +10,7 @@ import {
 } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { useAuthStore } from "../src/store/authStore";
+import { useAuthStore } from "../src/authStore";
 import "@testing-library/jest-dom";
 import { server } from "../__mocks__/server";
 import { loginHandler, refreshTokenHandler } from "../__mocks__/handlers";

@@ -15,7 +15,7 @@ import { server } from "../../__mocks__/server";
 import "@testing-library/jest-dom";
 import { act } from "react";
 import WeightChart from "../../src/pages/Stats";
-import { useAuthStore } from "../../src/store/authStore";
+import { useAuthStore } from "../../src/authStore";
 import { generateToken } from "../utils/token";
 import {
   weightGetWeightsHandler,

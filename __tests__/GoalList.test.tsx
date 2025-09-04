@@ -11,7 +11,7 @@ import { screen, waitFor } from "@testing-library/react";
 import { act } from "@testing-library/react";
 import GoalList from "../src/components/GoalList";
 import { weightGetGoalsHandler } from "../__mocks__/handlers/weightGetGoals";
-import { useAuthStore } from "../src/store/authStore";
+import { useAuthStore } from "../src/authStore";
 import { renderWithProviders, setupAuthStore } from "./utils/setup";
 import { server } from "../__mocks__/server";
 import "@testing-library/jest-dom";

@@ -3,11 +3,11 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { trpc } from "../trpc";
-import { useAuthStore } from "../store/authStore";
+import { useAuthStore } from "../authStore";
 import { useEffect, useState } from "react";
 import type { TRPCClientErrorLike } from "@trpc/client";
 import type { AppRouter } from "server/trpc";
-import { router } from "../router/router";
+import { router } from "../router";
 
 // Define the expected response type for the login mutation
 type LoginResponse = {

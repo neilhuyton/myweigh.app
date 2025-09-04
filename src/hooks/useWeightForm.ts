@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { trpc } from "../trpc";
-import { useAuthStore } from "../store/authStore";
+import { useAuthStore } from "../authStore";
 
 type Goal = {
   id: string;
@@ -42,7 +42,7 @@ export function useWeightForm() {
           setTimeout(() => setShowConfetti(false), 7000);
         }
       }
-      
+
       queryClient.weight.getWeights.invalidate();
       queryClient.weight.getCurrentGoal.invalidate();
       queryClient.weight.getGoals.invalidate();

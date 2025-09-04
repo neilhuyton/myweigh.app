@@ -16,7 +16,7 @@ import { verifyEmailHandler } from "../__mocks__/handlers";
 import { mockUsers, type MockUser } from "../__mocks__/mockUsers";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { createMemoryHistory } from "@tanstack/history";
-import { router } from "../src/router/router";
+import { router } from "../src/router";
 
 // Mock useNavigate to track navigation calls
 const mockNavigate = vi.fn();
