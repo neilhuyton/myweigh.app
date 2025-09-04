@@ -10,12 +10,12 @@ export interface MockUser {
   resetPasswordTokenExpiresAt: string | null;
   createdAt: string;
   updatedAt: string;
-  refreshToken: string | null; // Add refreshToken property
+  refreshToken: string | null;
 }
 
 export const mockUsers: MockUser[] = [
   {
-    id: "test-user-1", // Changed from 'test-user-id' to match test expectation
+    id: "test-user-1",
     email: "testuser@example.com",
     password: bcrypt.hashSync("password123", 10),
     verificationToken: null,
@@ -24,7 +24,7 @@ export const mockUsers: MockUser[] = [
     resetPasswordTokenExpiresAt: null,
     createdAt: "2025-08-16T10:40:39.214Z",
     updatedAt: "2025-08-16T10:40:39.214Z",
-    refreshToken: "mock-refresh-token", // Add refreshToken
+    refreshToken: "mock-refresh-token",
   },
   {
     id: "verified-user-id",
@@ -36,7 +36,7 @@ export const mockUsers: MockUser[] = [
     resetPasswordTokenExpiresAt: null,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    refreshToken: "mock-refresh-token-verified", // Add refreshToken
+    refreshToken: "mock-refresh-token-verified",
   },
   {
     id: "27e72eb9-a0ad-4714-bd7a-c148ac1b903e",
@@ -50,7 +50,7 @@ export const mockUsers: MockUser[] = [
     ).toISOString(),
     createdAt: "2025-08-16T10:40:39.214Z",
     updatedAt: "2025-08-16T11:10:39.214Z",
-    refreshToken: null, // No refreshToken for unverified user
+    refreshToken: null,
   },
   {
     id: "fb208768-1bf8-4f8d-bcad-1f94c882ed93",
@@ -62,6 +62,18 @@ export const mockUsers: MockUser[] = [
     resetPasswordTokenExpiresAt: null,
     createdAt: "2025-08-16T19:57:56.561Z",
     updatedAt: "2025-08-16T19:58:22.721Z",
-    refreshToken: "mock-refresh-token-hi", // Add refreshToken
+    refreshToken: "mock-refresh-token-hi",
+  },
+  {
+    id: "existing-user-id",
+    email: "exists@example.com",
+    password: bcrypt.hashSync("password123", 10),
+    verificationToken: null,
+    isEmailVerified: true,
+    resetPasswordToken: null,
+    resetPasswordTokenExpiresAt: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    refreshToken: "mock-refresh-token-existing",
   },
 ];

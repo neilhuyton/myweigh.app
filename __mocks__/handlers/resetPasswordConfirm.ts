@@ -1,4 +1,3 @@
-// __mocks__/handlers/resetPasswordConfirm.ts
 import { http, HttpResponse } from "msw";
 import { z } from "zod";
 import { createTRPCErrorResponse, withBodyParsing } from "../utils";
@@ -14,12 +13,9 @@ export const resetPasswordConfirmHandler = http.post(
     resetPasswordConfirmInputSchema,
     "resetPassword.confirm",
     async (body) => {
-      console.log("resetPassword.confirm handler called");
-
       const { token } = body;
 
       if (token === "123e4567-e29b-12d3-a456-426614174000") {
-        console.log("Returning success response for valid token");
         return HttpResponse.json(
           {
             id: 0,
@@ -32,7 +28,6 @@ export const resetPasswordConfirmHandler = http.post(
         );
       }
 
-      console.error("Invalid or expired token:", token);
       return createTRPCErrorResponse(
         0,
         "Invalid or expired token",
@@ -41,6 +36,5 @@ export const resetPasswordConfirmHandler = http.post(
         "resetPassword.confirm"
       );
     },
-    false
-  ) // Disable Parsed body logging
+  )
 );

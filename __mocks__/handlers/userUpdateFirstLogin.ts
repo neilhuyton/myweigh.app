@@ -17,7 +17,7 @@ export const userUpdateFirstLoginHandler = http.post(
   withBodyParsing(
     updateFirstLoginInputSchema,
     "user.updateFirstLogin",
-    async (body, request) => {
+    async (_, request) => {
       // Use the reusable authentication utility
       const authResult = authenticateRequest(request, "user.updateFirstLogin");
       if (authResult instanceof HttpResponse) {
@@ -46,6 +46,5 @@ export const userUpdateFirstLoginHandler = http.post(
         "user.updateFirstLogin"
       );
     },
-    false
-  ) // Disable Parsed body logging
+  )
 );

@@ -38,7 +38,6 @@ export const registerRouter = t.router({
           verificationToken,
           refreshToken,
           isEmailVerified: false,
-          isFirstLogin: true, // Set isFirstLogin to true for new users
         },
       });
 
@@ -58,7 +57,6 @@ export const registerRouter = t.router({
         email: user.email,
         token,
         refreshToken,
-        isFirstLogin: user.isFirstLogin, // Include isFirstLogin
         message: 'Registration successful! Please check your email to verify your account.',
       };
     }),

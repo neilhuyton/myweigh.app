@@ -1,4 +1,3 @@
-// __mocks__/handlers/resetPasswordRequest.ts
 import { http, HttpResponse } from "msw";
 import { z } from "zod";
 import { createTRPCErrorResponse, withBodyParsing } from "../utils";
@@ -13,15 +12,12 @@ export const resetPasswordRequestHandler = http.post(
     resetPasswordInputSchema,
     "resetPassword.request",
     async (body) => {
-      console.log("resetPassword.request handler called");
-
       const { email } = body;
 
       if (
         email === "nonexistent@example.com" ||
         email === "unknown@example.com"
       ) {
-        console.log("Returning neutral response for email:", email);
         return HttpResponse.json(
           {
             id: 0,
@@ -37,7 +33,6 @@ export const resetPasswordRequestHandler = http.post(
       }
 
       if (email === "fail@example.com") {
-        console.error("Simulating server error for email:", email);
         return createTRPCErrorResponse(
           0,
           "Failed to send reset email",
@@ -47,7 +42,6 @@ export const resetPasswordRequestHandler = http.post(
         );
       }
 
-      console.log("Returning success response for email:", email);
       return HttpResponse.json(
         {
           id: 0,
@@ -58,7 +52,6 @@ export const resetPasswordRequestHandler = http.post(
         },
         { status: 200 }
       );
-    },
-    false
-  ) // Disable Parsed body logging
+    }
+  )
 );

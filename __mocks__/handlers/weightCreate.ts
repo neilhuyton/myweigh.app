@@ -1,4 +1,3 @@
-// __mocks__/handlers/weightCreate.ts
 import { http, HttpResponse } from "msw";
 import { z } from "zod";
 import {
@@ -27,20 +26,14 @@ const weightInputSchema = z.object({
 export const weightCreateHandler = http.post(
   "http://localhost:8888/.netlify/functions/trpc/weight.create",
   withBodyParsing(weightInputSchema, "weight.create", async (body, request) => {
-    console.log("weight.create handler called");
-
-    // Use the reusable authentication utility
     const authResult = authenticateRequest(request, "weight.create");
     if (authResult instanceof HttpResponse) {
-      return authResult; // Return error response if authentication fails
+      return authResult;
     }
     const { userId } = authResult as AuthenticatedUser;
-    console.log("Decoded userId:", userId);
-
     const { weightKg, note } = body;
 
     if (userId === "test-user-id" || userId === "empty-user-id") {
-      console.log("Returning success response for userId:", userId);
       return HttpResponse.json(
         {
           id: 0,
@@ -60,7 +53,6 @@ export const weightCreateHandler = http.post(
     }
 
     if (userId === "error-user-id") {
-      console.error("Simulating server error for userId:", userId);
       return createTRPCErrorResponse(
         0,
         "Failed to create weight",
@@ -70,7 +62,6 @@ export const weightCreateHandler = http.post(
       );
     }
 
-    console.error("Unauthorized userId:", userId);
     return createTRPCErrorResponse(
       0,
       "Unauthorized: Invalid user ID",

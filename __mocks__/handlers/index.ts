@@ -1,4 +1,6 @@
 // __mocks__/handlers/index.ts
+import { loginHandler } from "./login";
+import { refreshTokenHandler } from "./refreshToken";
 import { registerHandler } from "./register";
 import { resetPasswordConfirmHandler } from "./resetPasswordConfirm";
 import { resetPasswordRequestHandler } from "./resetPasswordRequest";
@@ -27,6 +29,8 @@ export const handlers = [
   weightGetWeightsHandler,
   weightSetGoalHandler,
   weightUpdateGoalHandler,
+  refreshTokenHandler,
+  loginHandler,
 ];
 
 export {
@@ -43,4 +47,6 @@ export {
   weightGetWeightsHandler,
   weightSetGoalHandler,
   weightUpdateGoalHandler,
+  refreshTokenHandler,
+  loginHandler,
 };
