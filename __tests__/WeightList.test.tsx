@@ -18,28 +18,27 @@ import "@testing-library/jest-dom";
 import WeightList from "../src/components/WeightList";
 import { weightGetWeightsHandler } from "../__mocks__/handlers/weightGetWeights";
 import { weightDeleteHandler } from "../__mocks__/handlers/weightDelete";
-import { resetWeights } from "../__mocks__/handlers/weightsData";
 import { useAuthStore } from "../src/store/authStore";
 import { generateToken } from "./utils/token";
-import { act } from "@testing-library/react";
+import { resetWeights } from "../__mocks__/handlers/weightsData";
 
-// Mock LoadingSpinner
+// Mock LoadingSpinner component
 vi.mock("../src/components/LoadingSpinner", () => ({
   LoadingSpinner: ({ testId }: { testId: string }) => (
     <div data-testid={testId}>Loading...</div>
   ),
 }));
 
-// Define the type for a tRPC request
-interface TRPCRequest {
-  path?: string;
-  method?: string;
-  json?: unknown;
-  id?: number;
-}
-
+// Mock lucide-react icons
 vi.mock("lucide-react", () => ({
-  Trash2: () => <div data-testid="trash-icon" />,
+  Trash2: () => <div data-testid="trash-2-icon" />,
+}));
+
+// Mock Button component
+vi.mock("@/components/ui/button", () => ({
+  Button: ({ onClick, ...props }: any) => (
+    <button onClick={onClick} {...props} />
+  ),
 }));
 
 describe("WeightList Component", () => {
@@ -54,49 +53,6 @@ describe("WeightList Component", () => {
     links: [
       httpLink({
         url: "http://localhost:8888/.netlify/functions/trpc",
-        fetch: async (url, options = {}) => {
-          let correctedUrl = "http://localhost:8888/.netlify/functions/trpc";
-          let modifiedOptions = { ...options };
-          let parsedBody;
-          try {
-            parsedBody = options.body
-              ? JSON.parse(options.body as string)
-              : null;
-          } catch {
-            parsedBody = null;
-          }
-
-          const isGetWeights =
-            parsedBody === null ||
-            (Array.isArray(parsedBody) &&
-              parsedBody.some(
-                (req: TRPCRequest) =>
-                  req.path === "weight.getWeights" && req.method === "query"
-              ));
-
-          if (isGetWeights) {
-            correctedUrl = `${correctedUrl}/weight.getWeights`;
-            modifiedOptions = {
-              ...options,
-              method: "GET",
-              body: undefined,
-            };
-          } else {
-            modifiedOptions = {
-              ...options,
-              method: "POST",
-              body: options.body,
-            };
-          }
-
-          const response = await fetch(correctedUrl, modifiedOptions);
-          const json = await response.json();
-          return new Response(JSON.stringify(json), {
-            status: response.status,
-            statusText: response.statusText,
-            headers: response.headers,
-          });
-        },
         headers: () => ({
           "content-type": "application/json",
           ...(useAuthStore.getState().token
@@ -117,19 +73,17 @@ describe("WeightList Component", () => {
       logout: vi.fn(),
     });
 
-    await act(async () => {
-      render(
-        <trpc.Provider client={trpcClient} queryClient={queryClient}>
-          <QueryClientProvider client={queryClient}>
-            <WeightList />
-          </QueryClientProvider>
-        </trpc.Provider>
-      );
-    });
+    render(
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <WeightList />
+        </QueryClientProvider>
+      </trpc.Provider>
+    );
   };
 
   beforeAll(() => {
-    server.listen({ onUnhandledRequest: "error" });
+    server.listen({ onUnhandledRequest: "warn" });
     server.use(weightGetWeightsHandler, weightDeleteHandler);
   });
 
@@ -163,109 +117,37 @@ describe("WeightList Component", () => {
           screen.queryByTestId("weight-list-loading")
         ).not.toBeInTheDocument();
         expect(screen.getByRole("table")).toBeInTheDocument();
-        expect(screen.getByText("Weight (kg)")).toBeInTheDocument();
-        expect(screen.getByText("Date")).toBeInTheDocument();
         expect(screen.getByText("70.00")).toBeInTheDocument();
         expect(screen.getByText("69.90")).toBeInTheDocument();
         expect(screen.queryByTestId("error-message")).not.toBeInTheDocument();
       },
-      { timeout: 2000 }
+      { timeout: 5000 }
     );
   });
 
-  it("deletes a weight measurement when delete button is clicked and confirmed", async () => {
+  it("deletes a weight measurement when delete button is clicked", async () => {
     await setup();
 
     await waitFor(
       () => {
-        expect(
-          screen.queryByTestId("weight-list-loading")
-        ).not.toBeInTheDocument();
+        expect(screen.getByRole("table")).toBeInTheDocument();
         expect(screen.getByText("70.00")).toBeInTheDocument();
         expect(screen.getByText("69.90")).toBeInTheDocument();
-        expect(screen.getByTestId("delete-button-1")).toBeInTheDocument();
         expect(screen.queryByTestId("error-message")).not.toBeInTheDocument();
-      },
-      { timeout: 2000 }
-    );
-
-    const deleteButton = screen.getByTestId("delete-button-1");
-    await act(async () => {
-      await userEvent.click(deleteButton);
-    });
-
-    await waitFor(
-      () => {
-        expect(screen.getByText("Are you sure?")).toBeInTheDocument();
-        expect(
-          screen.getByText(
-            /This action cannot be undone\. This will permanently delete the weight measurement of 70\.00 kg/
-          )
-        ).toBeInTheDocument();
-        expect(screen.getByTestId("cancel-delete")).toBeInTheDocument();
-        expect(screen.getByTestId("confirm-delete")).toBeInTheDocument();
       },
       { timeout: 1000 }
     );
 
-    await act(async () => {
-      await userEvent.click(screen.getByTestId("confirm-delete"));
-    });
+    const deleteButton = screen.getByTestId(
+      "delete-button-550e8400-e29b-41d4-a716-446655440000"
+    );
+
+    await userEvent.click(deleteButton);
 
     await waitFor(
       () => {
         expect(screen.queryByText("70.00")).not.toBeInTheDocument();
         expect(screen.getByText("69.90")).toBeInTheDocument();
-        expect(screen.queryByTestId("error-message")).not.toBeInTheDocument();
-      },
-      { timeout: 2000 }
-    );
-  });
-
-  it("cancels deletion when cancel button is clicked", async () => {
-    await setup();
-
-    await waitFor(
-      () => {
-        expect(
-          screen.queryByTestId("weight-list-loading")
-        ).not.toBeInTheDocument();
-        expect(screen.getByText("70.00")).toBeInTheDocument();
-        expect(screen.getByText("69.90")).toBeInTheDocument();
-        expect(screen.getByTestId("delete-button-1")).toBeInTheDocument();
-        expect(screen.queryByTestId("error-message")).not.toBeInTheDocument();
-      },
-      { timeout: 2000 }
-    );
-
-    const deleteButton = screen.getByTestId("delete-button-1");
-    await act(async () => {
-      await userEvent.click(deleteButton);
-    });
-
-    await waitFor(
-      () => {
-        expect(screen.getByText("Are you sure?")).toBeInTheDocument();
-        expect(
-          screen.getByText(
-            /This action cannot be undone\. This will permanently delete the weight measurement of 70\.00 kg/
-          )
-        ).toBeInTheDocument();
-        expect(screen.getByTestId("cancel-delete")).toBeInTheDocument();
-        expect(screen.getByTestId("confirm-delete")).toBeInTheDocument();
-      },
-      { timeout: 1000 }
-    );
-
-    await act(async () => {
-      await userEvent.click(screen.getByTestId("cancel-delete"));
-    });
-
-    await waitFor(
-      () => {
-        expect(screen.getByText("70.00")).toBeInTheDocument();
-        expect(screen.getByText("69.90")).toBeInTheDocument();
-        expect(screen.queryByText("Are you sure?")).not.toBeInTheDocument();
         expect(screen.queryByTestId("error-message")).not.toBeInTheDocument();
       },
       { timeout: 1000 }

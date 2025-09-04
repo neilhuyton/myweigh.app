@@ -1,14 +1,22 @@
 // __mocks__/weightsData.ts
-export let weights = [
+export interface Weight {
+  id: string;
+  userId: string;
+  weightKg: number;
+  note: string | null;
+  createdAt: string;
+}
+
+export let weights: Weight[] = [
   {
-    id: "1",
+    id: "550e8400-e29b-41d4-a716-446655440000",
     userId: "test-user-id",
-    weightKg: 70,
+    weightKg: 70.0,
     createdAt: "2023-10-01T00:00:00Z",
     note: "Morning weigh-in",
   },
   {
-    id: "2",
+    id: "123e4567-e89b-12d3-a456-426614174000",
     userId: "test-user-id",
     weightKg: 69.9,
     createdAt: "2023-10-02T00:00:00Z",
@@ -16,33 +24,33 @@ export let weights = [
   },
 ];
 
-export const noChangeWeights = [
+export const noChangeWeights: Weight[] = [
   {
-    id: "3",
+    id: "3e6b8400-e29b-41d4-a716-446655440000",
     userId: "no-change-user-id",
-    weightKg: 70,
+    weightKg: 70.0,
     createdAt: "2023-10-01T00:00:00Z",
     note: "Morning weigh-in",
   },
   {
-    id: "4",
+    id: "4e6b8400-e29b-41d4-a716-446655440000",
     userId: "no-change-user-id",
-    weightKg: 70,
+    weightKg: 70.0,
     createdAt: "2023-10-02T00:00:00Z",
     note: "Evening weigh-in",
   },
 ];
 
-export const gainWeights = [
+export const gainWeights: Weight[] = [
   {
-    id: "5",
+    id: "5e6b8400-e29b-41d4-a716-446655440000",
     userId: "gain-user-id",
-    weightKg: 70,
+    weightKg: 70.0,
     createdAt: "2023-10-01T00:00:00Z",
     note: "Morning weigh-in",
   },
   {
-    id: "6",
+    id: "6e6b8400-e29b-41d4-a716-446655440000",
     userId: "gain-user-id",
     weightKg: 70.5,
     createdAt: "2023-10-02T00:00:00Z",
@@ -50,11 +58,11 @@ export const gainWeights = [
   },
 ];
 
-export const singleWeight = [
+export const singleWeight: Weight[] = [
   {
-    id: "7",
+    id: "7e6b8400-e29b-41d4-a716-446655440000",
     userId: "single-user-id",
-    weightKg: 70,
+    weightKg: 70.0,
     createdAt: "2023-10-01T00:00:00Z",
     note: "Morning weigh-in",
   },
@@ -63,14 +71,14 @@ export const singleWeight = [
 export const resetWeights = () => {
   weights = [
     {
-      id: "1",
+      id: "550e8400-e29b-41d4-a716-446655440000",
       userId: "test-user-id",
-      weightKg: 70,
+      weightKg: 70.0,
       createdAt: "2023-10-01T00:00:00Z",
       note: "Morning weigh-in",
     },
     {
-      id: "2",
+      id: "123e4567-e89b-12d3-a456-426614174000",
       userId: "test-user-id",
       weightKg: 69.9,
       createdAt: "2023-10-02T00:00:00Z",

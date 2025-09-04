@@ -1,47 +1,41 @@
+// __mocks__/handlers/weightGetGoals.ts
 import { http, HttpResponse } from "msw";
-import jwt from "jsonwebtoken";
+import { createTRPCErrorResponse, verifyJWT } from "../utils";
 
 export const weightGetGoalsHandler = http.get(
   "http://localhost:8888/.netlify/functions/trpc/weight.getGoals",
   async ({ request }) => {
+    console.log("weight.getGoals handler called");
+
     const authHeader = request.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Unauthorized",
-            code: -32001,
-            data: { code: "UNAUTHORIZED", httpStatus: 401, path: "weight.getGoals" },
-          },
-        },
-        { status: 200, headers: { "Content-Type": "application/json" } }
+      console.error("Missing or invalid Authorization header");
+      return createTRPCErrorResponse(
+        0,
+        "Unauthorized: User must be logged in",
+        -32001,
+        401,
+        "weight.getGoals"
       );
     }
 
     const token = authHeader.split(" ")[1];
-    let userId: string | null = null;
-    try {
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET || "your-secret-key"
-      ) as { userId: string };
-      userId = decoded.userId;
-    } catch {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Invalid token",
-            code: -32001,
-            data: { code: "UNAUTHORIZED", httpStatus: 401, path: "weight.getGoals" },
-          },
-        },
-        { status: 200, headers: { "Content-Type": "application/json" } }
+    const decoded = verifyJWT(token);
+    if (!decoded) {
+      console.error("Invalid token");
+      return createTRPCErrorResponse(
+        0,
+        "Invalid token",
+        -32001,
+        401,
+        "weight.getGoals"
       );
     }
+    const { userId } = decoded;
+    console.log("Decoded userId:", userId);
 
     if (userId === "test-user-id") {
+      console.log("Returning goals for userId:", userId);
       return HttpResponse.json(
         {
           id: 0,
@@ -49,13 +43,13 @@ export const weightGetGoalsHandler = http.get(
             type: "data",
             data: [
               {
-                id: "1",
+                id: "550e8400-e29b-41d4-a716-446655440000",
                 goalWeightKg: 65.0,
                 goalSetAt: "2025-08-28T00:00:00Z",
                 reachedAt: null,
               },
               {
-                id: "2",
+                id: "123e4567-e89b-12d3-a456-426614174000",
                 goalWeightKg: 70.0,
                 goalSetAt: "2025-08-27T00:00:00Z",
                 reachedAt: "2025-08-27T12:00:00Z",
@@ -63,41 +57,42 @@ export const weightGetGoalsHandler = http.get(
             ],
           },
         },
-        { status: 200, headers: { "Content-Type": "application/json" } }
+        { status: 200 }
       );
     }
 
     if (userId === "empty-user-id") {
+      console.log("No goals for userId:", userId);
       return HttpResponse.json(
-        { id: 0, result: { type: "data", data: [] } },
-        { status: 200, headers: { "Content-Type": "application/json" } }
+        {
+          id: 0,
+          result: {
+            type: "data",
+            data: [],
+          },
+        },
+        { status: 200 }
       );
     }
 
     if (userId === "error-user-id") {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Failed to fetch goals",
-            code: -32002,
-            data: { code: "INTERNAL_SERVER_ERROR", httpStatus: 500, path: "weight.getGoals" },
-          },
-        },
-        { status: 200, headers: { "Content-Type": "application/json" } }
+      console.error("Simulating server error for userId:", userId);
+      return createTRPCErrorResponse(
+        0,
+        "Failed to fetch goals",
+        -32002,
+        500,
+        "weight.getGoals"
       );
     }
 
-    return HttpResponse.json(
-      {
-        id: 0,
-        error: {
-          message: "Unauthorized",
-          code: -32001,
-          data: { code: "UNAUTHORIZED", httpStatus: 401, path: "weight.getGoals" },
-        },
-      },
-      { status: 200, headers: { "Content-Type": "application/json" } }
+    console.error("Unauthorized userId:", userId);
+    return createTRPCErrorResponse(
+      0,
+      "Unauthorized: Invalid user ID",
+      -32001,
+      401,
+      "weight.getGoals"
     );
   }
 );

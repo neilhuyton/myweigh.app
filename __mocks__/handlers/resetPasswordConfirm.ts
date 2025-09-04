@@ -1,39 +1,64 @@
 // __mocks__/handlers/resetPasswordConfirm.ts
 import { http, HttpResponse } from "msw";
+import { z } from "zod";
+import { parseBody, createTRPCErrorResponse } from "../utils";
+
+const resetPasswordConfirmInputSchema = z.object({
+  token: z.string().uuid({ message: "Invalid token format" }),
+  newPassword: z.string().min(1, { message: "New password is required" }),
+});
 
 export const resetPasswordConfirmHandler = http.post(
   "http://localhost:8888/.netlify/functions/trpc/resetPassword.confirm",
   async ({ request }) => {
-    const body = await request.json() as { token?: string; newPassword?: string } | null;
+    console.log("resetPassword.confirm handler called");
 
-    if (!body || !body.token || !body.newPassword) {
+    let body: { token: string; newPassword: string };
+    try {
+      body = await parseBody(
+        request,
+        resetPasswordConfirmInputSchema,
+        "resetPassword.confirm"
+      );
+      console.log("Parsed body:", JSON.stringify(body));
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unknown error parsing request body";
+      console.error(message);
+      return createTRPCErrorResponse(
+        0,
+        message,
+        -32600,
+        400,
+        "resetPassword.confirm"
+      );
+    }
+
+    const { token } = body;
+
+    if (token === "123e4567-e29b-12d3-a456-426614174000") {
+      console.log("Returning success response for valid token");
       return HttpResponse.json(
         {
-          error: {
-            message: "Invalid request body",
-            code: -32600,
-            data: { code: "BAD_REQUEST", httpStatus: 400, path: "resetPassword.confirm" },
+          id: 0,
+          result: {
+            type: "data",
+            data: { success: true },
           },
         },
         { status: 200 }
       );
     }
 
-    if (body.token === "123e4567-e89b-12d3-a456-426614174000") {
-      return HttpResponse.json({
-        result: { data: { success: true } },
-      });
-    }
-
-    return HttpResponse.json(
-      {
-        error: {
-          message: "Invalid or expired token",
-          code: -32600,
-          data: { code: "BAD_REQUEST", httpStatus: 400, path: "resetPassword.confirm" },
-        },
-      },
-      { status: 200 }
+    console.error("Invalid or expired token:", token);
+    return createTRPCErrorResponse(
+      0,
+      "Invalid or expired token",
+      -32600,
+      400,
+      "resetPassword.confirm"
     );
   }
 );

@@ -1,143 +1,101 @@
 // __mocks__/handlers/weightDelete.ts
 import { http, HttpResponse } from "msw";
-import jwt from "jsonwebtoken";
+import { z } from "zod";
+import { parseBody, verifyJWT, createTRPCErrorResponse } from "../utils";
 import { weights } from "./weightsData";
 
-interface TRPCRequestBody {
-  id?: number;
-  method?: string;
-  path?: string;
-  json?: { weightId: string };
-}
-
-interface SimpleRequestBody {
-  weightId: string;
-}
+const weightDeleteInputSchema = z.object({
+  weightId: z.string().uuid({ message: "Invalid weight ID" }),
+});
 
 export const weightDeleteHandler = http.post(
-  "http://localhost:8888/.netlify/functions/trpc",
+  "http://localhost:8888/.netlify/functions/trpc/weight.delete",
   async ({ request }) => {
-    let body: unknown;
+    const clonedRequest = request.clone();
+
+    let body: { weightId: string };
     try {
-      body = await request.clone().json();
-    } catch {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Invalid request body",
-            code: -32000,
-            data: { code: "BAD_REQUEST", httpStatus: 400, path: "weight.delete" },
-          },
-        },
-        { status: 200 }
+      body = await parseBody(
+        clonedRequest,
+        weightDeleteInputSchema,
+        "weight.delete"
       );
-    }
-
-    let deleteRequest: TRPCRequestBody | SimpleRequestBody | undefined;
-    if (Array.isArray(body)) {
-      deleteRequest = body.find((req: TRPCRequestBody) => req.path === "weight.delete");
-    } else if (body && typeof body === "object") {
-      if ("path" in body && body.path === "weight.delete") {
-        deleteRequest = body as TRPCRequestBody;
-      } else if ("weightId" in body) {
-        deleteRequest = body as SimpleRequestBody;
-      }
-    }
-
-    if (!deleteRequest) {
-      return; // Pass to other handlers
+    } catch (error) {
+      return createTRPCErrorResponse(
+        0,
+        error instanceof Error ? error.message : "Invalid request body",
+        -32600,
+        400,
+        "weight.delete"
+      );
     }
 
     const authHeader = request.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return HttpResponse.json(
-        {
-          id: (deleteRequest as TRPCRequestBody).id || 0,
-          error: {
-            message: "Unauthorized",
-            code: -32001,
-            data: { code: "UNAUTHORIZED", httpStatus: 401, path: "weight.delete" },
-          },
-        },
-        { status: 200 }
+      return createTRPCErrorResponse(
+        0,
+        "Unauthorized: User must be logged in",
+        -32001,
+        401,
+        "weight.delete"
       );
     }
 
     const token = authHeader.split(" ")[1];
-    let userId: string | null = null;
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || "your-secret-key") as { userId: string };
-      userId = decoded.userId;
-    } catch {
-      return HttpResponse.json(
-        {
-          id: (deleteRequest as TRPCRequestBody).id || 0,
-          error: {
-            message: "Invalid token",
-            code: -32001,
-            data: { code: "UNAUTHORIZED", httpStatus: 401, path: "weight.delete" },
-          },
-        },
-        { status: 200 }
+    const decoded = verifyJWT(token);
+    if (!decoded) {
+      return createTRPCErrorResponse(
+        0,
+        "Invalid token",
+        -32001,
+        401,
+        "weight.delete"
       );
     }
+    const { userId } = decoded;
+
+    const { weightId } = body;
 
     if (userId === "error-user-id") {
-      return HttpResponse.json(
-        {
-          id: (deleteRequest as TRPCRequestBody).id || 0,
-          error: {
-            message: "Failed to delete weight",
-            code: -32002,
-            data: { code: "INTERNAL_SERVER_ERROR", httpStatus: 500, path: "weight.delete" },
-          },
-        },
-        { status: 200 }
+      return createTRPCErrorResponse(
+        0,
+        "Failed to delete weight",
+        -32002,
+        500,
+        "weight.delete"
       );
     }
 
-    const input = (deleteRequest as TRPCRequestBody).json || (deleteRequest as SimpleRequestBody);
-    if (!input || !input.weightId) {
-      return HttpResponse.json(
-        {
-          id: (deleteRequest as TRPCRequestBody).id || 0,
-          error: {
-            message: "Invalid input",
-            code: -32000,
-            data: { code: "BAD_REQUEST", httpStatus: 400, path: "weight.delete" },
-          },
-        },
-        { status: 200 }
+    const weight = weights.find((w) => w.id === weightId);
+    if (!weight) {
+      return createTRPCErrorResponse(
+        0,
+        "Weight measurement not found",
+        -32602,
+        404,
+        "weight.delete"
       );
     }
 
-    const weightIndex = weights.findIndex((w) => w.id === input.weightId);
-    if (weightIndex !== -1) {
-      weights.splice(weightIndex, 1);
-      return HttpResponse.json(
-        {
-          id: (deleteRequest as TRPCRequestBody).id || 0,
-          result: {
-            type: "data",
-            data: { id: input.weightId },
-          },
-        },
-        { status: 200 }
+    if (weight.userId !== userId) {
+      return createTRPCErrorResponse(
+        0,
+        "Unauthorized: Cannot delete another user's weight measurement",
+        -32001,
+        401,
+        "weight.delete"
       );
     }
+
+    const weightIndex = weights.findIndex((w) => w.id === weightId);
+    weights.splice(weightIndex, 1);
 
     return HttpResponse.json(
       {
-        id: (deleteRequest as TRPCRequestBody).id || 0,
-        error: {
-          message: "Weight measurement not found",
-          code: -32001,
-          data: {
-            code: "NOT_FOUND",
-            httpStatus: 404,
-            path: "weight.delete",
-          },
+        id: 0,
+        result: {
+          type: "data",
+          data: { id: weightId },
         },
       },
       { status: 200 }

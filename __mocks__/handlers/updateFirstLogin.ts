@@ -1,115 +1,79 @@
+// __mocks__/handlers/userUpdateFirstLogin.ts
 import { http, HttpResponse } from "msw";
-import jwt from "jsonwebtoken";
+import { z } from "zod";
+import { parseBody, createTRPCErrorResponse, verifyJWT } from "../utils";
 
-interface TRPCRequestBody {
-  id?: number;
-  input?: { isFirstLogin: boolean };
-  isFirstLogin?: boolean;
-}
+const updateFirstLoginInputSchema = z.object({
+  isFirstLogin: z.boolean({ message: "isFirstLogin must be a boolean" }),
+});
 
 export const userUpdateFirstLoginHandler = http.post(
   "http://localhost:8888/.netlify/functions/trpc/user.updateFirstLogin",
   async ({ request }) => {
+    console.log("user.updateFirstLogin handler called");
+
     const authHeader = request.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Unauthorized: User must be logged in",
-            code: -32001,
-            data: {
-              code: "UNAUTHORIZED",
-              httpStatus: 401,
-              path: "user.updateFirstLogin",
-            },
-          },
-        },
-        { status: 401 }
+      console.error("Missing or invalid Authorization header");
+      return createTRPCErrorResponse(
+        0,
+        "Unauthorized: User must be logged in",
+        -32001,
+        401,
+        "user.updateFirstLogin"
       );
     }
 
     const token = authHeader.split(" ")[1];
-    let userId: string | null = null;
+    const decoded = verifyJWT(token);
+    if (!decoded) {
+      console.error("Invalid token");
+      return createTRPCErrorResponse(
+        0,
+        "Invalid token",
+        -32001,
+        401,
+        "user.updateFirstLogin"
+      );
+    }
+    const { userId } = decoded;
+    console.log("Decoded userId:", userId);
+
+    let body: { isFirstLogin: boolean };
     try {
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET || "your-secret-key"
-      ) as { userId: string };
-      userId = decoded.userId;
-    } catch {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Invalid token",
-            code: -32001,
-            data: {
-              code: "UNAUTHORIZED",
-              httpStatus: 401,
-              path: "user.updateFirstLogin",
-            },
-          },
-        },
-        { status: 401 }
+      body = await parseBody(
+        request,
+        updateFirstLoginInputSchema,
+        "user.updateFirstLogin"
+      );
+      console.log("Parsed body:", JSON.stringify(body));
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unknown error parsing request body";
+      console.error(message);
+      return createTRPCErrorResponse(
+        0,
+        message,
+        -32600,
+        400,
+        "user.updateFirstLogin"
       );
     }
 
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Invalid request body",
-            code: -32600,
-            data: {
-              code: "BAD_REQUEST",
-              httpStatus: 400,
-              path: "user.updateFirstLogin",
-            },
-          },
-        },
-        { status: 400 }
-      );
-    }
-
-    let isFirstLogin: boolean | undefined;
-    let id: number = 0;
-    if (Array.isArray(body)) {
-      const firstBody = body[0] as TRPCRequestBody;
-      isFirstLogin = firstBody.input?.isFirstLogin ?? firstBody.isFirstLogin;
-      id = firstBody.id ?? 0;
-    } else {
-      const typedBody = body as TRPCRequestBody;
-      isFirstLogin = typedBody.input?.isFirstLogin ?? typedBody.isFirstLogin;
-      id = typedBody.id ?? 0;
-    }
-
-    if (isFirstLogin === undefined) {
-      return HttpResponse.json(
-        {
-          id,
-          error: {
-            message: "isFirstLogin is required",
-            code: -32600,
-            data: {
-              code: "BAD_REQUEST",
-              httpStatus: 400,
-              path: "user.updateFirstLogin",
-            },
-          },
-        },
-        { status: 400 }
-      );
-    }
+    const { isFirstLogin } = body;
 
     if (userId === "test-user-id") {
+      console.log(
+        "Returning success response for userId:",
+        userId,
+        "isFirstLogin:",
+        isFirstLogin
+      );
       return HttpResponse.json(
         {
-          id,
+          id: 0,
           result: {
             type: "data",
             data: { message: "First login status updated successfully" },
@@ -119,20 +83,13 @@ export const userUpdateFirstLoginHandler = http.post(
       );
     }
 
-    return HttpResponse.json(
-      {
-        id,
-        error: {
-          message: "User not found",
-          code: -32001,
-          data: {
-            code: "NOT_FOUND",
-            httpStatus: 404,
-            path: "user.updateFirstLogin",
-          },
-        },
-      },
-      { status: 404 }
+    console.error("User not found for userId:", userId);
+    return createTRPCErrorResponse(
+      0,
+      "User not found",
+      -32001,
+      404,
+      "user.updateFirstLogin"
     );
   }
 );

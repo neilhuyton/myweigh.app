@@ -1,4 +1,4 @@
-// __tests__/components/WeightChangeMessage.test.tsx
+// __tests__/WeightChangeMessage.test.tsx
 import {
   describe,
   it,

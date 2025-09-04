@@ -1,5 +1,13 @@
 // __tests__/ConfirmResetPassword.test.tsx
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  afterEach,
+  vi,
+} from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -10,7 +18,14 @@ import { act } from "@testing-library/react";
 import { server } from "../__mocks__/server";
 import { resetPasswordConfirmHandler } from "../__mocks__/handlers/resetPasswordConfirm";
 import ConfirmResetPasswordForm from "../src/components/ConfirmResetPasswordForm";
-import { RouterProvider, createRouter, createMemoryHistory, createRootRoute, createRoute, useSearch } from "@tanstack/react-router";
+import {
+  RouterProvider,
+  createRouter,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  useSearch,
+} from "@tanstack/react-router";
 
 // Mock useSearch from @tanstack/react-router
 vi.mock("@tanstack/react-router", async () => {
@@ -40,7 +55,13 @@ describe("ConfirmResetPasswordForm Component", () => {
     ],
   });
 
-  const setup = async (token: string = "123e4567-e89b-12d3-a456-426614174000", initialPath = "/confirm-password-reset") => {
+  const VALID_TOKEN = "123e4567-e29b-12d3-a456-426614174000";
+  const INVALID_TOKEN = "00000000-0000-0000-0000-000000000000";
+
+  const setup = async (
+    token: string = VALID_TOKEN,
+    initialPath = "/confirm-password-reset"
+  ) => {
     vi.mocked(useSearch).mockReturnValue({ token });
 
     const rootRoute = createRootRoute({
@@ -57,7 +78,10 @@ describe("ConfirmResetPasswordForm Component", () => {
       path: "/login",
     });
 
-    const routeTree = rootRoute.addChildren([confirmResetPasswordRoute, loginRoute]);
+    const routeTree = rootRoute.addChildren([
+      confirmResetPasswordRoute,
+      loginRoute,
+    ]);
 
     const history = createMemoryHistory({ initialEntries: [initialPath] });
     const testRouter = createRouter({
@@ -105,7 +129,9 @@ describe("ConfirmResetPasswordForm Component", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByTestId("confirm-reset-password-form")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("confirm-reset-password-form")
+        ).toBeInTheDocument();
       },
       { timeout: 2000, interval: 100 }
     );
@@ -113,7 +139,9 @@ describe("ConfirmResetPasswordForm Component", () => {
     await act(async () => {
       const passwordInput = screen.getByTestId("password-input");
       await userEvent.clear(passwordInput);
-      await userEvent.type(passwordInput, "newSecurePassword123", { delay: 10 });
+      await userEvent.type(passwordInput, "newSecurePassword123", {
+        delay: 10,
+      });
       expect(passwordInput).toHaveValue("newSecurePassword123");
       const form = screen.getByTestId("confirm-reset-password-form");
       await form.dispatchEvent(new Event("submit", { bubbles: true }));
@@ -121,8 +149,12 @@ describe("ConfirmResetPasswordForm Component", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByTestId("confirm-reset-password-message")).toHaveTextContent("Password reset successfully");
-        expect(screen.getByTestId("confirm-reset-password-message")).toHaveClass("text-green-500");
+        expect(
+          screen.getByTestId("confirm-reset-password-message")
+        ).toHaveTextContent("Password reset successfully");
+        expect(
+          screen.getByTestId("confirm-reset-password-message")
+        ).toHaveClass("text-green-500");
         expect(screen.getByTestId("password-input")).toHaveValue(""); // Verify input is cleared
       },
       { timeout: 2000, interval: 100 }
@@ -130,11 +162,13 @@ describe("ConfirmResetPasswordForm Component", () => {
   });
 
   it("displays error message for invalid token", async () => {
-    await setup("invalid-token");
+    await setup(INVALID_TOKEN);
 
     await waitFor(
       () => {
-        expect(screen.getByTestId("confirm-reset-password-form")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("confirm-reset-password-form")
+        ).toBeInTheDocument();
       },
       { timeout: 2000, interval: 100 }
     );
@@ -142,7 +176,9 @@ describe("ConfirmResetPasswordForm Component", () => {
     await act(async () => {
       const passwordInput = screen.getByTestId("password-input");
       await userEvent.clear(passwordInput);
-      await userEvent.type(passwordInput, "newSecurePassword123", { delay: 10 });
+      await userEvent.type(passwordInput, "newSecurePassword123", {
+        delay: 10,
+      });
       expect(passwordInput).toHaveValue("newSecurePassword123");
       const form = screen.getByTestId("confirm-reset-password-form");
       await form.dispatchEvent(new Event("submit", { bubbles: true }));
@@ -150,10 +186,14 @@ describe("ConfirmResetPasswordForm Component", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByTestId("confirm-reset-password-message")).toHaveTextContent(
+        expect(
+          screen.getByTestId("confirm-reset-password-message")
+        ).toHaveTextContent(
           "Failed to reset password: Invalid or expired token"
         );
-        expect(screen.getByTestId("confirm-reset-password-message")).toHaveClass("text-red-500");
+        expect(
+          screen.getByTestId("confirm-reset-password-message")
+        ).toHaveClass("text-red-500");
       },
       { timeout: 2000, interval: 100 }
     );
