@@ -16,7 +16,7 @@ import { useRouter } from "@tanstack/react-router";
 function LoginForm() {
   const router = useRouter();
   const { form, message, isPending, handleSubmit } = useLogin({
-    navigate: router.navigate, // Pass navigate function to useLogin
+    navigate: router.navigate,
   });
 
   return (

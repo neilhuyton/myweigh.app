@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -40,16 +39,13 @@ function WeightList() {
   return (
     <div className="mx-auto max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm">
       <h1
-        className="text-2xl font-bold text-foreground mb-6"
+        className="text-xl font-bold text-foreground mb-6"
         role="heading"
         aria-level={1}
       >
         Past Measurements
       </h1>
       <Table className="border border-border rounded-lg">
-        <TableCaption className="text-sm text-muted-foreground mb-4">
-          A list of your recent weight measurements.
-        </TableCaption>
         <TableHeader>
           <TableRow className="hover:bg-muted/50 rounded-t-lg">
             <TableHead className="h-10 px-4 text-left font-semibold text-foreground bg-muted/50">
@@ -79,7 +75,7 @@ function WeightList() {
                 <TableCell className="p-4 text-foreground">
                   {formatDate(weight.createdAt)}
                 </TableCell>
-                <TableCell className="p-4 text-right">
+                <TableCell className=" text-right">
                   <Button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -94,7 +90,7 @@ function WeightList() {
                     )}`}
                     data-testid={`delete-button-${weight.id}`}
                   >
-                    <Trash2 className="h-4 w-4" data-lucide-name="trash-2" />
+                    <Trash2 className="h-2 w-2" data-lucide-name="trash-2" />
                   </Button>
                 </TableCell>
               </TableRow>

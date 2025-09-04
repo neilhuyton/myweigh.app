@@ -11,7 +11,7 @@ import type {
   TRPCDefaultErrorShape,
 } from "@trpc/server";
 import type { AppRouter } from "../../server/trpc";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore } from "@/authStore";
 import { useRouter } from "@tanstack/react-router";
 
 interface EmailFormValues {

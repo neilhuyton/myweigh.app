@@ -67,7 +67,7 @@ describe("WeightChangeMessage Component", () => {
           screen.queryByTestId("weight-change-error")
         ).not.toBeInTheDocument();
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
 
     vi.restoreAllMocks();
@@ -87,7 +87,7 @@ describe("WeightChangeMessage Component", () => {
           screen.queryByTestId("weight-change-message")
         ).not.toBeInTheDocument();
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 
@@ -106,7 +106,7 @@ describe("WeightChangeMessage Component", () => {
           screen.queryByTestId("weight-change-error")
         ).not.toBeInTheDocument();
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 
@@ -124,7 +124,7 @@ describe("WeightChangeMessage Component", () => {
           screen.queryByTestId("weight-change-error")
         ).not.toBeInTheDocument();
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 
@@ -142,7 +142,7 @@ describe("WeightChangeMessage Component", () => {
           screen.queryByTestId("weight-change-error")
         ).not.toBeInTheDocument();
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 
@@ -162,7 +162,7 @@ describe("WeightChangeMessage Component", () => {
           screen.queryByTestId("weight-change-error")
         ).not.toBeInTheDocument();
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 
@@ -181,7 +181,7 @@ describe("WeightChangeMessage Component", () => {
           screen.queryByTestId("weight-change-error")
         ).not.toBeInTheDocument();
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 });

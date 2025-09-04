@@ -11,7 +11,7 @@ import { screen, waitFor } from "@testing-library/react";
 import { act } from "@testing-library/react";
 import GoalList from "../src/components/GoalList";
 import { weightGetGoalsHandler } from "../__mocks__/handlers/weightGetGoals";
-import { useAuthStore } from "../src/store/authStore";
+import { useAuthStore } from "../src/authStore";
 import { renderWithProviders, setupAuthStore } from "./utils/setup";
 import { server } from "../__mocks__/server";
 import "@testing-library/jest-dom";
@@ -77,7 +77,7 @@ describe("GoalList Component", () => {
         expect(screen.getByText("70.00")).toBeInTheDocument();
         expect(screen.queryByTestId("error-message")).not.toBeInTheDocument();
       },
-      { timeout: 5000 }
+      { timeout: 1000 }
     );
   });
 
@@ -91,7 +91,7 @@ describe("GoalList Component", () => {
           "Error: Failed to fetch goals"
         );
       },
-      { timeout: 5000 }
+      { timeout: 1000 }
     );
   });
 });

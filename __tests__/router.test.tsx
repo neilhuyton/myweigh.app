@@ -9,11 +9,11 @@ import {
   vi,
 } from "vitest";
 import { redirect } from "@tanstack/react-router";
-import { useAuthStore } from "../src/store/authStore";
-import { checkAuth } from "../src/router/routes";
+import { useAuthStore } from "../src/authStore";
+import { checkAuth } from "../src/router";
 import { act } from "@testing-library/react";
 import { server } from "../__mocks__/server";
-import { router } from "../src/router/router";
+import { router } from "../src/router";
 
 // Mock jwt-decode
 vi.mock("jwt-decode", () => ({

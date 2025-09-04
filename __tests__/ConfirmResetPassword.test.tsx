@@ -27,9 +27,13 @@ vi.mock("@tanstack/react-router", async () => {
 
 // Mock react-confetti
 vi.mock("react-confetti", () => ({
-  default: ({ className, ...props }: { className: string; "data-testid": string }) => (
-    <div className={className} data-testid={props["data-testid"]} />
-  ),
+  default: ({
+    className,
+    ...props
+  }: {
+    className: string;
+    "data-testid": string;
+  }) => <div className={className} data-testid={props["data-testid"]} />,
 }));
 
 // Mock LoadingSpinner component
@@ -72,14 +76,20 @@ describe("ConfirmResetPasswordForm Component", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByTestId("confirm-reset-password-form")).toBeInTheDocument();
-        expect(screen.getByTestId("password-label")).toHaveTextContent("New Password");
+        expect(
+          screen.getByTestId("confirm-reset-password-form")
+        ).toBeInTheDocument();
+        expect(screen.getByTestId("password-label")).toHaveTextContent(
+          "New Password"
+        );
         expect(screen.getByTestId("password-input")).toBeInTheDocument();
         expect(screen.getByTestId("reset-password-button")).toBeInTheDocument();
-        expect(screen.queryByTestId("confirm-reset-password-message")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("confirm-reset-password-message")
+        ).not.toBeInTheDocument();
         expect(screen.getByTestId("back-to-login-link")).toBeInTheDocument();
       },
-      { timeout: 2000, interval: 100 }
+      { timeout: 1000, interval: 100 }
     );
   });
 
@@ -89,9 +99,11 @@ describe("ConfirmResetPasswordForm Component", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByTestId("confirm-reset-password-form")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("confirm-reset-password-form")
+        ).toBeInTheDocument();
       },
-      { timeout: 2000, interval: 100 }
+      { timeout: 1000, interval: 100 }
     );
 
     const form = screen.getByTestId("confirm-reset-password-form");
@@ -104,15 +116,15 @@ describe("ConfirmResetPasswordForm Component", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByTestId("confirm-reset-password-message")).toHaveTextContent(
-          "Password reset successfully"
-        );
-        expect(screen.getByTestId("confirm-reset-password-message")).toHaveClass(
-          "text-green-500"
-        );
+        expect(
+          screen.getByTestId("confirm-reset-password-message")
+        ).toHaveTextContent("Password reset successfully");
+        expect(
+          screen.getByTestId("confirm-reset-password-message")
+        ).toHaveClass("text-green-500");
         expect(screen.getByTestId("password-input")).toHaveValue("");
       },
-      { timeout: 2000, interval: 100 }
+      { timeout: 1000, interval: 100 }
     );
   });
 
@@ -122,9 +134,11 @@ describe("ConfirmResetPasswordForm Component", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByTestId("confirm-reset-password-form")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("confirm-reset-password-form")
+        ).toBeInTheDocument();
       },
-      { timeout: 2000, interval: 100 }
+      { timeout: 1000, interval: 100 }
     );
 
     const form = screen.getByTestId("confirm-reset-password-form");
@@ -137,14 +151,16 @@ describe("ConfirmResetPasswordForm Component", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByTestId("confirm-reset-password-message")).toHaveTextContent(
+        expect(
+          screen.getByTestId("confirm-reset-password-message")
+        ).toHaveTextContent(
           "Failed to reset password: Invalid or expired token"
         );
-        expect(screen.getByTestId("confirm-reset-password-message")).toHaveClass(
-          "text-red-500"
-        );
+        expect(
+          screen.getByTestId("confirm-reset-password-message")
+        ).toHaveClass("text-red-500");
       },
-      { timeout: 2000, interval: 100 }
+      { timeout: 1000, interval: 100 }
     );
   });
 });

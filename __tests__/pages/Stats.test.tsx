@@ -15,7 +15,7 @@ import { server } from "../../__mocks__/server";
 import "@testing-library/jest-dom";
 import { act } from "react";
 import WeightChart from "../../src/pages/Stats";
-import { useAuthStore } from "../../src/store/authStore";
+import { useAuthStore } from "../../src/authStore";
 import { generateToken } from "../utils/token";
 import {
   weightGetWeightsHandler,
@@ -118,7 +118,7 @@ describe("WeightChart Component", () => {
           "Error: Failed to fetch weights"
         );
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 
@@ -128,7 +128,7 @@ describe("WeightChart Component", () => {
       () => {
         expect(screen.getByTestId("no-data")).toBeInTheDocument();
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 
@@ -138,7 +138,7 @@ describe("WeightChart Component", () => {
       () => {
         expect(screen.getByTestId("chart-mock")).toBeInTheDocument();
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
 
     await act(async () => {
@@ -150,7 +150,7 @@ describe("WeightChart Component", () => {
       () => {
         expect(screen.getByTestId("chart-mock")).toBeInTheDocument();
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 
@@ -160,7 +160,7 @@ describe("WeightChart Component", () => {
       () => {
         expect(screen.getByTestId("latest-weight-card")).toBeInTheDocument();
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 
@@ -173,7 +173,7 @@ describe("WeightChart Component", () => {
           screen.queryByTestId("latest-weight-card")
         ).not.toBeInTheDocument();
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 
@@ -183,7 +183,7 @@ describe("WeightChart Component", () => {
       () => {
         expect(screen.getByTestId("goal-weight-card")).toBeInTheDocument();
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 
@@ -196,7 +196,7 @@ describe("WeightChart Component", () => {
           screen.queryByTestId("goal-weight-card")
         ).not.toBeInTheDocument();
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 });

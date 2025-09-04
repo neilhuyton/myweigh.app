@@ -89,7 +89,7 @@ describe("WeightForm Component", () => {
         expect(screen.getByTestId("submit-button")).toBeInTheDocument();
         expect(screen.queryByTestId("weight-message")).not.toBeInTheDocument();
       },
-      { timeout: 2000, interval: 100 }
+      { timeout: 1000, interval: 100 }
     );
   });
 
@@ -118,7 +118,7 @@ describe("WeightForm Component", () => {
         expect(weightInput).toHaveValue(null);
         expect(mockNavigate).not.toHaveBeenCalled();
       },
-      { timeout: 2000, interval: 100 }
+      { timeout: 1000, interval: 100 }
     );
   });
 
@@ -142,7 +142,7 @@ describe("WeightForm Component", () => {
         );
         expect(mockNavigate).not.toHaveBeenCalled();
       },
-      { timeout: 2000, interval: 100 }
+      { timeout: 1000, interval: 100 }
     );
   });
 
@@ -166,7 +166,7 @@ describe("WeightForm Component", () => {
         );
         expect(mockNavigate).not.toHaveBeenCalled();
       },
-      { timeout: 2000, interval: 100 }
+      { timeout: 1000, interval: 100 }
     );
   });
 
@@ -189,7 +189,7 @@ describe("WeightForm Component", () => {
           "Please enter a valid weight."
         );
       },
-      { timeout: 2000, interval: 100 }
+      { timeout: 1000, interval: 100 }
     );
 
     fireEvent.change(weightInput, { target: { value: "65.00" } });
@@ -198,7 +198,7 @@ describe("WeightForm Component", () => {
       () => {
         expect(screen.queryByTestId("weight-message")).not.toBeInTheDocument();
       },
-      { timeout: 2000, interval: 100 }
+      { timeout: 1000, interval: 100 }
     );
   });
 });

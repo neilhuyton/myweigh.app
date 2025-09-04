@@ -3,7 +3,6 @@ import { useGoalList } from "../hooks/useGoalList";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -29,17 +28,14 @@ function GoalList() {
 
   return (
     <div className="mx-auto max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm">
-      <h1
-        className="text-2xl font-bold text-foreground mb-6"
+      <h2
+        className="text-xl font-bold text-foreground mb-6"
         role="heading"
         aria-level={1}
       >
         Past Weight Goals
-      </h1>
+      </h2>
       <Table className="border border-border rounded-lg">
-        <TableCaption className="text-sm text-muted-foreground mb-4">
-          A list of your past weight goals.
-        </TableCaption>
         <TableHeader>
           <TableRow className="hover:bg-muted/50 rounded-t-lg">
             <TableHead className="h-10 px-4 text-left font-semibold text-foreground bg-muted/50">
@@ -48,7 +44,7 @@ function GoalList() {
             <TableHead className="h-10 px-4 text-left font-semibold text-foreground bg-muted/50">
               Set Date
             </TableHead>
-            <TableHead className="h-10 px-4 text-left font-semibold text-foreground bg-muted/50">
+            <TableHead className="h-10 px-4 text-right font-semibold text-foreground bg-muted/50">
               Reached Date
             </TableHead>
           </TableRow>
@@ -69,7 +65,7 @@ function GoalList() {
                 <TableCell className="p-4 text-foreground">
                   {formatDate(goal.goalSetAt)}
                 </TableCell>
-                <TableCell className="p-4 text-foreground">
+                <TableCell className="p-4 text-foreground text-right">
                   {goal.reachedAt ? formatDate(goal.reachedAt) : "Not Reached"}
                 </TableCell>
               </TableRow>

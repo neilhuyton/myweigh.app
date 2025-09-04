@@ -1,6 +1,6 @@
 // src/hooks/useWeightChange.ts
 import { useMemo } from "react";
-import { useAuthStore } from "../store/authStore";
+import { useAuthStore } from "../authStore";
 import { trpc } from "../trpc";
 
 export function useWeightChange() {

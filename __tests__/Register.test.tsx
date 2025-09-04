@@ -94,7 +94,7 @@ describe("Register Component Email Verification", () => {
         expect(screen.getByTestId("password-input")).toBeInTheDocument();
         expect(screen.getByTestId("register-button")).toBeInTheDocument();
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 
@@ -130,7 +130,7 @@ describe("Register Component Email Verification", () => {
         );
         expect(alert).toHaveClass("text-green-500");
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 
@@ -164,7 +164,7 @@ describe("Register Component Email Verification", () => {
         expect(alert).toHaveClass("text-destructive");
         expect(screen.getByTestId("email-input")).toHaveValue("invalid-email");
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 
@@ -200,7 +200,7 @@ describe("Register Component Email Verification", () => {
         expect(alert).toHaveClass("text-destructive");
         expect(screen.getByTestId("password-input")).toHaveValue("short");
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 
@@ -239,7 +239,7 @@ describe("Register Component Email Verification", () => {
           "exists@example.com"
         );
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 

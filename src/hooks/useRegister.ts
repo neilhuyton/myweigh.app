@@ -3,7 +3,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { trpc } from "../trpc";
 import { useState, useEffect } from "react";
-import { useAuthStore } from "../store/authStore";
+import { useAuthStore } from "../authStore";
 import { useRouter } from "@tanstack/react-router";
 
 const formSchema = z.object({
