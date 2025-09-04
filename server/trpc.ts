@@ -8,6 +8,7 @@ import { verifyEmailRouter } from './routers/verifyEmail';
 import { weightRouter } from './routers/weight';
 import { resetPasswordRouter } from './routers/resetPassword';
 import { refreshTokenRouter } from './routers/refreshToken';
+import { userRouter } from './routers/user';
 
 export type Context = {
   prisma: PrismaClient;
@@ -45,6 +46,7 @@ export function createContext({ req }: { req: IncomingMessage }): Context {
 export const t = initTRPC.context<Context>().create();
 
 export const appRouter = t.router({
+  user: userRouter,
   register: registerRouter.register,
   login: loginRouter.login,
   verifyEmail: verifyEmailRouter.verifyEmail,

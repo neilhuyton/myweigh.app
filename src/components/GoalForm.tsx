@@ -38,7 +38,7 @@ function GoalForm() {
               <div className="space-y-2">
                 <Label
                   htmlFor="goalWeight"
-                  className="text-sm font-medium text-foreground"
+                  className="text-xl font-medium text-foreground"
                   data-testid="goal-weight-label"
                 >
                   Goal Weight (kg)

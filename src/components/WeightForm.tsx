@@ -46,10 +46,10 @@ function WeightForm() {
             <div className="space-y-2">
               <Label
                 htmlFor="weight"
-                className="text-sm font-medium text-foreground"
+                className="text-xl font-medium text-foreground"
                 data-testid="weight-label"
               >
-                Weight (kg)
+                Currrent Weight (kg)
               </Label>
               <Input
                 id="weight"
