@@ -1,24 +1,28 @@
-// __mocks__/handlers/weightSetGoal.ts
 import { http, HttpResponse } from "msw";
 import jwt from "jsonwebtoken";
 
-interface TRPCRequestBody {
-  id?: number;
+// Define the expected shape of the request body
+interface GoalInput {
+  goalWeightKg?: number;
   input?: { goalWeightKg?: number };
+  id?: number;
 }
 
 export const weightSetGoalHandler = http.post(
   "http://localhost:8888/.netlify/functions/trpc/weight.setGoal",
   async ({ request }) => {
-    let body;
+    console.log("weight.setGoal handler called");
+    let body: unknown;
     try {
       body = await request.json();
+      console.log("Request body:", JSON.stringify(body));
     } catch {
+      console.error("Failed to parse request body");
       return HttpResponse.json(
         {
           id: 0,
           error: {
-            message: "Invalid request body",
+            message: "Failed to parse request body",
             code: -32600,
             data: {
               code: "BAD_REQUEST",
@@ -33,6 +37,7 @@ export const weightSetGoalHandler = http.post(
 
     const authHeader = request.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.error("Missing or invalid Authorization header");
       return HttpResponse.json(
         {
           id: 0,
@@ -55,7 +60,9 @@ export const weightSetGoalHandler = http.post(
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || "your-secret-key") as { userId: string };
       userId = decoded.userId;
+      console.log("Decoded userId:", userId);
     } catch {
+      console.error("Invalid token");
       return HttpResponse.json(
         {
           id: 0,
@@ -73,19 +80,24 @@ export const weightSetGoalHandler = http.post(
       );
     }
 
-    let input: { goalWeightKg?: number } | undefined;
+    let goalWeightKg: number | undefined;
     let id: number = 0;
+
+    // Handle different possible body formats
     if (Array.isArray(body)) {
-      input = body[0]?.input;
-      id = body[0]?.id ?? 0;
-    } else if (body && typeof body === "object" && "input" in body) {
-      input = (body as TRPCRequestBody).input;
-      id = (body as TRPCRequestBody).id ?? 0;
+      const firstItem = body[0] as GoalInput | undefined;
+      goalWeightKg = firstItem?.input?.goalWeightKg ?? firstItem?.goalWeightKg;
+      id = firstItem?.id ?? 0;
+    } else if (body && typeof body === "object") {
+      const bodyObj = body as GoalInput;
+      goalWeightKg = bodyObj.input?.goalWeightKg ?? bodyObj.goalWeightKg;
+      id = bodyObj.id ?? 0;
     }
 
-    const goalWeightKg = input?.goalWeightKg;
+    console.log("Goal weight:", goalWeightKg);
 
-    if (!goalWeightKg || goalWeightKg <= 0) {
+    if (goalWeightKg === undefined || goalWeightKg === null || isNaN(goalWeightKg) || goalWeightKg <= 0) {
+      console.error("Invalid goal weight:", goalWeightKg);
       return HttpResponse.json(
         {
           id,
@@ -103,10 +115,10 @@ export const weightSetGoalHandler = http.post(
       );
     }
 
-    // Validate two decimal places
     const goalWeightStr = goalWeightKg.toString();
     const decimalPlaces = (goalWeightStr.split(".")[1]?.length || 0);
     if (decimalPlaces > 2) {
+      console.error("Goal weight has too many decimal places:", decimalPlaces);
       return HttpResponse.json(
         {
           id,
@@ -124,16 +136,18 @@ export const weightSetGoalHandler = http.post(
       );
     }
 
-    if (userId === "test-user-id") {
+    if (userId === "test-user-id" || userId === "empty-user-id") {
+      console.log("Returning success response for userId:", userId);
       return HttpResponse.json(
         {
           id,
           result: {
             type: "data",
             data: {
-              id: "2",
-              goalWeightKg: Number(goalWeightKg.toFixed(2)), // Format to two decimal places
+              id: userId === "test-user-id" ? "2" : "goal-1",
+              goalWeightKg: Number(goalWeightKg.toFixed(2)),
               goalSetAt: new Date().toISOString(),
+              reachedAt: null,
             },
           },
         },
@@ -141,6 +155,7 @@ export const weightSetGoalHandler = http.post(
       );
     }
 
+    console.error("Unauthorized userId:", userId);
     return HttpResponse.json(
       {
         id,

@@ -1,9 +1,9 @@
-// src/hooks/useWeightGoal.ts
 import { useState } from "react";
 import { trpc } from "../trpc";
 import { useAuthStore } from "../store/authStore";
 import type { TRPCClientErrorLike } from "@trpc/client";
 import type { AppRouter } from "server/trpc";
+import { STATUS } from "react-joyride";
 
 type Goal = {
   id: string;
@@ -15,6 +15,7 @@ type Goal = {
 export function useWeightGoal() {
   const [goalWeight, setGoalWeight] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [runStatsTour, setRunStatsTour] = useState(false);
   const { userId } = useAuthStore();
 
   const {
@@ -36,6 +37,10 @@ export function useWeightGoal() {
       setMessage("Goal set successfully!");
       queryClient.weight.getCurrentGoal.invalidate();
       queryClient.weight.getGoals.invalidate();
+      // Trigger Stats tour only if this is the first goal
+      if (!currentGoal) {
+        setRunStatsTour(true);
+      }
     },
     onError: (error: TRPCClientErrorLike<AppRouter>) => {
       setMessage(`Failed to set goal: ${error.message}`);
@@ -84,6 +89,12 @@ export function useWeightGoal() {
     setMessage(null); // Clear message on input change
   };
 
+  const handleJoyrideCallback = (data: { status: string }) => {
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setRunStatsTour(false);
+    }
+  };
+
   return {
     currentGoal,
     isLoading: isGoalLoading,
@@ -94,5 +105,7 @@ export function useWeightGoal() {
     isGoalAchieved: currentGoal?.reachedAt !== null,
     handleSubmit,
     handleGoalWeightChange,
+    runStatsTour,
+    handleJoyrideCallback,
   };
 }

@@ -1,71 +1,60 @@
 import { http, HttpResponse } from "msw";
-
-interface Goal {
-  id: string;
-  goalWeightKg: number;
-  goalSetAt: string;
-  reachedAt: string | null;
-}
-
-let goal: Goal | null = {
-  id: "1",
-  goalWeightKg: 65.0,
-  goalSetAt: "2025-08-28T00:00:00Z",
-  reachedAt: null,
-};
+import jwt from "jsonwebtoken";
 
 export const weightGetCurrentGoalHandler = http.get(
   "http://localhost:8888/.netlify/functions/trpc/weight.getCurrentGoal",
-  async ({ request, params }) => {
+  async ({ request }) => {
+    console.log("weight.getCurrentGoal handler called");
     const authHeader = request.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.error("Missing or invalid Authorization header");
       return HttpResponse.json(
         {
           id: 0,
           error: {
-            message: "Unauthorized",
+            message: "Unauthorized: User must be logged in",
             code: -32001,
-            data: {
-              code: "UNAUTHORIZED",
-              httpStatus: 401,
-              path: params.path ?? "weight.getCurrentGoal",
-            },
+            data: { code: "UNAUTHORIZED", httpStatus: 401, path: "weight.getCurrentGoal" },
           },
         },
-        { status: 200 }
+        { status: 401 }
       );
     }
 
-    const token = authHeader.replace("Bearer ", "");
+    const token = authHeader.split(" ")[1];
     let userId: string | null = null;
     try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      userId = payload.userId;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || "your-secret-key") as { userId: string };
+      userId = decoded.userId;
+      console.log("Decoded userId:", userId);
     } catch {
+      console.error("Invalid token");
       return HttpResponse.json(
         {
           id: 0,
           error: {
             message: "Invalid token",
             code: -32001,
-            data: {
-              code: "UNAUTHORIZED",
-              httpStatus: 401,
-              path: params.path ?? "weight.getCurrentGoal",
-            },
+            data: { code: "UNAUTHORIZED", httpStatus: 401, path: "weight.getCurrentGoal" },
           },
         },
-        { status: 200 }
+        { status: 401 }
       );
     }
 
     if (userId === "test-user-id") {
+      console.log("Returning existing goal for test-user-id");
       return HttpResponse.json(
         {
           id: 0,
           result: {
             type: "data",
-            data: goal,
+            data: {
+              id: "1",
+              goalWeightKg: 65.0,
+              goalSetAt: "2025-08-28T00:00:00Z",
+              reachedAt: null,
+            },
           },
         },
         { status: 200 }
@@ -73,6 +62,7 @@ export const weightGetCurrentGoalHandler = http.get(
     }
 
     if (userId === "empty-user-id") {
+      console.log("Returning null for empty-user-id (no goal)");
       return HttpResponse.json(
         {
           id: 0,
@@ -85,227 +75,17 @@ export const weightGetCurrentGoalHandler = http.get(
       );
     }
 
-    if (userId === "error-user-id") {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Failed to fetch current goal",
-            code: -32002,
-            data: {
-              code: "INTERNAL_SERVER_ERROR",
-              httpStatus: 500,
-              path: params.path?.includes("weight.getCurrentGoal")
-                ? "weight.getCurrentGoal"
-                : "unknown",
-            },
-          },
-        },
-        { status: 200 }
-      );
-    }
-
-    if (userId === "invalid-user-id") {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Invalid token",
-            code: -32001,
-            data: {
-              code: "UNAUTHORIZED",
-              httpStatus: 401,
-              path: params.path ?? "weight.getCurrentGoal",
-            },
-          },
-        },
-        { status: 200 }
-      );
-    }
-
+    console.error("Unauthorized userId:", userId);
     return HttpResponse.json(
       {
         id: 0,
         error: {
-          message: "Unauthorized",
+          message: "Unauthorized: Invalid user ID",
           code: -32001,
-          data: {
-            code: "UNAUTHORIZED",
-            httpStatus: 401,
-            path: params.path ?? "weight.getCurrentGoal",
-          },
+          data: { code: "UNAUTHORIZED", httpStatus: 401, path: "weight.getCurrentGoal" },
         },
       },
-      { status: 200 }
-    );
-  }
-);
-
-export const weightCreateHandler = http.post(
-  "http://localhost:8888/.netlify/functions/trpc/weight.create",
-  async ({ request }) => {
-    const authHeader = request.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Unauthorized",
-            code: -32001,
-            data: {
-              code: "UNAUTHORIZED",
-              httpStatus: 401,
-              path: "weight.create",
-            },
-          },
-        },
-        { status: 200 }
-      );
-    }
-
-    const token = authHeader.replace("Bearer ", "");
-    let userId: string | null = null;
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      userId = payload.userId;
-    } catch {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Invalid token",
-            code: -32001,
-            data: {
-              code: "UNAUTHORIZED",
-              httpStatus: 401,
-              path: "weight.create",
-            },
-          },
-        },
-        { status: 200 }
-      );
-    }
-
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Invalid request body",
-            code: -32000,
-            data: {
-              code: "BAD_REQUEST",
-              httpStatus: 400,
-              path: "weight.create",
-            },
-          },
-        },
-        { status: 200 }
-      );
-    }
-
-    const isValidBody = (b: unknown): b is { weightKg: number | string; note?: string } =>
-      b !== null &&
-      typeof b === "object" &&
-      "weightKg" in b &&
-      (typeof b.weightKg === "number" || typeof b.weightKg === "string") &&
-      ("note" in b ? typeof b.note === "string" || b.note === undefined : true);
-
-    if (!isValidBody(body)) {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Invalid request body: missing or invalid weightKg",
-            code: -32000,
-            data: {
-              code: "BAD_REQUEST",
-              httpStatus: 400,
-              path: "weight.create",
-            },
-          },
-        },
-        { status: 200 }
-      );
-    }
-
-    const weightKg = typeof body.weightKg === "string" ? parseFloat(body.weightKg) : body.weightKg;
-
-    if (isNaN(weightKg) || weightKg <= 0) {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Invalid weight value",
-            code: -32000,
-            data: {
-              code: "BAD_REQUEST",
-              httpStatus: 400,
-              path: "weight.create",
-            },
-          },
-        },
-        { status: 200 }
-      );
-    }
-
-    if (userId === "test-user-id") {
-      if (goal && weightKg <= goal.goalWeightKg && !goal.reachedAt) {
-        goal = { ...goal, reachedAt: "2025-09-02T00:00:00Z" };
-      }
-      return HttpResponse.json(
-        {
-          id: 0,
-          result: {
-            type: "data",
-            data: {
-              id: "weight-1",
-              userId,
-              weightKg,
-              note: body.note || null,
-              createdAt: "2025-09-02T00:00:00Z",
-            },
-          },
-        },
-        { status: 200 }
-      );
-    }
-
-    if (userId === "error-user-id") {
-      return HttpResponse.json(
-        {
-          id: 0,
-          error: {
-            message: "Failed to create weight",
-            code: -32002,
-            data: {
-              code: "INTERNAL_SERVER_ERROR",
-              httpStatus: 500,
-              path: "weight.create",
-            },
-          },
-        },
-        { status: 200 }
-      );
-    }
-
-    return HttpResponse.json(
-      {
-        id: 0,
-        error: {
-          message: "Unauthorized",
-          code: -32001,
-          data: {
-            code: "UNAUTHORIZED",
-            httpStatus: 401,
-            path: "weight.create",
-          },
-        },
-      },
-      { status: 200 }
+      { status: 401 }
     );
   }
 );
