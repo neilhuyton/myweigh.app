@@ -72,6 +72,14 @@ function WeightForm() {
                 <LoadingSpinner size="md" testId="weight-form-submitting" />
               </div>
             )}
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full h-10 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring"
+              data-testid="submit-button"
+            >
+              {isSubmitting ? "Submitting..." : "Submit Weight"}
+            </Button>
             {message && (
               <p
                 className={cn(
@@ -87,14 +95,6 @@ function WeightForm() {
                 {message}
               </p>
             )}
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full h-10 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring"
-              data-testid="submit-button"
-            >
-              {isSubmitting ? "Submitting..." : "Submit Weight"}
-            </Button>
           </div>
         </form>
       </div>
