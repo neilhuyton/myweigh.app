@@ -15,7 +15,6 @@ type LoginResponse = {
   email: string;
   token: string;
   refreshToken: string;
-  isFirstLogin: boolean; // Add isFirstLogin
 };
 
 const formSchema = z.object({
@@ -55,7 +54,7 @@ export const useLogin = ({ navigate }: UseLoginProps): UseLoginReturn => {
     onSuccess: (data: { result: { data: LoginResponse } } | LoginResponse) => {
       const response = "result" in data ? data.result.data : data;
       setMessage("Login successful!");
-      login(response.id, response.token, response.refreshToken, response.isFirstLogin); // Pass isFirstLogin
+      login(response.id, response.token, response.refreshToken);
       form.reset();
       navigate({ to: "/weight" });
     },

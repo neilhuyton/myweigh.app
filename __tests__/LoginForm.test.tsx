@@ -5,380 +5,214 @@ import {
   beforeAll,
   afterAll,
   afterEach,
+  beforeEach,
   vi,
 } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { httpLink } from "@trpc/client";
-import { trpc } from "../src/trpc";
-import { server } from "../__mocks__/server";
-import "@testing-library/jest-dom";
-import { act } from "@testing-library/react";
-import WeightForm from "../src/components/WeightForm";
-import {
-  weightCreateHandler,
-  weightGetCurrentGoalHandler,
-  userUpdateFirstLoginHandler,
-} from "../__mocks__/handlers";
 import { useAuthStore } from "../src/store/authStore";
-import { generateToken } from "./utils/token";
+import "@testing-library/jest-dom";
+import { server } from "../__mocks__/server";
+import { loginHandler, refreshTokenHandler } from "../__mocks__/handlers";
+import LoginForm from "../src/components/LoginForm";
+import {
+  RouterProvider,
+  createRouter,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+} from "@tanstack/react-router";
+import { renderWithProviders } from "./utils/setup";
 
-// Mock react-confetti
-vi.mock("react-confetti", () => ({
-  default: ({
-    className,
-    ...props
-  }: {
-    className: string;
-    "data-testid": string;
-  }) => <div className={className} data-testid={props["data-testid"]} />,
-}));
-
-// Mock LoadingSpinner component
-vi.mock("../src/components/LoadingSpinner", () => ({
-  LoadingSpinner: ({ testId }: { testId: string }) => (
-    <div data-testid={testId}>Loading...</div>
-  ),
-}));
-
-// Mock react-joyride
-vi.mock("react-joyride", () => ({
-  default: ({
-    steps,
-    run,
-    callback,
-    locale,
-  }: {
-    steps: {
-      target: string;
-      content: string;
-      placement: string;
-      disableBeacon: boolean;
-    }[];
-    run: boolean;
-    callback: (data: { status: string }) => void;
-    styles: { options: Record<string, unknown> }; // Changed from Record<string, any>
-    locale: Record<string, string>;
-  }) => {
-    if (run) {
-      return (
-        <div data-testid="joyride-tour">
-          <div data-testid="joyride-step">{steps[0].content}</div>
-          <button
-            data-testid="joyride-skip"
-            onClick={() => callback({ status: "skipped" })}
-          >
-            {locale.skip}
-          </button>
-          <button
-            data-testid="joyride-finish"
-            onClick={() => callback({ status: "finished" })}
-          >
-            {locale.last}
-          </button>
-        </div>
-      );
+vi.mock("jwt-decode", () => ({
+  jwtDecode: vi.fn((token) => {
+    if (
+      token ===
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ0ZXN0LXVzZXItMSJ9.dummy-signature"
+    ) {
+      return { userId: "test-user-1" };
     }
-    return null;
-  },
+    throw new Error("Invalid token");
+  }),
 }));
 
-// Mock useNavigate to track navigation calls
-const mockNavigate = vi.fn();
-vi.mock("@tanstack/react-router", async () => {
-  const actual = await vi.importActual("@tanstack/react-router");
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
-
-// Mock console.error to suppress act warnings during debugging
-const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
-describe("WeightForm Component", () => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-      mutations: { retry: false },
-    },
-  });
-
-  const trpcClient = trpc.createClient({
-    links: [
-      httpLink({
-        url: "http://localhost:8888/.netlify/functions/trpc",
-        headers: () => ({
-          "content-type": "application/json",
-          Authorization: `Bearer ${useAuthStore.getState().token}`,
-        }),
-      }),
-    ],
-  });
-
-  const setup = async (userId = "test-user-id", isFirstLogin = false) => {
-    await act(async () => {
-      useAuthStore.setState({
-        isLoggedIn: true,
-        userId,
-        token: generateToken(userId),
-        refreshToken: "valid-refresh-token",
-        isFirstLogin,
-        login: vi.fn(),
-        logout: vi.fn(),
-      });
-
-      render(
-        <trpc.Provider client={trpcClient} queryClient={queryClient}>
-          <QueryClientProvider client={queryClient}>
-            <WeightForm />
-          </QueryClientProvider>
-        </trpc.Provider>
-      );
+describe("LoginForm Component", () => {
+  const setupRouter = () => {
+    const rootRoute = createRootRoute({
+      component: () => <LoginForm />,
     });
+    const loginRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: "/login",
+    });
+    const weightRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: "/weight",
+    });
+    const routeTree = rootRoute.addChildren([loginRoute, weightRoute]);
+    const history = createMemoryHistory({ initialEntries: ["/login"] });
+    const testRouter = createRouter({ routeTree, history });
+    return { history, testRouter };
   };
 
   beforeAll(() => {
     server.listen({ onUnhandledRequest: "error" });
+    process.on("unhandledRejection", (reason) => {
+      if (
+        reason instanceof Error &&
+        reason.message.includes("Invalid email or password")
+      ) {
+        return;
+      }
+      throw reason;
+    });
   });
 
   beforeEach(() => {
-    server.use(
-      weightGetCurrentGoalHandler,
-      weightCreateHandler,
-      userUpdateFirstLoginHandler
-    );
-    vi.spyOn(window.localStorage, "setItem");
-    mockNavigate.mockReset();
-  });
-
-  afterEach(() => {
-    server.resetHandlers();
-    queryClient.clear();
-    vi.clearAllMocks();
-    document.body.innerHTML = "";
     useAuthStore.setState({
       isLoggedIn: false,
       userId: null,
       token: null,
       refreshToken: null,
-      isFirstLogin: false,
-      login: vi.fn(),
-      logout: vi.fn(),
     });
-    consoleErrorSpy.mockReset();
+  });
+
+  afterEach(() => {
+    server.resetHandlers();
+    useAuthStore.setState({
+      isLoggedIn: false,
+      userId: null,
+      token: null,
+      refreshToken: null,
+    });
+    localStorage.clear();
+    vi.clearAllMocks();
   });
 
   afterAll(() => {
     server.close();
+    process.removeAllListeners("unhandledRejection");
+  });
+
+  it("renders login form with email, password inputs, and submit button", async () => {
+    const { testRouter } = setupRouter();
+    renderWithProviders(<RouterProvider router={testRouter} />);
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: "Login to your account" })
+      ).toBeInTheDocument();
+      expect(screen.getByLabelText("Email")).toBeInTheDocument();
+      expect(screen.getByLabelText("Password")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Login" })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Sign up" })).toBeInTheDocument();
+      expect(screen.getByTestId("forgot-password-link")).toBeInTheDocument();
+    });
+  });
+
+  it("handles successful login, updates auth state, and redirects to /weight", async () => {
+    server.use(loginHandler, refreshTokenHandler);
+    const { history, testRouter } = setupRouter();
+    renderWithProviders(<RouterProvider router={testRouter} />, {
+      userId: "test-user-1",
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("login-form")).toBeInTheDocument();
+    });
+    const form = screen.getByTestId("login-form");
+    const emailInput = screen.getByTestId("email-input");
+    const passwordInput = screen.getByTestId("password-input");
+    await userEvent.type(emailInput, "testuser@example.com", { delay: 10 });
+    await userEvent.type(passwordInput, "password123", { delay: 10 });
+    expect(emailInput).toHaveValue("testuser@example.com");
+    expect(passwordInput).toHaveValue("password123");
+    await form.dispatchEvent(new Event("submit", { bubbles: true }));
+    await waitFor(
+      () => {
+        expect(useAuthStore.getState().isLoggedIn).toBe(true);
+        expect(useAuthStore.getState().userId).toBe("test-user-1");
+        expect(screen.getByTestId("login-message")).toHaveTextContent(
+          "Login successful!"
+        );
+        expect(screen.getByTestId("login-message")).toHaveClass(
+          "text-green-500"
+        );
+        expect(history.location.pathname).toBe("/weight");
+      },
+      { timeout: 5000, interval: 100 }
+    );
+  });
+
+  it("displays error message on invalid login credentials", async () => {
+    server.use(loginHandler);
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    const { testRouter } = setupRouter();
+    renderWithProviders(<RouterProvider router={testRouter} />, {
+      isLoggedIn: false,
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("login-form")).toBeInTheDocument();
+    });
+    const form = screen.getByTestId("login-form");
+    const emailInput = screen.getByTestId("email-input");
+    const passwordInput = screen.getByTestId("password-input");
+    await userEvent.type(emailInput, "wronguser@example.com", { delay: 10 });
+    await userEvent.type(passwordInput, "wrongpassword", { delay: 10 });
+    expect(emailInput).toHaveValue("wronguser@example.com");
+    expect(passwordInput).toHaveValue("wrongpassword");
+    await form.dispatchEvent(new Event("submit", { bubbles: true }));
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("login-message")).toHaveTextContent(
+          "Login failed: Invalid email or password"
+        );
+        expect(screen.getByTestId("login-message")).toHaveClass("text-red-500");
+        expect(useAuthStore.getState().isLoggedIn).toBe(false);
+      },
+      { timeout: 5000, interval: 100 }
+    );
     consoleErrorSpy.mockRestore();
   });
 
-  it("renders WeightForm with correct content", async () => {
-    await setup();
-
+  it("displays validation errors for invalid email and password", async () => {
+    const { testRouter } = setupRouter();
+    renderWithProviders(<RouterProvider router={testRouter} />);
+    await waitFor(() => {
+      expect(screen.getByTestId("login-form")).toBeInTheDocument();
+    });
+    const form = screen.getByTestId("login-form");
+    const emailInput = screen.getByTestId("email-input");
+    const passwordInput = screen.getByTestId("password-input");
+    await userEvent.type(emailInput, "invalid-email", { delay: 10 });
+    await userEvent.type(passwordInput, "short", { delay: 10 });
+    await userEvent.click(document.body);
+    await form.dispatchEvent(new Event("submit", { bubbles: true }));
     await waitFor(
       () => {
         expect(
-          screen.queryByTestId("weight-form-submitting")
-        ).not.toBeInTheDocument();
-        expect(screen.getByTestId("weight-label")).toHaveTextContent(
-          "Weight (kg)"
-        );
-        expect(screen.getByTestId("weight-input")).toBeInTheDocument();
-        expect(screen.getByTestId("submit-button")).toBeInTheDocument();
-        expect(screen.queryByTestId("weight-message")).not.toBeInTheDocument();
+          screen.getByText("Please enter a valid email address")
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText("Password must be at least 8 characters long")
+        ).toBeInTheDocument();
       },
-      { timeout: 15000, interval: 100 }
+      { timeout: 5000, interval: 100 }
     );
   });
 
-  it("starts Joyride tour on first login", async () => {
-    await setup("test-user-id", true);
-
-    await waitFor(
-      () => {
-        expect(screen.getByTestId("joyride-tour")).toBeInTheDocument();
-        expect(screen.getByTestId("joyride-step")).toHaveTextContent(
-          "Enter your weight here in kilograms to start tracking your progress!"
-        );
-        expect(screen.getByTestId("joyride-skip")).toHaveTextContent("Skip");
-        expect(screen.getByTestId("joyride-finish")).toHaveTextContent(
-          "Finish"
-        );
-      },
-      { timeout: 15000, interval: 100 }
-    );
-  });
-
-  it("does not start Joyride tour when not first login", async () => {
-    await setup("test-user-id", false);
-
-    await waitFor(
-      () => {
-        expect(screen.queryByTestId("joyride-tour")).not.toBeInTheDocument();
-      },
-      { timeout: 15000, interval: 100 }
-    );
-  });
-
-  it("skips Joyride tour and updates isFirstLogin", async () => {
-    await setup("test-user-id", true);
-
-    await waitFor(
-      () => {
-        expect(screen.getByTestId("joyride-tour")).toBeInTheDocument();
-      },
-      { timeout: 15000, interval: 100 }
-    );
-
-    await act(async () => {
-      const skipButton = screen.getByTestId("joyride-skip");
-      await userEvent.click(skipButton);
+  it("displays forgot password link as placeholder", async () => {
+    const { testRouter } = setupRouter();
+    renderWithProviders(<RouterProvider router={testRouter} />);
+    await waitFor(() => {
+      expect(screen.getByTestId("forgot-password-link")).toBeInTheDocument();
+      expect(screen.getByTestId("forgot-password-link")).toHaveAttribute(
+        "href",
+        "#"
+      );
+      expect(screen.getByTestId("forgot-password-link")).toHaveTextContent(
+        "Forgot your password?"
+      );
     });
-
-    await waitFor(
-      () => {
-        expect(screen.queryByTestId("joyride-tour")).not.toBeInTheDocument();
-        expect(useAuthStore.getState().isFirstLogin).toBe(false);
-        expect(localStorage.setItem).toHaveBeenCalledWith(
-          "isFirstLogin",
-          JSON.stringify(false)
-        );
-      },
-      { timeout: 15000, interval: 100 }
-    );
-  });
-
-  it("completes Joyride tour and updates isFirstLogin", async () => {
-    await setup("test-user-id", true);
-
-    await waitFor(
-      () => {
-        expect(screen.getByTestId("joyride-tour")).toBeInTheDocument();
-      },
-      { timeout: 15000, interval: 100 }
-    );
-
-    await act(async () => {
-      const finishButton = screen.getByTestId("joyride-finish");
-      await userEvent.click(finishButton);
-    });
-
-    await waitFor(
-      () => {
-        expect(screen.queryByTestId("joyride-tour")).not.toBeInTheDocument();
-        expect(useAuthStore.getState().isFirstLogin).toBe(false);
-        expect(localStorage.setItem).toHaveBeenCalledWith(
-          "isFirstLogin",
-          JSON.stringify(false)
-        );
-      },
-      { timeout: 15000, interval: 100 }
-    );
-  });
-
-  it("handles unauthorized error when updating isFirstLogin", async () => {
-    await setup("invalid-user-id", true);
-
-    await waitFor(
-      () => {
-        expect(screen.getByTestId("joyride-tour")).toBeInTheDocument();
-      },
-      { timeout: 15000, interval: 100 }
-    );
-
-    await act(async () => {
-      const finishButton = screen.getByTestId("joyride-finish");
-      await userEvent.click(finishButton);
-    });
-
-    await waitFor(
-      () => {
-        expect(screen.queryByTestId("joyride-tour")).not.toBeInTheDocument();
-        expect(localStorage.setItem).not.toHaveBeenCalled();
-      },
-      { timeout: 15000, interval: 100 }
-    );
-  });
-
-  it("shows goal-setting Joyride tour after first weight submission when no goal exists and navigates to /goals", async () => {
-    await setup("empty-user-id", false);
-
-    await waitFor(
-      () => {
-        expect(screen.getByTestId("weight-input")).toBeInTheDocument();
-        expect(screen.queryByTestId("joyride-tour")).not.toBeInTheDocument();
-      },
-      { timeout: 15000, interval: 100 }
-    );
-
-    await act(async () => {
-      const input = screen.getByTestId("weight-input") as HTMLInputElement;
-      await userEvent.clear(input);
-      await userEvent.type(input, "70.5", { delay: 10 });
-      expect(input).toHaveValue(70.5);
-      const form = screen.getByTestId("weight-form");
-      await form.dispatchEvent(new Event("submit", { bubbles: true }));
-    });
-
-    await waitFor(
-      () => {
-        expect(screen.getByTestId("weight-message")).toHaveTextContent(
-          "Weight recorded successfully!"
-        );
-        expect(screen.getByTestId("joyride-tour")).toBeInTheDocument();
-        expect(screen.getByTestId("joyride-step")).toHaveTextContent(
-          "Great job! Now set a goal to track your progress."
-        );
-        expect(screen.getByTestId("joyride-finish")).toHaveTextContent("OK");
-      },
-      { timeout: 20000, interval: 100 }
-    );
-
-    await act(async () => {
-      const okButton = screen.getByTestId("joyride-finish");
-      await userEvent.click(okButton);
-    });
-
-    await waitFor(
-      () => {
-        expect(screen.queryByTestId("joyride-tour")).not.toBeInTheDocument();
-        expect(mockNavigate).toHaveBeenCalledWith({ to: "/goals" });
-      },
-      { timeout: 15000, interval: 100 }
-    );
-  });
-
-  it("does not show goal-setting Joyride tour when a goal exists", async () => {
-    await setup("test-user-id", false);
-
-    await waitFor(
-      () => {
-        expect(screen.getByTestId("weight-input")).toBeInTheDocument();
-        expect(screen.queryByTestId("joyride-tour")).not.toBeInTheDocument();
-      },
-      { timeout: 15000, interval: 100 }
-    );
-
-    await act(async () => {
-      const input = screen.getByTestId("weight-input") as HTMLInputElement;
-      await userEvent.clear(input);
-      await userEvent.type(input, "70.5", { delay: 10 });
-      expect(input).toHaveValue(70.5);
-      const form = screen.getByTestId("weight-form");
-      await form.dispatchEvent(new Event("submit", { bubbles: true }));
-    });
-
-    await waitFor(
-      () => {
-        expect(screen.getByTestId("weight-message")).toHaveTextContent(
-          "Weight recorded successfully!"
-        );
-        expect(screen.queryByTestId("joyride-tour")).not.toBeInTheDocument();
-      },
-      { timeout: 15000, interval: 100 }
-    );
   });
 });

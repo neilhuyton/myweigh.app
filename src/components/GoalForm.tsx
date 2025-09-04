@@ -4,8 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { LoadingSpinner } from "./LoadingSpinner";
-import Joyride, { type CallBackProps } from "react-joyride";
-import { useNavigate } from "@tanstack/react-router";
 
 function GoalForm() {
   const {
@@ -16,43 +14,10 @@ function GoalForm() {
     isSettingGoal,
     handleSubmit,
     handleGoalWeightChange,
-    runStatsTour,
-    handleJoyrideCallback,
   } = useWeightGoal();
-  const navigate = useNavigate();
-
-  const joyrideSteps = [
-    {
-      target: ".goal-form-container",
-      content:
-        "Great job setting your first goal! Check your progress on the Stats page.",
-      placement: "center" as const,
-      disableBeacon: true,
-    },
-  ];
 
   return (
     <div className="goal-form-container mx-auto max-w-4xl rounded-lg border border-border bg-card p-6 shadow-sm">
-      <Joyride
-        steps={joyrideSteps}
-        run={runStatsTour}
-        callback={(data: CallBackProps) => {
-          handleJoyrideCallback(data);
-          if (data.status === "finished" || data.status === "skipped" || data.action === "close") {
-            navigate({ to: "/stats" });
-          }
-        }}
-        locale={{ last: "Close", skip: "Skip" }}
-        styles={{
-          options: {
-            zIndex: 10000,
-            primaryColor: "hsl(var(--primary))",
-            textColor: "hsl(var(--foreground))",
-            backgroundColor: "hsl(var(--card))",
-          },
-        }}
-        data-testid="joyride-tour"
-      />
       {isLoading ? (
         <div className="flex items-center justify-center bg-background min-h-[calc(100vh-3.5rem)]">
           <LoadingSpinner size="lg" testId="weight-goal-loading" />

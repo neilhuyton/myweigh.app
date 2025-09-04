@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import Confetti from "react-confetti";
-import Joyride, { type Step } from "react-joyride";
 import { createPortal } from "react-dom";
 import { LoadingSpinner } from "./LoadingSpinner";
 
@@ -15,80 +14,12 @@ function WeightForm() {
     isSubmitting,
     showConfetti,
     fadeOut,
-    runTour,
-    runGoalTour,
     handleSubmit,
     handleWeightChange,
-    handleTourCallback,
-    handleGoalTourCallback,
   } = useWeightForm();
-
-  const firstLoginSteps: Step[] = [
-    {
-      target: '[data-testid="weight-input"]',
-      content:
-        "Enter your weight here in kilograms to start tracking your progress!",
-      placement: "top",
-      disableBeacon: true,
-    },
-  ];
-
-  const goalSteps: Step[] = [
-    {
-      target: '[data-testid="submit-button"]',
-      content: "Great job! Now set a goal to track your progress.",
-      placement: "top",
-      disableBeacon: true,
-    },
-  ];
 
   return (
     <>
-      <Joyride
-        steps={firstLoginSteps}
-        run={runTour}
-        continuous
-        showSkipButton
-        callback={handleTourCallback}
-        styles={{
-          options: {
-            zIndex: 1000,
-            primaryColor: "#3b82f6",
-            textColor: "#1f2937",
-            backgroundColor: "#ffffff",
-            overlayColor: "rgba(0, 0, 0, 0.5)",
-          },
-        }}
-        locale={{
-          back: "Back",
-          close: "Close",
-          last: "Finish",
-          next: "Next",
-          skip: "Skip",
-        }}
-      />
-      <Joyride
-        steps={goalSteps}
-        run={runGoalTour}
-        continuous
-        callback={handleGoalTourCallback}
-        styles={{
-          options: {
-            zIndex: 1000,
-            primaryColor: "#3b82f6",
-            textColor: "#1f2937",
-            backgroundColor: "#ffffff",
-            overlayColor: "rgba(0, 0, 0, 0.5)",
-          },
-        }}
-        locale={{
-          back: "Back",
-          close: "Close",
-          last: "OK",
-          next: "Next",
-          skip: "Skip",
-        }}
-      />
       {showConfetti &&
         createPortal(
           <Confetti

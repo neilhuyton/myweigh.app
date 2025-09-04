@@ -54,7 +54,6 @@ export const loginRouter = t.router({
         email: user.email,
         token,
         refreshToken,
-        isFirstLogin: user.isFirstLogin, // Include isFirstLogin
       };
     }),
 });
