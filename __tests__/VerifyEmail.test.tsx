@@ -84,7 +84,7 @@ describe("Email Verification", () => {
         );
         expect(screen.getByTestId("go-to-login-button")).toBeInTheDocument();
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 
@@ -102,7 +102,7 @@ describe("Email Verification", () => {
           "text-red-500"
         );
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 
@@ -120,7 +120,7 @@ describe("Email Verification", () => {
           "text-red-500"
         );
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 });

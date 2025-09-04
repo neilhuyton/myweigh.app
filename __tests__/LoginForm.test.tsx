@@ -138,7 +138,7 @@ describe("LoginForm Component", () => {
         );
         expect(history.location.pathname).toBe("/weight");
       },
-      { timeout: 5000, interval: 100 }
+      { timeout: 1000, interval: 100 }
     );
   });
 
@@ -170,7 +170,7 @@ describe("LoginForm Component", () => {
         expect(screen.getByTestId("login-message")).toHaveClass("text-red-500");
         expect(useAuthStore.getState().isLoggedIn).toBe(false);
       },
-      { timeout: 5000, interval: 100 }
+      { timeout: 1000, interval: 100 }
     );
     consoleErrorSpy.mockRestore();
   });
@@ -197,7 +197,7 @@ describe("LoginForm Component", () => {
           screen.getByText("Password must be at least 8 characters long")
         ).toBeInTheDocument();
       },
-      { timeout: 5000, interval: 100 }
+      { timeout: 1000, interval: 100 }
     );
   });
 

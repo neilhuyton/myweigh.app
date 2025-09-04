@@ -80,17 +80,17 @@ test.describe("Theme Toggle Functionality", () => {
     await page.getByTestId("login-button").click();
 
     // Wait for navigation to /weight
-    await page.waitForURL("**/weight", { timeout: 20000 });
+    await page.waitForURL("**/weight", { timeout: 1000 });
 
     // Verify header and theme toggle
-    await expect(page.getByTestId("header")).toBeVisible({ timeout: 20000 });
+    await expect(page.getByTestId("header")).toBeVisible({ timeout: 1000 });
     await expect(page.getByTestId("profile-icon")).toBeVisible({
-      timeout: 20000,
+      timeout: 1000,
     });
     const themeToggle = page
       .getByRole("button", { name: "Toggle theme" })
       .first();
-    await expect(themeToggle).toBeVisible({ timeout: 20000 });
+    await expect(themeToggle).toBeVisible({ timeout: 1000 });
 
     // Test theme toggle functionality
     const htmlElement = page.locator("html");
@@ -100,12 +100,12 @@ test.describe("Theme Toggle Functionality", () => {
     await themeToggle.click();
     await page.getByRole("menuitem", { name: "Light" }).click();
     await page.waitForTimeout(1000); // Wait for theme transition
-    await expect(htmlElement).not.toHaveClass(/dark/, { timeout: 5000 }); // Should be light
+    await expect(htmlElement).not.toHaveClass(/dark/, { timeout: 1000 }); // Should be light
 
     // Open the dropdown and select "Dark"
     await themeToggle.click();
     await page.getByRole("menuitem", { name: "Dark" }).click();
     await page.waitForTimeout(1000); // Wait for theme transition
-    await expect(htmlElement).toHaveClass(/dark/, { timeout: 5000 }); // Should be dark
+    await expect(htmlElement).toHaveClass(/dark/, { timeout: 1000 }); // Should be dark
   });
 });

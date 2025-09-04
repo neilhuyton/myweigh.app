@@ -1,11 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-  afterEach,
-} from "vitest";
+import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { server } from "../__mocks__/server";
@@ -47,7 +40,7 @@ describe("WeightList Component", () => {
         expect(screen.getByText("69.90")).toBeInTheDocument();
         expect(screen.queryByTestId("error-message")).not.toBeInTheDocument();
       },
-      { timeout: 5000 }
+      { timeout: 1000 }
     );
   });
 

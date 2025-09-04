@@ -35,7 +35,6 @@ vi.mock("../src/components/LoadingSpinner", () => ({
   ),
 }));
 
-
 // Mock useNavigate to track navigation calls
 const mockNavigate = vi.fn();
 vi.mock("@tanstack/react-router", async () => {
@@ -114,7 +113,7 @@ describe("ResetPasswordForm Component", () => {
         expect(screen.getByTestId("back-to-login-link")).toBeInTheDocument();
         expect(screen.getByTestId("app-name")).toHaveTextContent("My Weigh");
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 
@@ -147,7 +146,7 @@ describe("ResetPasswordForm Component", () => {
         expect(alert).toHaveClass("text-green-500");
         expect(screen.getByTestId("email-input")).toHaveValue("");
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 
@@ -177,7 +176,7 @@ describe("ResetPasswordForm Component", () => {
         expect(alert).toHaveClass("text-destructive");
         expect(screen.getByTestId("email-input")).toHaveValue("invalid-email");
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 
@@ -245,7 +244,7 @@ describe("ResetPasswordForm Component", () => {
           screen.queryByTestId("reset-password-loading")
         ).not.toBeInTheDocument();
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
 
     vi.restoreAllMocks();

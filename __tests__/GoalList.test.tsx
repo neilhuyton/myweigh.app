@@ -77,7 +77,7 @@ describe("GoalList Component", () => {
         expect(screen.getByText("70.00")).toBeInTheDocument();
         expect(screen.queryByTestId("error-message")).not.toBeInTheDocument();
       },
-      { timeout: 5000 }
+      { timeout: 1000 }
     );
   });
 
@@ -91,7 +91,7 @@ describe("GoalList Component", () => {
           "Error: Failed to fetch goals"
         );
       },
-      { timeout: 5000 }
+      { timeout: 1000 }
     );
   });
 });
