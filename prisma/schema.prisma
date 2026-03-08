@@ -1,0 +1,61 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../node_modules/.prisma/client"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  // shadowDatabaseUrl = env("SHADOW_DATABASE_URL")   // uncomment later if needed
+}
+
+model User {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  weightMeasurements WeightMeasurement[]
+  goals              Goal[]
+
+  @@index([createdAt])
+  @@map("user")
+}
+
+model WeightMeasurement {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  weightKg  Float
+  note      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("weight_measurement")
+}
+
+model Goal {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  userId       String    @db.Uuid
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  goalWeightKg Float
+  goalSetAt    DateTime  @default(now())
+  reachedAt    DateTime?
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([goalSetAt])
+  @@map("goal")
+}
