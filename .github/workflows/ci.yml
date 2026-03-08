@@ -79,7 +79,7 @@ jobs:
       - name: Run Vitest
         run: pnpm test
         env:
-          VITE_TRPC_URL: ${{ vars.DATABASE_URL }}
+          VITE_TRPC_URL: ${{ vars.VITE_TRPC_URL }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           SUPABASE_JWT_SECRET: ${{ secrets.SUPABASE_JWT_SECRET }}
