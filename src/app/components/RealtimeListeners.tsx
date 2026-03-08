@@ -1,9 +1,11 @@
 // src/app/components/RealtimeListeners.tsx
 
-import { useListRealtime } from "@/shared/hooks/useListRealtime";
+import { useGoalRealtime } from "@/shared/hooks/useGoalRealtime";
+import { useWeightRealtime } from "@/shared/hooks/useWeightRealtime";
 
 export function RealtimeListeners() {
-  useListRealtime({ table: "todolist" });
+  useGoalRealtime();
+  useWeightRealtime();
 
   return null;
 }
