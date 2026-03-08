@@ -4,28 +4,42 @@ import { useRef, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc";
 import EditableNumberCard from "@/app/components/EditableNumberCard";
+import {
+  getCachedCurrentGoal,
+  saveCurrentGoal,
+  clearCurrentGoalCache,
+} from "@/utils/goalCache";
 
 export default function CurrentGoalCard() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+
+  const currentGoalQueryKey = trpc.weight.getCurrentGoal.queryKey();
+
+  const cachedGoal = getCachedCurrentGoal();
+
+  const { data: currentGoal, isLoading } = useQuery(
+    trpc.weight.getCurrentGoal.queryOptions(undefined, {
+      staleTime: 15_000,
+      gcTime: 300_000,
+      initialData: cachedGoal ?? undefined,
+      initialDataUpdatedAt: cachedGoal ? Date.now() : undefined,
+    }),
+  );
 
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const currentGoalQueryKey = trpc.weight.getCurrentGoal.queryKey();
-
-  const { data: currentGoal } = useQuery(
-    trpc.weight.getCurrentGoal.queryOptions(undefined, {
-      staleTime: 15000,
-      gcTime: 300000,
-    }),
-  );
-
   useEffect(() => {
-    setEditValue(currentGoal?.goalWeightKg?.toString() ?? "");
-  }, [currentGoal]);
+    if (currentGoal) {
+      setEditValue(currentGoal.goalWeightKg.toString());
+      saveCurrentGoal(currentGoal);
+    } else if (!isLoading) {
+      clearCurrentGoalCache();
+    }
+  }, [currentGoal, isLoading]);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -37,11 +51,9 @@ export default function CurrentGoalCard() {
   const getValidatedWeight = (): number | null => {
     const trimmed = editValue.trim();
     if (!trimmed) return null;
-
     const val = parseFloat(trimmed);
     if (isNaN(val) || val <= 0) return null;
     if (currentGoal && val === currentGoal.goalWeightKg) return null;
-
     return val;
   };
 
@@ -49,7 +61,6 @@ export default function CurrentGoalCard() {
     trpc.weight.setGoal.mutationOptions({
       onMutate: async ({ goalWeightKg }) => {
         await queryClient.cancelQueries({ queryKey: currentGoalQueryKey });
-
         const previous = queryClient.getQueryData(currentGoalQueryKey);
 
         queryClient.setQueryData(currentGoalQueryKey, {
@@ -60,6 +71,9 @@ export default function CurrentGoalCard() {
         });
 
         return { previous };
+      },
+      onSuccess: (newGoal) => {
+        saveCurrentGoal(newGoal);
       },
       onError: (_, __, context) => {
         if (context?.previous) {
@@ -79,7 +93,6 @@ export default function CurrentGoalCard() {
     trpc.weight.updateGoal.mutationOptions({
       onMutate: async ({ goalWeightKg }) => {
         await queryClient.cancelQueries({ queryKey: currentGoalQueryKey });
-
         const previous = queryClient.getQueryData(currentGoalQueryKey);
 
         if (previous) {
@@ -90,6 +103,9 @@ export default function CurrentGoalCard() {
         }
 
         return { previous };
+      },
+      onSuccess: (updatedGoal) => {
+        saveCurrentGoal(updatedGoal);
       },
       onError: (_, __, context) => {
         if (context?.previous) {
@@ -151,6 +167,11 @@ export default function CurrentGoalCard() {
     setIsEditing(false);
     setEditValue(currentGoal?.goalWeightKg?.toString() ?? "");
   };
+
+  // Optional: show loading skeleton instead of "no goal" during first load
+  if (isLoading && !currentGoal) {
+    return <div className="h-40 animate-pulse bg-muted rounded-lg" />;
+  }
 
   return (
     <EditableNumberCard
