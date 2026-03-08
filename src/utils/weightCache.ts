@@ -2,8 +2,8 @@
 
 interface CachedLatestWeight {
   weightKg: number;
-  createdAt: string; // ISO string
-  timestamp: number; // for potential staleness check
+  createdAt: string;
+  timestamp: number;
 }
 
 const STORAGE_KEY = 'latest_weight_cache';

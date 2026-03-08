@@ -1,7 +1,7 @@
 // src/hooks/useLatestWeight.ts
 
 import { useState, useEffect } from "react";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/trpc";
 import { getCachedLatestWeight, saveLatestWeight } from "@/utils/weightCache";
 
@@ -12,51 +12,58 @@ interface LatestWeightDisplay {
 }
 
 export function useLatestWeight() {
-  const { data: weights = [] } = useSuspenseQuery(
+  const cached = getCachedLatestWeight();
+
+  const initialDisplay: LatestWeightDisplay | null = cached
+    ? {
+        weightKg: cached.weightKg,
+        createdAt: cached.createdAt,
+        source: "cache" as const,
+      }
+    : null;
+
+  const { data: weights = [] } = useQuery(
     trpc.weight.getWeights.queryOptions(undefined, {
       staleTime: 1000 * 15,
       gcTime: 1000 * 60 * 5,
     }),
   );
 
-  const [display, setDisplay] = useState<LatestWeightDisplay | null>(null);
-
-  useEffect(() => {
-    const cached = getCachedLatestWeight();
-    if (cached) {
-      setDisplay({
-        weightKg: cached.weightKg,
-        createdAt: cached.createdAt,
-        source: "cache",
-      });
-    }
-  }, []);
+  const [display, setDisplay] = useState<LatestWeightDisplay | null>(
+    initialDisplay,
+  );
 
   useEffect(() => {
     if (weights.length === 0) {
-      setDisplay(null);
       return;
     }
 
     const sorted = [...weights].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
     const latest = sorted[0];
 
-    setDisplay({
+    const serverDisplay: LatestWeightDisplay = {
       weightKg: latest.weightKg,
       createdAt: latest.createdAt,
-      source: "server",
-    });
+      source: "server" as const,
+    };
 
-    saveLatestWeight({
-      weightKg: latest.weightKg,
-      createdAt: latest.createdAt,
-    });
-  }, [weights]);
+    if (
+      display?.weightKg !== serverDisplay.weightKg ||
+      display?.createdAt !== serverDisplay.createdAt ||
+      display?.source !== "server"
+    ) {
+      setDisplay(serverDisplay);
+      saveLatestWeight({
+        weightKg: latest.weightKg,
+        createdAt: latest.createdAt,
+      });
+    }
+  }, [weights, display]);
 
   const isFromCache = display?.source === "cache";
-
   const isServerLoaded = display?.source === "server";
 
   return {

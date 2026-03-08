@@ -9,11 +9,15 @@ interface CachedGoal {
   reachedAt: string | null;
 }
 
-export function saveCurrentGoal(goal: CachedGoal) {
+export function saveCurrentGoal(goal: CachedGoal | null) {
   try {
-    localStorage.setItem(GOAL_CACHE_KEY, JSON.stringify(goal));
+    if (goal) {
+      localStorage.setItem(GOAL_CACHE_KEY, JSON.stringify(goal));
+    } else {
+      localStorage.removeItem(GOAL_CACHE_KEY);
+    }
   } catch {
-    // Non-critical: ignore localStorage errors (quota, private mode, etc.)
+    // silent fail
   }
 }
 
@@ -21,7 +25,10 @@ export function getCachedCurrentGoal(): CachedGoal | null {
   try {
     const item = localStorage.getItem(GOAL_CACHE_KEY);
     if (!item) return null;
-    return JSON.parse(item) as CachedGoal;
+    const parsed = JSON.parse(item) as CachedGoal;
+    // Optional: basic validation / migration
+    if (typeof parsed.goalWeightKg !== "number") return null;
+    return parsed;
   } catch {
     return null;
   }

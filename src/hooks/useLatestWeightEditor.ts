@@ -1,29 +1,24 @@
 // src/hooks/useLatestWeightEditor.ts
 
-import { formatDate } from "@/utils/date";
+import { useState, useEffect, useRef } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { trpc } from "@/trpc";
-import { useState, useRef, useEffect } from "react";
+import { formatDate } from "@/utils/date";
 import { saveLatestWeight } from "@/utils/weightCache";
 import { useLatestWeight } from "./useLatestWeight";
 
 export function useLatestWeightEditor() {
   const { latestWeight, isFromCache, isServerLoaded } = useLatestWeight();
 
-  const utils = trpc.useUtils();
-
   const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState<string>(
-    latestWeight?.weightKg?.toString() ?? "",
-  );
+  const [editValue, setEditValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (latestWeight) {
-      setEditValue(latestWeight.weightKg.toString());
-    } else {
-      setEditValue("");
+    if (!isEditing) {
+      setEditValue(latestWeight?.weightKg?.toString() ?? "");
     }
-  }, [latestWeight]);
+  }, [latestWeight, isEditing]);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -32,7 +27,39 @@ export function useLatestWeightEditor() {
     }
   }, [isEditing]);
 
+  const mutation = useMutation(
+    trpc.weight.create.mutationOptions({
+      onSuccess: (_data, variables) => {
+        saveLatestWeight({
+          weightKg: variables.weightKg,
+          createdAt: new Date().toISOString(),
+        });
+      },
+    }),
+  );
+
+  const isPending = mutation.isPending;
+
+  const pendingWeight = Number(editValue);
+  const displayedWeight = isPending
+    ? Number.isNaN(pendingWeight)
+      ? (latestWeight?.weightKg ?? null)
+      : pendingWeight
+    : (latestWeight?.weightKg ?? null);
+
+  const statusText = (() => {
+    if (isPending) return "Saving new weight...";
+
+    if (!latestWeight?.createdAt) return "";
+
+    const parts: string[] = [formatDate(latestWeight.createdAt)];
+    if (isFromCache) parts.push(" • cached");
+    if (isServerLoaded) parts.push(" • synced");
+    return parts.join("");
+  })();
+
   const startEditing = () => setIsEditing(true);
+
   const cancelEdit = () => {
     setEditValue(latestWeight?.weightKg?.toString() ?? "");
     setIsEditing(false);
@@ -41,67 +68,15 @@ export function useLatestWeightEditor() {
   const getValidatedWeight = (): number | null => {
     const trimmed = editValue.trim();
     if (!trimmed) return null;
-    const val = parseFloat(trimmed);
-    if (isNaN(val) || val <= 0) return null;
+
+    const val = Number(trimmed);
+    if (Number.isNaN(val) || val <= 0) return null;
     if (latestWeight && val === latestWeight.weightKg) return null;
+
     return val;
   };
 
-  const mutation = trpc.weight.create.useMutation({
-    onMutate: async ({ weightKg, note }) => {
-      // Optimistic: show new value immediately
-      // You can also update getWeights list optimistically if you want
-      const previousWeights = utils.weight.getWeights.getData() ?? [];
-
-      const tempEntry = {
-        id: `temp-${Date.now()}`,
-        weightKg,
-        createdAt: new Date().toISOString(),
-        note: note || null,
-      };
-
-      utils.weight.getWeights.setData(undefined, [
-        tempEntry,
-        ...previousWeights,
-      ]);
-
-      return { previousWeights };
-    },
-    onSuccess: (_, { weightKg }) => {
-      // Update local cache
-      saveLatestWeight({
-        weightKg,
-        createdAt: new Date().toISOString(),
-      });
-
-      utils.weight.getWeights.invalidate();
-      utils.weight.getCurrentGoal.invalidate(); // in case goal reached
-    },
-    onError: (_, __, context) => {
-      if (context?.previousWeights) {
-        utils.weight.getWeights.setData(undefined, context.previousWeights);
-      }
-    },
-  });
-
-  const isPending = mutation.isPending;
-
-  const displayedWeight = isPending
-    ? parseFloat(editValue) || latestWeight?.weightKg
-    : (latestWeight?.weightKg ?? null);
-
-  const statusText = (() => {
-    if (isPending) return "Saving new weight...";
-
-    if (!latestWeight) return "";
-
-    const parts = [formatDate(latestWeight.createdAt)];
-    if (isFromCache) parts.push(" • cached");
-    if (isServerLoaded) parts.push(" • synced");
-    return parts.join("");
-  })();
-
-  const saveEdit = async () => {
+  const saveEdit = () => {
     const newWeight = getValidatedWeight();
     if (newWeight === null) {
       cancelEdit();
@@ -112,7 +87,7 @@ export function useLatestWeightEditor() {
 
     mutation.mutate({
       weightKg: newWeight,
-      note: "", // you can add note input later if desired
+      note: "",
     });
   };
 
