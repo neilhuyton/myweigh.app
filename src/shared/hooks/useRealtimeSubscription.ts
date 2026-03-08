@@ -160,5 +160,12 @@ export function useRealtimeSubscription<T extends TableRow = TableRow>({
     };
   }, [enabled, subscribe, cleanupChannel]);
 
+  if (!table || !channelName) {
+    console.warn(
+      "[Realtime] Missing table or channelName — subscription skipped",
+    );
+    return { cleanup: () => {} };
+  }
+
   return { cleanup: cleanupChannel };
 }

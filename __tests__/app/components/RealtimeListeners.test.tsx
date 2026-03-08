@@ -1,21 +1,46 @@
 // __tests__/app/components/RealtimeListeners.test.tsx
 
-import { RealtimeListeners } from "@/app/components/RealtimeListeners";
-import { useListRealtime } from "@/shared/hooks/useListRealtime";
 import { render } from "@testing-library/react";
-import { vi, describe, it, expect } from "vitest";
+import { vi, describe, it, expect, beforeEach } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { RealtimeListeners } from "@/app/components/RealtimeListeners";
+import { useGoalRealtime } from "@/shared/hooks/useGoalRealtime";
+import { useWeightRealtime } from "@/shared/hooks/useWeightRealtime";
 
-vi.mock("@/shared/hooks/useListRealtime", () => ({
-  useListRealtime: vi.fn(),
+vi.mock("@/shared/hooks/useGoalRealtime", () => ({
+  useGoalRealtime: vi.fn(),
+}));
+
+vi.mock("@/shared/hooks/useWeightRealtime", () => ({
+  useWeightRealtime: vi.fn(),
 }));
 
 describe("RealtimeListeners", () => {
-  it('calls useListRealtime("todolist") and renders nothing', () => {
-    const { container } = render(<RealtimeListeners />);
+  let queryClient: QueryClient;
 
-    expect(vi.mocked(useListRealtime)).toHaveBeenCalledWith(
-      expect.objectContaining({ table: "todolist" }),
+  beforeEach(() => {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+
+    // Reset mocks before each test
+    vi.mocked(useGoalRealtime).mockClear();
+    vi.mocked(useWeightRealtime).mockClear();
+  });
+
+  it("renders nothing and calls both realtime hooks", () => {
+    const { container } = render(
+      <QueryClientProvider client={queryClient}>
+        <RealtimeListeners />
+      </QueryClientProvider>,
     );
+
+    expect(useGoalRealtime).toHaveBeenCalledTimes(1);
+    expect(useWeightRealtime).toHaveBeenCalledTimes(1);
     expect(container.firstChild).toBeNull();
   });
 });
