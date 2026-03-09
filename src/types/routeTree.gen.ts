@@ -8,20 +8,20 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './../app/routes/__root'
-import { Route as UpdatePasswordRouteImport } from './../app/routes/update-password'
-import { Route as ResetPasswordRouteImport } from './../app/routes/reset-password'
-import { Route as ResendVerificationRouteImport } from './../app/routes/resend-verification'
-import { Route as RegisterRouteImport } from './../app/routes/register'
-import { Route as LoginRouteImport } from './../app/routes/login'
-import { Route as AuthenticatedRouteRouteImport } from './../app/routes/_authenticated/route'
-import { Route as IndexRouteImport } from './../app/routes/index'
-import { Route as AuthenticatedWeightChartRouteImport } from './../app/routes/_authenticated/weight-chart'
-import { Route as AuthenticatedProfileRouteImport } from './../app/routes/_authenticated/profile'
-import { Route as AuthenticatedWeightLogIndexRouteImport } from './../app/routes/_authenticated/weight-log/index'
-import { Route as AuthenticatedWeightGoalIndexRouteImport } from './../app/routes/_authenticated/weight-goal/index'
-import { Route as AuthenticatedWeightLogHistoryRouteImport } from './../app/routes/_authenticated/weight-log/history'
-import { Route as AuthenticatedWeightGoalHistoryRouteImport } from './../app/routes/_authenticated/weight-goal/history'
+import { Route as rootRouteImport } from './../routes/__root'
+import { Route as UpdatePasswordRouteImport } from './../routes/update-password'
+import { Route as ResetPasswordRouteImport } from './../routes/reset-password'
+import { Route as ResendVerificationRouteImport } from './../routes/resend-verification'
+import { Route as RegisterRouteImport } from './../routes/register'
+import { Route as LoginRouteImport } from './../routes/login'
+import { Route as AuthenticatedRouteRouteImport } from './../routes/_authenticated/route'
+import { Route as IndexRouteImport } from './../routes/index'
+import { Route as AuthenticatedWeightChartRouteImport } from './../routes/_authenticated/weight-chart'
+import { Route as AuthenticatedProfileRouteImport } from './../routes/_authenticated/profile'
+import { Route as AuthenticatedWeightLogIndexRouteImport } from './../routes/_authenticated/weight-log/index'
+import { Route as AuthenticatedWeightGoalIndexRouteImport } from './../routes/_authenticated/weight-goal/index'
+import { Route as AuthenticatedWeightLogHistoryRouteImport } from './../routes/_authenticated/weight-log/history'
+import { Route as AuthenticatedWeightGoalHistoryRouteImport } from './../routes/_authenticated/weight-goal/history'
 
 const UpdatePasswordRoute = UpdatePasswordRouteImport.update({
   id: '/update-password',
