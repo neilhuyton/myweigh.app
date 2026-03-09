@@ -3,7 +3,6 @@
 import { protectedProcedure, publicProcedure, router } from "../trpc-base";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { Prisma } from "@prisma/client";
 
 export const userRouter = router({
   getCurrent: protectedProcedure.query(async ({ ctx }) => {
@@ -94,36 +93,38 @@ export const userRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { id, email } = input;
 
-      try {
-        const user = await ctx.prisma.user.upsert({
-          where: { id }, // match on UUID from auth.users
-          update: { email }, // update email if changed (rare, but safe)
-          create: {
-            id,
-            email,
-            // add any other defaults you want on first create, e.g.
-            // createdAt: new Date(),       // but Prisma handles this via @default(now())
-          },
-          select: { id: true, email: true },
-        });
+      let user = await ctx.prisma.user.findUnique({
+        where: { id },
+        select: { id: true, email: true },
+      });
 
-        return {
-          success: true,
-          message: user ? "User synced/updated" : "User created",
-          user,
-        };
-      } catch (e) {
-        if (
-          e instanceof Prisma.PrismaClientKnownRequestError &&
-          e.code === "P2002"
-        ) {
-          // Race condition or conflicting email on different ID → rare but possible
-          throw new TRPCError({
-            code: "CONFLICT",
-            message: "Email already in use by another account",
+      if (user) {
+        if (user.email !== email) {
+          user = await ctx.prisma.user.update({
+            where: { id },
+            data: { email },
+            select: { id: true, email: true },
           });
         }
-        throw e; // let other errors bubble up
+        return {
+          success: true,
+          message: "User already synced",
+          user,
+        };
       }
+
+      user = await ctx.prisma.user.create({
+        data: {
+          id,
+          email,
+        },
+        select: { id: true, email: true },
+      });
+
+      return {
+        success: true,
+        message: "User created in database",
+        user,
+      };
     }),
 });
