@@ -5,7 +5,7 @@ vi.mock('@/router/types/routeTree.gen', () => ({
   routeTree: {} satisfies Record<string, unknown>,
 }))
 
-vi.mock('@/app/components/RouteError', () => ({
+vi.mock('@/components/RouteError', () => ({
   RouteError: vi.fn(),
 }))
 

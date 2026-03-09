@@ -1,7 +1,7 @@
 // src/main.tsx
 
 import { createRoot } from "react-dom/client";
-import { Root } from "./app/Root";
+import { Root } from "./components/Root";
 import "./index.css";
 import { StrictMode } from "react";
 
