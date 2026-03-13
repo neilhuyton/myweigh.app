@@ -1,4 +1,3 @@
-// src/routes/_authenticated/profile.tsx
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { InstallPWA, useBannerStore } from "@steel-cut/steel-lib";
