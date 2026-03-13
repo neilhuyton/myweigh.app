@@ -1,5 +1,3 @@
-// src/components/Root.tsx
-
 import { useEffect } from "react";
 import { RouterProvider } from "@tanstack/react-router";
 

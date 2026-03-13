@@ -1,5 +1,3 @@
-// src/main.tsx
-
 import { createRoot } from "react-dom/client";
 import { Root } from "./components/Root";
 import "@steel-cut/steel-lib/dist/steel-lib.css";

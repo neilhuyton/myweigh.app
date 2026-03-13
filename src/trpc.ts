@@ -1,5 +1,3 @@
-// src/trpc.ts
-
 import { createTRPCClient, httpLink } from "@trpc/client";
 import type { TRPCLink } from "@trpc/client";
 import { TRPCClientError } from "@trpc/client";
@@ -86,27 +84,23 @@ const getFreshAccessToken = async (): Promise<string | null> => {
   return session.access_token;
 };
 
-export function createTrpcClient() {
-  return createTRPCClient<AppRouter>({
-    links: [
-      refreshOn401Link(),
-      httpLink({
-        url: "/trpc",
-        async headers() {
-          try {
-            const token = await getFreshAccessToken();
-            return token ? { Authorization: `Bearer ${token}` } : {};
-          } catch (err) {
-            console.warn("[tRPC headers] Failed to get token", err);
-            return {};
-          }
-        },
-      }),
-    ],
-  });
-}
-
-export const trpcClient = createTrpcClient();
+export const trpcClient = createTRPCClient<AppRouter>({
+  links: [
+    refreshOn401Link(),
+    httpLink({
+      url: "/trpc",
+      async headers() {
+        try {
+          const token = await getFreshAccessToken();
+          return token ? { Authorization: `Bearer ${token}` } : {};
+        } catch (err) {
+          console.warn("[tRPC headers] Failed to get token", err);
+          return {};
+        }
+      },
+    }),
+  ],
+});
 
 export const trpc = createTRPCOptionsProxy<AppRouter>({
   client: trpcClient,

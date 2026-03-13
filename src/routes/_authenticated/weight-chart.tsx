@@ -1,5 +1,3 @@
-// src/routes/_authenticated/weight-chart.tsx
-
 import WeightTrendCard from "@/components/WeightTrendCard";
 import { createFileRoute } from "@tanstack/react-router";
 

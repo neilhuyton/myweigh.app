@@ -1,5 +1,3 @@
-// src/shared/hooks/useWeightRealtime.ts
-
 import { useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/trpc";
 import { useRealtimeSubscription } from "./useRealtimeSubscription";

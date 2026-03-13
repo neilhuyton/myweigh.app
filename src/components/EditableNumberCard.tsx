@@ -1,5 +1,3 @@
-// src/components/EditableNumberCard.tsx
-
 import { Pencil, Check, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -20,11 +18,11 @@ interface EditableNumberCardProps {
   onSave: () => void;
   onChange: (value: string) => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  inputRef: React.RefObject<HTMLInputElement | null>; // ← FIXED HERE
+  inputRef: React.RefObject<HTMLInputElement | null>;
   noValueMessage: string;
   noValueSubMessage: string;
   dataTestId?: string;
-  childrenWhenEditing?: ReactNode; // optional extra content when editing
+  childrenWhenEditing?: ReactNode;
 }
 
 export default function EditableNumberCard({

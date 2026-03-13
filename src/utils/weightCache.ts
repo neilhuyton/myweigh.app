@@ -1,5 +1,3 @@
-// src/utils/weightCache.ts
-
 interface CachedLatestWeight {
   weightKg: number;
   createdAt: string;
@@ -23,11 +21,6 @@ export function getCachedLatestWeight(): CachedLatestWeight | null {
 
   try {
     const parsed = JSON.parse(raw) as CachedLatestWeight;
-    // Optional: invalidate if older than e.g. 48 hours
-    // if (Date.now() - parsed.timestamp > 48 * 60 * 60 * 1000) {
-    //   localStorage.removeItem(STORAGE_KEY);
-    //   return null;
-    // }
     return parsed;
   } catch {
     localStorage.removeItem(STORAGE_KEY);

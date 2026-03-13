@@ -1,5 +1,3 @@
-// src/components/WeightList.tsx
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/trpc";
 import { formatDate } from "@/utils/date";

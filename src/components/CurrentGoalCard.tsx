@@ -1,8 +1,6 @@
-// src/components/CurrentGoalCard.tsx
-
 import { useRef, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTRPC } from "@/trpc";
+import { trpc } from "@/trpc";
 import EditableNumberCard from "@/components/EditableNumberCard";
 import {
   getCachedCurrentGoal,
@@ -11,19 +9,17 @@ import {
 } from "@/utils/goalCache";
 
 export default function CurrentGoalCard() {
-  const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const currentGoalQueryKey = trpc.weight.getCurrentGoal.queryKey();
-
-  const cachedGoal = getCachedCurrentGoal();
+  const currentGoalQuery = trpc.weight.getCurrentGoal;
 
   const { data: currentGoal, isLoading } = useQuery(
-    trpc.weight.getCurrentGoal.queryOptions(undefined, {
-      staleTime: 15_000,
-      gcTime: 300_000,
-      initialData: cachedGoal ?? undefined,
-      initialDataUpdatedAt: cachedGoal ? Date.now() : undefined,
+    currentGoalQuery.queryOptions(undefined, {
+      staleTime: 15000,
+      gcTime: 300000,
+      initialData: () => getCachedCurrentGoal() ?? undefined,
+      initialDataUpdatedAt: () =>
+        getCachedCurrentGoal() ? Date.now() : undefined,
     }),
   );
 
@@ -60,10 +56,11 @@ export default function CurrentGoalCard() {
   const createGoalMutation = useMutation(
     trpc.weight.setGoal.mutationOptions({
       onMutate: async ({ goalWeightKg }) => {
-        await queryClient.cancelQueries({ queryKey: currentGoalQueryKey });
-        const previous = queryClient.getQueryData(currentGoalQueryKey);
+        const queryKey = currentGoalQuery.queryKey();
+        await queryClient.cancelQueries({ queryKey });
+        const previous = queryClient.getQueryData(queryKey);
 
-        queryClient.setQueryData(currentGoalQueryKey, {
+        queryClient.setQueryData(queryKey, {
           id: `temp-${Date.now()}`,
           goalWeightKg,
           goalSetAt: new Date().toISOString(),
@@ -77,11 +74,16 @@ export default function CurrentGoalCard() {
       },
       onError: (_, __, context) => {
         if (context?.previous) {
-          queryClient.setQueryData(currentGoalQueryKey, context.previous);
+          queryClient.setQueryData(
+            currentGoalQuery.queryKey(),
+            context.previous,
+          );
         }
       },
       onSettled: () => {
-        queryClient.invalidateQueries({ queryKey: currentGoalQueryKey });
+        queryClient.invalidateQueries({
+          queryKey: currentGoalQuery.queryKey(),
+        });
         queryClient.invalidateQueries({
           queryKey: trpc.weight.getGoals.queryKey(),
         });
@@ -92,11 +94,12 @@ export default function CurrentGoalCard() {
   const updateGoalMutation = useMutation(
     trpc.weight.updateGoal.mutationOptions({
       onMutate: async ({ goalWeightKg }) => {
-        await queryClient.cancelQueries({ queryKey: currentGoalQueryKey });
-        const previous = queryClient.getQueryData(currentGoalQueryKey);
+        const queryKey = currentGoalQuery.queryKey();
+        await queryClient.cancelQueries({ queryKey });
+        const previous = queryClient.getQueryData(queryKey);
 
         if (previous) {
-          queryClient.setQueryData(currentGoalQueryKey, {
+          queryClient.setQueryData(queryKey, {
             ...previous,
             goalWeightKg,
           });
@@ -109,11 +112,16 @@ export default function CurrentGoalCard() {
       },
       onError: (_, __, context) => {
         if (context?.previous) {
-          queryClient.setQueryData(currentGoalQueryKey, context.previous);
+          queryClient.setQueryData(
+            currentGoalQuery.queryKey(),
+            context.previous,
+          );
         }
       },
       onSettled: () => {
-        queryClient.invalidateQueries({ queryKey: currentGoalQueryKey });
+        queryClient.invalidateQueries({
+          queryKey: currentGoalQuery.queryKey(),
+        });
         queryClient.invalidateQueries({
           queryKey: trpc.weight.getGoals.queryKey(),
         });
@@ -168,7 +176,6 @@ export default function CurrentGoalCard() {
     setEditValue(currentGoal?.goalWeightKg?.toString() ?? "");
   };
 
-  // Optional: show loading skeleton instead of "no goal" during first load
   if (isLoading && !currentGoal) {
     return <div className="h-40 animate-pulse bg-muted rounded-lg" />;
   }

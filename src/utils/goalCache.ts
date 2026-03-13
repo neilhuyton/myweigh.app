@@ -1,5 +1,3 @@
-// src/utils/goalCache.ts
-
 const GOAL_CACHE_KEY = "latest_goal_cache";
 
 interface CachedGoal {

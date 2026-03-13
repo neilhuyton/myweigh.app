@@ -1,5 +1,3 @@
-// src/shared/hooks/useRealtimeSubscription.ts
-
 import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/store/authStore";

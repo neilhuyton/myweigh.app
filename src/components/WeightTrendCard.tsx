@@ -1,5 +1,3 @@
-// src/components/WeightTrendCard.tsx
-
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/trpc";

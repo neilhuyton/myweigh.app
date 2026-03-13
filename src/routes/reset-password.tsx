@@ -1,5 +1,3 @@
-// src/routes/reset-password.tsx
-
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Form,

@@ -1,5 +1,3 @@
-// src/routes/__root.tsx
-
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import type { RouterContext } from "@/router";
 import Navigation from "../components/Navigation";

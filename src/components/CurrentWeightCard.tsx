@@ -1,5 +1,3 @@
-// src/components/CurrentWeightCard.tsx
-
 import { useState, useRef, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/trpc";

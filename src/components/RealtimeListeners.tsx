@@ -1,5 +1,3 @@
-// src/components/RealtimeListeners.tsx
-
 import { useGoalRealtime } from "@/hooks/useGoalRealtime";
 import { useWeightRealtime } from "@/hooks/useWeightRealtime";
 

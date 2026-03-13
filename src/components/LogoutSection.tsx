@@ -1,5 +1,3 @@
-// src/components/LogoutSection.tsx
-
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/store/authStore";
 import {
