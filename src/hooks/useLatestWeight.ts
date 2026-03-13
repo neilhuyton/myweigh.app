@@ -1,5 +1,3 @@
-// src/hooks/useLatestWeight.ts
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/trpc";

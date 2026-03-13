@@ -1,5 +1,3 @@
-// src/routes/update-password.tsx
-
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Form,
@@ -40,7 +38,6 @@ export const Route = createFileRoute("/update-password")({
       error={error}
       reset={reset}
       title="Reset Link Error"
-      backTo="/reset-password"
       backLabel="Request New Link"
     />
   ),

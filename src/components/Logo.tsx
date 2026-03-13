@@ -1,5 +1,3 @@
-// src/components/Logo.tsx
-
 export function Logo() {
   return (
     <div className="flex flex-col items-center">

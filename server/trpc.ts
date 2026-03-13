@@ -1,24 +1,11 @@
-// server/trpc.ts
-
-import { router, createCallerFactory, publicProcedure } from "./trpc-base";
-import { userRouter } from "./routers/user";
+import { router, createCallerFactory } from "@steel-cut/trpc-auth/server";
+import { userRouter, healthRouter } from "@steel-cut/trpc-auth/server";
 import { weightRouter } from "./routers/weight";
-
-export const healthRouter = router({
-  ping: publicProcedure.query(async () => {
-    return {
-      status: "ok",
-      timestamp: new Date().toISOString(),
-    };
-  }),
-});
 
 export const appRouter = router({
   user: userRouter,
-
-  weight: weightRouter,
-
   health: healthRouter,
+  weight: weightRouter,
 });
 
 export type AppRouter = typeof appRouter;

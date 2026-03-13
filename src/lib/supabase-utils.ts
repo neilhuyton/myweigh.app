@@ -1,5 +1,3 @@
-// src/lib/supabase-utils.ts
-
 import { supabase } from "./supabase";
 import type { SignUpWithPasswordCredentials } from "@supabase/supabase-js";
 

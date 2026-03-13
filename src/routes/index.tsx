@@ -1,5 +1,3 @@
-// src/routes/index.tsx
-
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus, ListTodo, LogIn, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";

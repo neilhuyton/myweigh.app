@@ -1,5 +1,3 @@
-// src/routes/_authenticated/weight-goal/index.tsx
-
 import { Button } from "@/components/ui/button";
 import CurrentGoalCard from "@/components/CurrentGoalCard";
 import { createFileRoute, Link } from "@tanstack/react-router";

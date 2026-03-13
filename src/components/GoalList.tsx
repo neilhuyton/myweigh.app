@@ -1,5 +1,3 @@
-// src/components/GoalList.tsx
-
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/trpc";
 import {

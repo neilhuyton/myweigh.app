@@ -1,5 +1,3 @@
-// src/routes/resend-verification.tsx
-
 import { createFileRoute } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import {

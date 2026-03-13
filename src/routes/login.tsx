@@ -1,5 +1,3 @@
-// src/routes/login.tsx
-
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import {

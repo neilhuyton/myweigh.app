@@ -1,8 +1,6 @@
 // src/routes/_authenticated/profile.tsx
-
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useTRPC } from "@/trpc";
 import { InstallPWA, useBannerStore } from "@steel-cut/steel-lib";
 import { useAuthStore } from "@/store/authStore";
 import { supabase } from "@/lib/supabase";
@@ -27,7 +25,6 @@ function ProfilePage() {
   const queryClient = useQueryClient();
   const { show: showBanner } = useBannerStore();
   const { user, updateUserEmail } = useAuthStore();
-  const trpc = useTRPC();
 
   const currentEmail = user?.email ?? "";
   const hasUser = !!user;
@@ -46,7 +43,7 @@ function ProfilePage() {
               duration: 5000,
             });
             queryClient.invalidateQueries({
-              queryKey: trpc.user.getCurrent.queryKey(),
+              queryKey: [["user", "getCurrent"]],
             });
           }
         }
@@ -54,7 +51,7 @@ function ProfilePage() {
     );
 
     return () => listener.subscription.unsubscribe();
-  }, [currentEmail, updateUserEmail, showBanner, queryClient, trpc]);
+  }, [currentEmail, updateUserEmail, showBanner, queryClient]);
 
   const handleClose = () => {
     try {
@@ -135,5 +132,3 @@ function ProfilePage() {
     </div>
   );
 }
-
-export default ProfilePage;

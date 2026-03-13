@@ -1,5 +1,3 @@
-// src/components/Navigation.tsx
-
 import { Link } from "@tanstack/react-router";
 import {
   ScaleIcon,

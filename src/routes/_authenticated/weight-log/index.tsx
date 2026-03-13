@@ -1,5 +1,3 @@
-// src/routes/_authenticated/weight-log/index.tsx
-
 import { Button } from "@/components/ui/button";
 import CurrentWeightCard from "@/components/CurrentWeightCard";
 import { createFileRoute, Link } from "@tanstack/react-router";

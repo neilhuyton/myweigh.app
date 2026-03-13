@@ -1,5 +1,3 @@
-// src/routes/_authenticated/weight-goal/history.tsx
-
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
