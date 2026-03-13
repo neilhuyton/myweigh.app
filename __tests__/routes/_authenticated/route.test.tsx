@@ -1,5 +1,3 @@
-// __tests__/routes/_authenticated/route.test.tsx
-
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import {
@@ -202,5 +200,26 @@ describe("Authenticated Layout Route (/_authenticated)", () => {
 
     expect(router.state.location.pathname).not.toBe("/login");
     expect(screen.getByText("Loading session...")).toBeInTheDocument();
+  });
+
+  it("renders ProfileIcon in the header when authenticated", async () => {
+    const mockUser = { id: "user-123", email: "test@example.com" };
+
+    vi.mocked(useAuthStore).mockImplementation((selector) => {
+      const state = createMockAuthState({ user: mockUser, loading: false });
+      return selector ? selector(state) : state;
+    });
+
+    vi.mocked(useAuthStore.getState).mockReturnValue(
+      createMockAuthState({ user: mockUser, loading: false }),
+    );
+
+    const { router } = setupRouter();
+
+    render(<RouterProvider router={router} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /profile/i })).toBeInTheDocument();
+    });
   });
 });
