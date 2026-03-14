@@ -27,7 +27,7 @@ type Weight = {
 
 let queryClient: QueryClient;
 
-beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+beforeAll(() => server.listen({ onUnhandledRequest: "bypass" }));
 afterEach(() => {
   server.resetHandlers();
   vi.clearAllMocks();

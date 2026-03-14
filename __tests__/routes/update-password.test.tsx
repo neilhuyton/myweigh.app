@@ -1,66 +1,27 @@
-// __tests__/routes/update-password.test.tsx
-
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "../utils/test-helpers";
 import { supabase } from "@/lib/supabase";
-import { AuthError, type Session, type User } from "@supabase/supabase-js";
+import { AuthError } from "@supabase/supabase-js";
 import { suppressActWarnings } from "../../__tests__/act-suppress";
 
 suppressActWarnings();
 
 vi.mock("@/lib/supabase", () => {
+  const mockAuth = {
+    resetPasswordForEmail: vi.fn(),
+    getSession: vi.fn(),
+    onAuthStateChange: vi.fn(() => ({
+      data: { subscription: { unsubscribe: vi.fn() } },
+    })),
+  };
+
   return {
     supabase: {
-      auth: {
-        getSession: vi.fn(),
-        onAuthStateChange: vi.fn(),
-        updateUser: vi.fn(),
-        signOut: vi.fn(),
-      },
+      auth: mockAuth,
     },
   };
-});
-
-const mockUser: User = {
-  id: "test-user-123",
-  app_metadata: {},
-  user_metadata: {},
-  aud: "authenticated",
-  created_at: "2025-01-01T00:00:00.000Z",
-  role: "authenticated",
-  email_confirmed_at: "2025-01-01T00:00:00.000Z",
-  phone_confirmed_at: undefined,
-  last_sign_in_at: "2025-01-01T00:00:00.000Z",
-  confirmed_at: "2025-01-01T00:00:00.000Z",
-  recovery_sent_at: undefined,
-  email_change_sent_at: undefined,
-  new_email: undefined,
-  new_phone: undefined,
-  invited_at: undefined,
-  action_link: undefined,
-  email: "test@example.com",
-  phone: undefined,
-  confirmation_sent_at: undefined,
-  factors: undefined,
-  identities: [],
-  updated_at: "2025-01-01T00:00:00.000Z",
-};
-
-const mockSession: Session = {
-  access_token: "mock-access-token",
-  refresh_token: "mock-refresh-token",
-  expires_in: 3600,
-  expires_at: Math.floor(Date.now() / 1000) + 3600,
-  token_type: "bearer",
-  user: mockUser,
-};
-
-const mockSubscription = () => ({
-  id: Symbol("mock-subscription"),
-  callback: vi.fn(),
-  unsubscribe: vi.fn(),
 });
 
 describe("Update Password Page (/update-password)", () => {
@@ -68,194 +29,187 @@ describe("Update Password Page (/update-password)", () => {
     vi.clearAllMocks();
 
     vi.mocked(supabase.auth.getSession).mockResolvedValue({
-      data: { session: mockSession },
+      data: { session: null },
       error: null,
     });
 
-    vi.mocked(supabase.auth.onAuthStateChange).mockImplementation(
-      (callback) => {
-        supabase.auth.getSession().then((res) => {
-          const session = res.data.session ?? null;
-          queueMicrotask(() => callback("INITIAL_SESSION", session));
-        });
-        return { data: { subscription: mockSubscription() } };
-      },
-    );
-
-    vi.mocked(supabase.auth.updateUser).mockResolvedValue({
-      data: { user: mockUser },
+    vi.mocked(supabase.auth.resetPasswordForEmail).mockResolvedValue({
+      data: {},
       error: null,
     });
-
-    vi.mocked(supabase.auth.signOut).mockResolvedValue({ error: null });
   });
 
-  function renderUpdatePasswordPage(hash = "") {
-    const initialEntries = hash
-      ? [`/update-password#${hash}`]
-      : ["/update-password"];
-    return renderWithProviders({ initialEntries });
+  function renderUpdatePasswordPage() {
+    return renderWithProviders({ initialEntries: ["/update-password"] });
   }
 
-  it("renders error message when no valid session is found", async () => {
-    vi.mocked(supabase.auth.getSession).mockResolvedValue({
-      data: { session: null },
-      error: null,
-    });
+  it("renders the reset request form", async () => {
     renderUpdatePasswordPage();
-    await waitFor(
-      () => {
-        expect(
-          screen.getByText(
-            /Invalid or expired reset link\. Please request a new one\./i,
-          ),
-        ).toBeInTheDocument();
-      },
-      { timeout: 2000 },
-    );
-    expect(screen.queryByLabelText(/New Password/i)).not.toBeInTheDocument();
-  });
 
-  it("shows generic error message even with error_description in hash", async () => {
-    vi.mocked(supabase.auth.getSession).mockResolvedValue({
-      data: { session: null },
-      error: null,
-    });
-    renderUpdatePasswordPage("error_description=Token%20has%20expired");
-    await waitFor(
-      () => {
-        expect(
-          screen.getByText(
-            "Invalid or expired reset link. Please request a new one.",
-          ),
-        ).toBeInTheDocument();
-      },
-      { timeout: 2000 },
-    );
-  });
-
-  it("shows form when valid session is present", async () => {
-    renderUpdatePasswordPage();
-    await waitFor(
-      () => {
-        expect(screen.getByText("Set New Password")).toBeInTheDocument();
-        expect(screen.getByLabelText(/New Password/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/Confirm Password/i)).toBeInTheDocument();
-      },
-      { timeout: 1500 },
-    );
-  });
-
-  it("disables submit until passwords match and are long enough", async () => {
-    const user = userEvent.setup();
-    renderUpdatePasswordPage();
-    await screen.findByLabelText(/New Password/i, {}, { timeout: 2000 });
-    const submit = screen.getByRole("button", { name: /Update Password/i });
-    const pwd = screen.getByLabelText(/New Password/i);
-    const confirm = screen.getByLabelText(/Confirm Password/i);
-    expect(submit).toBeDisabled();
-    await user.type(pwd, "short");
-    expect(submit).toBeDisabled();
-    await user.clear(pwd);
-    await user.type(pwd, "longenough123456");
-    expect(submit).toBeDisabled();
-    await user.type(confirm, "wrong");
-    expect(submit).toBeDisabled();
-    await user.clear(confirm);
-    await user.type(confirm, "longenough123456");
-    await waitFor(() => expect(submit).not.toBeDisabled(), { timeout: 1500 });
-  });
-
-  it("shows validation messages for short password and mismatch", async () => {
-    const user = userEvent.setup();
-    renderUpdatePasswordPage();
-    const pwd = await screen.findByLabelText(/New Password/i);
-    const confirm = screen.getByLabelText(/Confirm Password/i);
-    await user.type(pwd, "abc123");
-    await user.tab();
     await waitFor(() => {
-      expect(screen.getByText(/at least 8 characters/i)).toBeInTheDocument();
-    });
-    await user.type(confirm, "different");
-    await user.tab();
-    await waitFor(() => {
-      expect(screen.getByText(/do not match/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "Reset your password" }),
+      ).toBeInTheDocument();
+      expect(screen.getByLabelText("Email")).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Send Reset Link" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/Enter your email to receive a password reset link/),
+      ).toBeInTheDocument();
     });
   });
 
-  it("shows loading, success message and redirects on successful update", async () => {
-    const user = userEvent.setup();
-    const { router } = renderUpdatePasswordPage();
-    await screen.findByLabelText(/New Password/i, {}, { timeout: 2000 });
-
-    await user.type(screen.getByLabelText(/New Password/i), "securepass123456");
-    await user.type(
-      screen.getByLabelText(/Confirm Password/i),
-      "securepass123456",
-    );
-
-    vi.mocked(supabase.auth.updateUser).mockImplementationOnce(async () => {
-      return { data: { user: mockUser }, error: null };
-    });
-
-    vi.mocked(supabase.auth.signOut).mockImplementationOnce(async () => {
-      vi.mocked(supabase.auth.getSession).mockResolvedValue({
-        data: { session: null },
-        error: null,
-      });
-      vi.mocked(supabase.auth.onAuthStateChange).mockImplementationOnce(
-        (cb) => {
-          queueMicrotask(() => cb("SIGNED_OUT", null));
-          return { data: { subscription: mockSubscription() } };
-        },
-      );
-      return { error: null };
-    });
-
-    await user.click(screen.getByRole("button", { name: /Update Password/i }));
-
-    await waitFor(
-      () => {
-        expect(
-          screen.getByText(
-            /Password updated successfully! Redirecting to login.../i,
-          ),
-        ).toBeInTheDocument();
-      },
-      { timeout: 3000 },
-    );
-
-    await new Promise((resolve) => setTimeout(resolve, 4000));
-
-    await waitFor(
-      () => {
-        expect(router.state.location.pathname).toBe("/login");
-      },
-      { timeout: 2000 },
-    );
-  });
-
-  it("shows error message when update fails", async () => {
+  it("disables submit button until valid email is entered", async () => {
     const user = userEvent.setup();
     renderUpdatePasswordPage();
-    await screen.findByLabelText(/New Password/i, {}, { timeout: 2000 });
 
-    vi.mocked(supabase.auth.updateUser).mockResolvedValueOnce({
-      data: { user: null },
-      error: new AuthError("Password is too common", 400),
+    const emailInput = await screen.findByLabelText("Email");
+    const submit = screen.getByRole("button", { name: "Send Reset Link" });
+
+    expect(submit).toBeDisabled();
+
+    await user.type(emailInput, "invalid");
+
+    expect(submit).toBeDisabled();
+
+    await user.clear(emailInput);
+    await user.type(emailInput, "valid@example.com");
+
+    await waitFor(() => {
+      expect(submit).not.toBeDisabled();
+    });
+  });
+
+  it("shows validation error for invalid email", async () => {
+    const user = userEvent.setup({ delay: null });
+    renderUpdatePasswordPage();
+
+    const emailInput = await screen.findByLabelText("Email");
+
+    await user.type(emailInput, "invalid");
+
+    await user.click(screen.getByRole("button", { name: "Send Reset Link" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Please enter a valid email address"),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("calls supabase resetPasswordForEmail and shows success message on success", async () => {
+    const user = userEvent.setup();
+    renderUpdatePasswordPage();
+
+    await screen.findByLabelText("Email");
+
+    await user.type(screen.getByLabelText("Email"), "user@example.com");
+
+    await user.click(screen.getByRole("button", { name: "Send Reset Link" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Password reset link sent! Check your email (including spam/junk).",
+        ),
+      ).toBeInTheDocument();
     });
 
-    await user.type(screen.getByLabelText(/New Password/i), "password123");
-    await user.type(screen.getByLabelText(/Confirm Password/i), "password123");
-    await user.click(screen.getByRole("button", { name: /Update Password/i }));
-
-    await waitFor(
-      () => {
-        expect(
-          screen.getByText(/Error: Password is too common/i),
-        ).toBeInTheDocument();
+    expect(supabase.auth.resetPasswordForEmail).toHaveBeenCalledWith(
+      "user@example.com",
+      {
+        redirectTo: expect.stringContaining("/update-password"),
       },
-      { timeout: 2000 },
     );
+  });
+
+  it("shows error message when reset fails", async () => {
+    const user = userEvent.setup();
+    renderUpdatePasswordPage();
+
+    await screen.findByLabelText("Email");
+
+    await user.type(screen.getByLabelText("Email"), "test@example.com");
+
+    vi.mocked(supabase.auth.resetPasswordForEmail).mockResolvedValueOnce({
+      data: null,
+      error: new AuthError("Rate limit exceeded", 429, "rate_limit_exceeded"),
+    });
+
+    await user.click(screen.getByRole("button", { name: "Send Reset Link" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Error: Rate limit exceeded"),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("shows loader during submission", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+
+    const user = userEvent.setup();
+    renderUpdatePasswordPage();
+
+    const emailInput = await screen.findByLabelText("Email");
+    await user.type(emailInput, "user@example.com");
+
+    vi.mocked(supabase.auth.resetPasswordForEmail).mockImplementationOnce(
+      () =>
+        new Promise((resolve) =>
+          setTimeout(() => resolve({ data: {}, error: null }), 50),
+        ),
+    );
+
+    await user.click(screen.getByRole("button", { name: "Send Reset Link" }));
+
+    vi.advanceTimersByTime(1);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /Sending…/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen
+          .getByRole("button", { name: /Sending…/i })
+          .querySelector("svg.animate-spin"),
+      ).not.toBeNull();
+    });
+
+    vi.advanceTimersByTime(50);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Password reset link sent! Check your email (including spam/junk).",
+        ),
+      ).toBeInTheDocument();
+    });
+
+    vi.useRealTimers();
+  });
+
+  it("clears message when user types again after error", async () => {
+    const user = userEvent.setup();
+    renderUpdatePasswordPage();
+
+    await screen.findByLabelText("Email");
+
+    vi.mocked(supabase.auth.resetPasswordForEmail).mockResolvedValueOnce({
+      data: null,
+      error: new AuthError("Some error"),
+    });
+
+    await user.type(screen.getByLabelText("Email"), "test@example.com");
+    await user.click(screen.getByRole("button", { name: "Send Reset Link" }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Some error/)).toBeInTheDocument();
+    });
+
+    await user.type(screen.getByLabelText("Email"), "x");
+
+    expect(screen.queryByText(/Some error/)).not.toBeInTheDocument();
   });
 });

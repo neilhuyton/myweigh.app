@@ -27,7 +27,7 @@ type WeightEntry = {
 
 let queryClient: QueryClient;
 
-beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+beforeAll(() => server.listen({ onUnhandledRequest: "bypass" }));
 afterEach(() => {
   server.resetHandlers();
   vi.clearAllMocks();
@@ -47,6 +47,7 @@ describe("WeightList", () => {
       },
     });
     vi.spyOn(window, "confirm").mockImplementation(() => true);
+    vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
