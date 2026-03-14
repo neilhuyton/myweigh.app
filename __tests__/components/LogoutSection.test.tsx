@@ -1,5 +1,3 @@
-// __tests__/app/components/LogoutSection.test.tsx
-
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import LogoutSection from "@/components/LogoutSection";

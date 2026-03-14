@@ -30,7 +30,10 @@ function GoalList() {
   if (isLoading) {
     return (
       <div className="py-4">
-        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+        <Loader2
+          data-testid="loading-spinner"
+          className="mr-2 h-5 w-5 animate-spin"
+        />
       </div>
     );
   }
