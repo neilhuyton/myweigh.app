@@ -1,11 +1,12 @@
-// __tests__/routes/reset-password.test.tsx
-
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "../utils/test-helpers";
 import { supabase } from "@/lib/supabase";
 import { AuthError } from "@supabase/supabase-js";
+import { suppressActWarnings } from "../../__tests__/act-suppress";
+
+suppressActWarnings();
 
 vi.mock("@/lib/supabase", () => {
   return {
@@ -122,29 +123,36 @@ describe("Reset Password Page (/reset-password)", () => {
     await screen.findByText(/Error: Email not found/i);
   });
 
-  it("shows loading state during submission", async () => {
-    vi.mocked(supabase.auth.resetPasswordForEmail).mockImplementationOnce(
-      async () => {
-        await new Promise((r) => setTimeout(r, 100));
-        return { data: {}, error: null };
-      },
-    );
+it("shows loading state during submission", async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
 
-    const user = userEvent.setup();
-    renderResetPasswordPage();
+  const user = userEvent.setup();
+  renderResetPasswordPage();
 
-    const emailInput = await screen.findByLabelText("Email");
-    const submit = screen.getByRole("button", { name: /Send Reset Link/i });
+  await user.type(await screen.findByLabelText("Email"), "test@example.com");
 
-    await user.type(emailInput, "test@example.com");
-    await user.click(submit);
+  vi.mocked(supabase.auth.resetPasswordForEmail).mockImplementationOnce(
+    () => new Promise((resolve) => setTimeout(() => resolve({ data: {}, error: null }), 50))
+  );
 
-    await waitFor(() => {
-      expect(submit).toHaveTextContent("Sending…");
-      expect(submit).toBeDisabled();
-    });
+  await user.click(screen.getByRole("button", { name: /Send Reset Link/i }));
+
+  vi.advanceTimersByTime(1);
+
+  await waitFor(() => {
+    const loadingButton = screen.getByRole("button", { name: /Sending…/i });
+    expect(loadingButton).toHaveTextContent("Sending…");
+    expect(loadingButton).toBeDisabled();
   });
 
+  vi.advanceTimersByTime(50);
+
+  await waitFor(() => {
+    expect(screen.getByText(/Password reset link sent!/i)).toBeInTheDocument();
+  });
+
+  vi.useRealTimers();
+});
   it('navigates back to login when "Back to login" is clicked', async () => {
     const user = userEvent.setup();
     const { router } = renderResetPasswordPage();

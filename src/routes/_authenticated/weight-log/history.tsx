@@ -27,7 +27,6 @@ function WeightHistoryPage() {
       )}
     >
       <div className="relative flex h-full flex-col">
-        {/* Fixed header area */}
         <header className="shrink-0 px-6 pt-20 pb-6 sm:px-8">
           <Button
             variant="outline"
@@ -46,7 +45,6 @@ function WeightHistoryPage() {
           </div>
         </header>
 
-        {/* Scrollable main content */}
         <div className="flex-1 overflow-y-auto px-6 pb-10 sm:px-8">
           <div className="mx-auto w-full max-w-3xl">
             <WeightList />

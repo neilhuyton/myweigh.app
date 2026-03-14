@@ -1,5 +1,3 @@
-// __tests__/routes/register.test.tsx
-
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
