@@ -219,7 +219,9 @@ describe("Authenticated Layout Route (/_authenticated)", () => {
     render(<RouterProvider router={router} />);
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /profile/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /profile/i }),
+      ).toBeInTheDocument();
     });
   });
 });
