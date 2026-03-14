@@ -1,5 +1,3 @@
-// __tests__/Logo.test.tsx
-
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { Logo } from "@/components/Logo";

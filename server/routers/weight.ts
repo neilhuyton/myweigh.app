@@ -15,7 +15,6 @@ export const weightRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-
       const weight = await ctx.prisma.weightMeasurement.create({
         data: {
           userId: ctx.userId,
@@ -63,9 +62,6 @@ export const weightRouter = router({
           },
         });
 
-        // Optional: re-check goal if weight changed significantly
-        // (you can copy logic from create if desired)
-
         return updated;
       } catch (err) {
         if (
@@ -93,6 +89,19 @@ export const weightRouter = router({
         weightKg: true,
         note: true,
         createdAt: true,
+      },
+    });
+  }),
+
+  getLatestWeight: protectedProcedure.query(async ({ ctx }) => {
+    return ctx.prisma.weightMeasurement.findFirst({
+      where: { userId: ctx.userId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        weightKg: true,
+        createdAt: true,
+        note: true,
       },
     });
   }),

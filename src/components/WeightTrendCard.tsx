@@ -17,7 +17,6 @@ export default function WeightTrendCard() {
   const {
     data: weightsData,
     isError,
-    error,
   } = useQuery(
     trpc.weight.getWeights.queryOptions(undefined, {
       staleTime: 1000 * 60 * 5,
@@ -92,7 +91,7 @@ export default function WeightTrendCard() {
   if (isError) {
     return (
       <div className="text-center text-destructive py-8">
-        {error?.message || "Failed to load weight data"}
+        Failed to load weight data
       </div>
     );
   }

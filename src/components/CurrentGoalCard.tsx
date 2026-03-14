@@ -2,11 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/trpc";
 import EditableNumberCard from "@/components/EditableNumberCard";
-import {
-  getCachedCurrentGoal,
-  saveCurrentGoal,
-  clearCurrentGoalCache,
-} from "@/utils/goalCache";
+import { formatDate } from "@/utils/date";
 
 export default function CurrentGoalCard() {
   const queryClient = useQueryClient();
@@ -17,10 +13,7 @@ export default function CurrentGoalCard() {
     currentGoalQuery.queryOptions(undefined, {
       staleTime: 15000,
       gcTime: 300000,
-      initialData: () => getCachedCurrentGoal() ?? undefined,
-      initialDataUpdatedAt: () =>
-        getCachedCurrentGoal() ? Date.now() : undefined,
-    }),
+    })
   );
 
   const [isEditing, setIsEditing] = useState(false);
@@ -31,11 +24,8 @@ export default function CurrentGoalCard() {
   useEffect(() => {
     if (currentGoal) {
       setEditValue(currentGoal.goalWeightKg.toString());
-      saveCurrentGoal(currentGoal);
-    } else if (!isLoading) {
-      clearCurrentGoalCache();
     }
-  }, [currentGoal, isLoading]);
+  }, [currentGoal]);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -69,26 +59,16 @@ export default function CurrentGoalCard() {
 
         return { previous };
       },
-      onSuccess: (newGoal) => {
-        saveCurrentGoal(newGoal);
-      },
       onError: (_, __, context) => {
         if (context?.previous) {
-          queryClient.setQueryData(
-            currentGoalQuery.queryKey(),
-            context.previous,
-          );
+          queryClient.setQueryData(currentGoalQuery.queryKey(), context.previous);
         }
       },
       onSettled: () => {
-        queryClient.invalidateQueries({
-          queryKey: currentGoalQuery.queryKey(),
-        });
-        queryClient.invalidateQueries({
-          queryKey: trpc.weight.getGoals.queryKey(),
-        });
+        queryClient.invalidateQueries({ queryKey: currentGoalQuery.queryKey() });
+        queryClient.invalidateQueries({ queryKey: trpc.weight.getGoals.queryKey() });
       },
-    }),
+    })
   );
 
   const updateGoalMutation = useMutation(
@@ -107,36 +87,29 @@ export default function CurrentGoalCard() {
 
         return { previous };
       },
-      onSuccess: (updatedGoal) => {
-        saveCurrentGoal(updatedGoal);
-      },
       onError: (_, __, context) => {
         if (context?.previous) {
-          queryClient.setQueryData(
-            currentGoalQuery.queryKey(),
-            context.previous,
-          );
+          queryClient.setQueryData(currentGoalQuery.queryKey(), context.previous);
         }
       },
       onSettled: () => {
-        queryClient.invalidateQueries({
-          queryKey: currentGoalQuery.queryKey(),
-        });
-        queryClient.invalidateQueries({
-          queryKey: trpc.weight.getGoals.queryKey(),
-        });
+        queryClient.invalidateQueries({ queryKey: currentGoalQuery.queryKey() });
+        queryClient.invalidateQueries({ queryKey: trpc.weight.getGoals.queryKey() });
       },
-    }),
+    })
   );
 
-  const isPending =
-    createGoalMutation.isPending || updateGoalMutation.isPending;
+  const isPending = createGoalMutation.isPending || updateGoalMutation.isPending;
 
   const displayedWeight = isPending
-    ? ((Number(editValue) || currentGoal?.goalWeightKg) ?? null)
-    : (currentGoal?.goalWeightKg ?? null);
+    ? (Number(editValue) || currentGoal?.goalWeightKg) ?? null
+    : currentGoal?.goalWeightKg ?? null;
 
-  const statusText = isPending ? "Saving goal..." : "";
+  const statusText = (() => {
+    if (isPending) return "Saving goal...";
+    if (!currentGoal?.goalSetAt) return "";
+    return formatDate(currentGoal.goalSetAt);
+  })();
 
   const saveEdit = () => {
     const newWeight = getValidatedWeight();

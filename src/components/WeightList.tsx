@@ -2,11 +2,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/trpc";
 import { formatDate } from "@/utils/date";
 import {
-  getCachedLatestWeight,
-  saveLatestWeight,
-  clearLatestWeightCache,
-} from "@/utils/weightCache";
-import {
   Table,
   TableBody,
   TableCell,
@@ -17,7 +12,7 @@ import {
 import { Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-function useWeightListLogic() {
+export default function WeightList() {
   const queryClient = useQueryClient();
   const weightsQueryKey = trpc.weight.getWeights.queryKey();
 
@@ -25,7 +20,6 @@ function useWeightListLogic() {
     data: weightsRaw,
     isLoading,
     isError,
-    error,
     refetch,
   } = useQuery(
     trpc.weight.getWeights.queryOptions(undefined, {
@@ -33,36 +27,12 @@ function useWeightListLogic() {
     }),
   );
 
-  if (weightsRaw && weightsRaw.length > 0) {
-    const sorted = [...weightsRaw].sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
-    const latest = sorted[0];
-    saveLatestWeight({
-      weightKg: latest.weightKg,
-      createdAt: latest.createdAt,
-    });
-  }
-
   const weights = weightsRaw
     ? [...weightsRaw].sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       )
     : undefined;
-
-  const cachedLatest = getCachedLatestWeight();
-
-  const latestWeight =
-    weights?.[0] ??
-    (cachedLatest
-      ? {
-          id: "cached",
-          weightKg: cachedLatest.weightKg,
-          createdAt: cachedLatest.createdAt,
-        }
-      : undefined);
 
   const deleteMutation = useMutation(
     trpc.weight.delete.mutationOptions({
@@ -78,31 +48,9 @@ function useWeightListLogic() {
         return { previousWeights: previous };
       },
 
-      onSuccess: (_, variables) => {
+      onSuccess: () => {
         refetch();
         queryClient.invalidateQueries({ queryKey: weightsQueryKey });
-
-        const currentData = queryClient.getQueryData(weightsQueryKey);
-        if (currentData) {
-          const remaining = currentData.filter(
-            (w) => w.id !== variables.weightId,
-          );
-          if (remaining.length > 0) {
-            const newLatest = remaining.reduce((a, b) =>
-              new Date(b.createdAt).getTime() > new Date(a.createdAt).getTime()
-                ? b
-                : a,
-            );
-            saveLatestWeight({
-              weightKg: newLatest.weightKg,
-              createdAt: newLatest.createdAt,
-            });
-          } else {
-            clearLatestWeightCache();
-          }
-        } else {
-          clearLatestWeightCache();
-        }
       },
 
       onError: (_, __, context) => {
@@ -122,34 +70,24 @@ function useWeightListLogic() {
     }
   };
 
-  return {
-    weights,
-    latestWeight,
-    isLoading,
-    isError,
-    error,
-    formatDate,
-    handleDelete,
-    isDeleting: deleteMutation.isPending,
-  };
-}
-
-export default function WeightList() {
-  const {
-    weights,
-    isLoading,
-    isError,
-    error,
-    formatDate,
-    handleDelete,
-    isDeleting,
-  } = useWeightListLogic();
+  const isDeleting = deleteMutation.isPending;
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-12">
+      <div data-testid="loading-spinner" className="flex justify-center py-12">
         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <p
+        data-testid="error-message"
+        className="mt-6 text-center text-sm text-destructive"
+      >
+        Failed to load weight history
+      </p>
     );
   }
 
@@ -203,12 +141,6 @@ export default function WeightList() {
           ))}
         </TableBody>
       </Table>
-
-      {isError && (
-        <p className="mt-6 text-center text-sm text-destructive">
-          {error?.message || "Failed to load weight history"}
-        </p>
-      )}
     </>
   );
 }

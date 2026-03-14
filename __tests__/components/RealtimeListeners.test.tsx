@@ -1,5 +1,3 @@
-// __tests__/app/components/RealtimeListeners.test.tsx
-
 import { render } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";

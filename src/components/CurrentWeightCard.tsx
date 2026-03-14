@@ -1,27 +1,29 @@
-import { useState, useRef, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRef, useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/trpc";
+import EditableNumberCard from "@/components/EditableNumberCard";
 import { formatDate } from "@/utils/date";
-import { saveLatestWeight } from "@/utils/weightCache";
-import { useLatestWeight } from "@/hooks/useLatestWeight";
-import EditableNumberCard from "./EditableNumberCard";
 
-function useLatestWeightEditor() {
-  const { latestWeight, isFromCache, isServerLoaded } = useLatestWeight();
-
+export default function CurrentWeightCard() {
   const queryClient = useQueryClient();
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState<string>(
-    latestWeight?.weightKg?.toString() ?? "",
+  const latestWeightQuery = trpc.weight.getLatestWeight;
+
+  const { data: latestWeight, isLoading } = useQuery(
+    latestWeightQuery.queryOptions(undefined, {
+      staleTime: 30000,
+      gcTime: 300000,
+    }),
   );
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState("");
+
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (latestWeight) {
       setEditValue(latestWeight.weightKg.toString());
-    } else {
-      setEditValue("");
     }
   }, [latestWeight]);
 
@@ -32,97 +34,73 @@ function useLatestWeightEditor() {
     }
   }, [isEditing]);
 
-  const startEditing = () => setIsEditing(true);
-
-  const cancelEdit = () => {
-    setEditValue(latestWeight?.weightKg?.toString() ?? "");
-    setIsEditing(false);
-  };
-
   const getValidatedWeight = (): number | null => {
     const trimmed = editValue.trim();
     if (!trimmed) return null;
-
     const val = parseFloat(trimmed);
     if (isNaN(val) || val <= 0) return null;
     if (latestWeight && val === latestWeight.weightKg) return null;
-
     return val;
   };
 
-  const weightsQueryKey = trpc.weight.getWeights.queryKey();
-
-  const mutation = useMutation(
+  const createMutation = useMutation(
     trpc.weight.create.mutationOptions({
-      onMutate: async ({ weightKg, note }) => {
-        await queryClient.cancelQueries({ queryKey: weightsQueryKey });
+      onMutate: async ({ weightKg, note = "" }) => {
+        const queryKey = latestWeightQuery.queryKey();
+        await queryClient.cancelQueries({ queryKey });
+        const previous = queryClient.getQueryData(queryKey);
 
-        const previousWeights = queryClient.getQueryData(weightsQueryKey) ?? [];
-
-        const tempEntry = {
+        const optimistic = {
           id: `temp-${Date.now()}`,
           weightKg,
           createdAt: new Date().toISOString(),
-          note: note || null,
+          note,
         };
 
-        const newWeights = [tempEntry, ...previousWeights];
+        queryClient.setQueryData(queryKey, optimistic);
 
-        queryClient.setQueryData(weightsQueryKey, newWeights);
-
-        return { previousWeights };
-      },
-
-      onSuccess: (_, { weightKg }) => {
-        saveLatestWeight({
-          weightKg,
-          createdAt: new Date().toISOString(),
-        });
-
-        queryClient.invalidateQueries({ queryKey: weightsQueryKey });
-        queryClient.invalidateQueries({
-          queryKey: trpc.weight.getCurrentGoal.queryKey(),
-        });
+        return { previous };
       },
 
       onError: (_, __, context) => {
-        if (context?.previousWeights) {
-          queryClient.setQueryData(weightsQueryKey, context.previousWeights);
+        if (context?.previous !== undefined) {
+          queryClient.setQueryData(
+            latestWeightQuery.queryKey(),
+            context.previous,
+          );
         }
+      },
+
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: latestWeightQuery.queryKey(),
+        });
       },
     }),
   );
 
-  const isPending = mutation.isPending;
+  const isPending = createMutation.isPending;
 
   const displayedWeight = isPending
-    ? parseFloat(editValue) || latestWeight?.weightKg
+    ? ((Number(editValue) || latestWeight?.weightKg) ?? null)
     : (latestWeight?.weightKg ?? null);
 
-  const statusText = (() => {
-    if (isPending) return "Saving new weight...";
-
-    if (!latestWeight) return "";
-
-    const parts = [formatDate(latestWeight.createdAt)];
-    if (isFromCache) parts.push(" • cached");
-    if (isServerLoaded) parts.push(" • synced");
-    return parts.join("");
-  })();
+  const statusText = isPending
+    ? "Saving new weight..."
+    : latestWeight?.createdAt
+      ? formatDate(latestWeight.createdAt)
+      : "";
 
   const saveEdit = () => {
     const newWeight = getValidatedWeight();
     if (newWeight === null) {
-      cancelEdit();
+      setIsEditing(false);
+      setEditValue(latestWeight?.weightKg?.toString() ?? "");
       return;
     }
 
     setIsEditing(false);
-
-    mutation.mutate({
-      weightKg: newWeight,
-      note: "",
-    });
+    createMutation.mutate({ weightKg: newWeight, note: "" });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -130,53 +108,30 @@ function useLatestWeightEditor() {
       e.preventDefault();
       saveEdit();
     } else if (e.key === "Escape") {
-      cancelEdit();
+      setIsEditing(false);
+      setEditValue(latestWeight?.weightKg?.toString() ?? "");
     }
   };
 
-  return {
-    isEditing,
-    isPending,
-    displayedWeight,
-    editValue,
-    inputRef,
-    setEditValue,
-    startEditing,
-    cancelEdit,
-    saveEdit,
-    handleKeyDown,
-    hasWeight: displayedWeight !== null,
-    statusText,
-  };
-}
-
-export default function CurrentWeightCard() {
-  const {
-    isEditing,
-    isPending,
-    displayedWeight,
-    editValue,
-    inputRef,
-    statusText,
-    startEditing,
-    cancelEdit,
-    saveEdit,
-    setEditValue,
-    handleKeyDown,
-  } = useLatestWeightEditor();
+  if (isLoading && !latestWeight) {
+    return <div className="h-40 animate-pulse bg-muted rounded-lg" />;
+  }
 
   return (
     <EditableNumberCard
       title="Current Weight"
       ariaLabel="Record or update your current weight"
-      value={displayedWeight ?? null}
+      value={displayedWeight}
       unit="kg"
       statusText={statusText}
       isEditing={isEditing}
       isPending={isPending}
       editValue={editValue}
-      onStartEditing={startEditing}
-      onCancel={cancelEdit}
+      onStartEditing={() => setIsEditing(true)}
+      onCancel={() => {
+        setIsEditing(false);
+        setEditValue(latestWeight?.weightKg?.toString() ?? "");
+      }}
       onSave={saveEdit}
       onChange={setEditValue}
       onKeyDown={handleKeyDown}
