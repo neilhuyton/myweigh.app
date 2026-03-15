@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { trpc } from "@/trpc";
+import { getTRPCClient } from "@/trpc";
 import { formatDate } from "@/utils/date";
 import {
   Table,
@@ -12,20 +12,27 @@ import {
 import { Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+type WeightMeasurement = {
+  id: string;
+  weightKg: number;
+  createdAt: string;
+  note?: string | null;
+};
+
 export default function WeightList() {
   const queryClient = useQueryClient();
-  const weightsQueryKey = trpc.weight.getWeights.queryKey();
+  const weightsQueryKey = ["weight.getWeights"] as const;
 
   const {
     data: weightsRaw,
     isLoading,
     isError,
     refetch,
-  } = useQuery(
-    trpc.weight.getWeights.queryOptions(undefined, {
-      staleTime: 1000 * 15,
-    }),
-  );
+  } = useQuery<WeightMeasurement[]>({
+    queryKey: weightsQueryKey,
+    queryFn: () => getTRPCClient().weight.getWeights.query(),
+    staleTime: 1000 * 15,
+  });
 
   const weights = weightsRaw
     ? [...weightsRaw].sort(
@@ -34,33 +41,32 @@ export default function WeightList() {
       )
     : undefined;
 
-  const deleteMutation = useMutation(
-    trpc.weight.delete.mutationOptions({
-      onMutate: async (variables: { weightId: string }) => {
-        await queryClient.cancelQueries({ queryKey: weightsQueryKey });
-        const previous = queryClient.getQueryData(weightsQueryKey);
-        if (previous) {
-          queryClient.setQueryData(
-            weightsQueryKey,
-            previous.filter((w) => w.id !== variables.weightId),
-          );
-        }
-        return { previousWeights: previous };
-      },
-
-      onSuccess: () => {
-        refetch();
-        queryClient.invalidateQueries({ queryKey: weightsQueryKey });
-      },
-
-      onError: (_, __, context) => {
-        if (context?.previousWeights) {
-          queryClient.setQueryData(weightsQueryKey, context.previousWeights);
-        }
-        console.error("Delete failed:");
-      },
-    }),
-  );
+  const deleteMutation = useMutation({
+    mutationFn: (input: { weightId: string }) =>
+      getTRPCClient().weight.delete.mutate(input),
+    onMutate: async (variables: { weightId: string }) => {
+      await queryClient.cancelQueries({ queryKey: weightsQueryKey });
+      const previous =
+        queryClient.getQueryData<WeightMeasurement[]>(weightsQueryKey);
+      if (previous) {
+        queryClient.setQueryData(
+          weightsQueryKey,
+          previous.filter((w) => w.id !== variables.weightId),
+        );
+      }
+      return { previousWeights: previous };
+    },
+    onSuccess: () => {
+      refetch();
+      queryClient.invalidateQueries({ queryKey: weightsQueryKey });
+    },
+    onError: (_, __, context) => {
+      if (context?.previousWeights) {
+        queryClient.setQueryData(weightsQueryKey, context.previousWeights);
+      }
+      console.error("Delete failed:");
+    },
+  });
 
   const handleDelete = (weightId: string) => {
     if (

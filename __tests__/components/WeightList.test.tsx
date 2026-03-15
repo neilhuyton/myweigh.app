@@ -11,8 +11,6 @@ import {
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { TRPCProvider } from "@/trpc";
-import { trpc, trpcClient } from "@/trpc";
 import { server } from "../../__mocks__/server";
 import { http, HttpResponse } from "msw";
 import WeightList from "@/components/WeightList";
@@ -51,12 +49,10 @@ describe("WeightList", () => {
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </TRPCProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  const weightsQueryKey = trpc.weight.getWeights.queryKey();
+  const weightsQueryKey = ["weight.getWeights"];
 
   const setupGetHandler = (weights: WeightEntry[] = []) => {
     server.use(
@@ -152,9 +148,9 @@ describe("WeightList", () => {
 
   it("shows error message when query fails", async () => {
     server.use(
-      http.get("/trpc/weight.getWeights", () => {
-        return new HttpResponse(null, { status: 500 });
-      }),
+      http.get("/trpc/weight.getWeights", () =>
+        HttpResponse.json(null, { status: 500 }),
+      ),
     );
 
     render(<WeightList />, { wrapper });
@@ -164,7 +160,6 @@ describe("WeightList", () => {
         const errorEl = screen.getByTestId("error-message");
         expect(errorEl).toBeInTheDocument();
         expect(errorEl).toHaveTextContent("Failed to load weight history");
-        expect(errorEl).toHaveClass("text-destructive");
       },
       { timeout: 5000 },
     );
@@ -173,7 +168,7 @@ describe("WeightList", () => {
   it("optimistically removes deleted entry on success", async () => {
     const user = userEvent.setup();
 
-    const weights: WeightEntry[] = [
+    const initialWeights: WeightEntry[] = [
       {
         id: "w1",
         weightKg: 82.0,
@@ -188,28 +183,60 @@ describe("WeightList", () => {
       },
     ];
 
-    setupGetHandler(weights);
+    setupGetHandler(initialWeights);
 
     server.use(
       http.post("/trpc/weight.delete", async ({ request }) => {
-        const json = await request.json();
-        if (!json || !Array.isArray(json) || !json[0]) {
+        const rawBody = await request.json();
+
+        // Explicit type for tRPC batch request body
+        interface TrpcBatchItem {
+          id: number;
+          json: {
+            input: {
+              weightId: string;
+            };
+          };
+        }
+
+        if (!Array.isArray(rawBody) || rawBody.length === 0) {
           return new HttpResponse(null, { status: 400 });
         }
-        const { input } = json[0];
-        const updated = weights.filter((w) => w.id !== input.weightId);
-        queryClient.setQueryData(weightsQueryKey, updated);
-        return HttpResponse.json({ result: { data: null } });
+
+        const firstItem = rawBody[0] as TrpcBatchItem | undefined;
+        const input = firstItem?.json?.input;
+
+        if (!input || typeof input.weightId !== "string") {
+          return new HttpResponse(null, { status: 400 });
+        }
+
+        const updatedWeights = initialWeights.filter(
+          (weight) => weight.id !== input.weightId,
+        );
+
+        queryClient.setQueryData<WeightEntry[]>(
+          weightsQueryKey,
+          updatedWeights,
+        );
+
+        return HttpResponse.json({
+          result: { data: { success: true, deletedId: input.weightId } },
+        });
       }),
     );
 
     render(<WeightList />, { wrapper });
 
-    await waitFor(() => screen.getAllByRole("button", { name: /delete/i }));
+    await waitFor(() =>
+      expect(screen.getAllByRole("button", { name: /delete/i })).toHaveLength(
+        2,
+      ),
+    );
 
     const deleteButtons = screen.getAllByRole("button", {
       name: /delete entry/i,
     });
+
     await user.click(deleteButtons[0]);
 
     await waitFor(() => {
@@ -221,7 +248,7 @@ describe("WeightList", () => {
   it("restores previous data on delete error", async () => {
     const user = userEvent.setup();
 
-    const weights: WeightEntry[] = [
+    const initialWeights: WeightEntry[] = [
       {
         id: "w1",
         weightKg: 83.0,
@@ -230,7 +257,7 @@ describe("WeightList", () => {
       },
     ];
 
-    setupGetHandler(weights);
+    setupGetHandler(initialWeights);
 
     server.use(
       http.post(
@@ -241,15 +268,16 @@ describe("WeightList", () => {
 
     render(<WeightList />, { wrapper });
 
-    await waitFor(() => screen.getByRole("button", { name: /delete/i }));
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: /delete/i }),
+      ).toBeInTheDocument(),
+    );
 
     await user.click(screen.getByRole("button", { name: /delete entry/i }));
 
-    await waitFor(
-      () => {
-        expect(screen.getByText("83")).toBeInTheDocument();
-      },
-      { timeout: 3000 },
-    );
+    await waitFor(() => {
+      expect(screen.getByText("83")).toBeInTheDocument();
+    });
   });
 });

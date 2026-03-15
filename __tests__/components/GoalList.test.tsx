@@ -10,8 +10,6 @@ import {
 } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { TRPCProvider } from "@/trpc";
-import { trpc, trpcClient } from "@/trpc";
 import { server } from "../../__mocks__/server";
 import { http, HttpResponse } from "msw";
 import GoalList from "@/components/GoalList";
@@ -47,12 +45,10 @@ describe("GoalList", () => {
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </TRPCProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  const goalsQueryKey = trpc.weight.getGoals.queryKey();
+  const goalsQueryKey = ["weight.getGoals"];
 
   const setupGetHandler = (goals: Goal[] = []) => {
     server.use(
@@ -149,12 +145,14 @@ describe("GoalList", () => {
 
   it("shows error message when query fails", async () => {
     server.use(
-      http.get("/trpc/weight.getGoals", () => {
-        return new HttpResponse(null, {
-          status: 500,
-          statusText: "Internal Server Error",
-        });
-      }),
+      http.get(
+        "/trpc/weight.getGoals",
+        () =>
+          new HttpResponse(null, {
+            status: 500,
+            statusText: "Internal Server Error",
+          }),
+      ),
     );
 
     render(<GoalList />, { wrapper });

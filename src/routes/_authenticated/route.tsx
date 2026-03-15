@@ -1,4 +1,9 @@
-import { createFileRoute, redirect, Outlet } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  redirect,
+  Outlet,
+  useNavigate,
+} from "@tanstack/react-router";
 import { useAuthStore } from "@/store/authStore";
 import { ProfileIcon } from "@steel-cut/steel-lib";
 import { ThemeToggle } from "@steel-cut/steel-lib";
@@ -8,6 +13,7 @@ import { useEffect } from "react";
 import { Suspense } from "react";
 
 const AuthenticatedLayout = () => {
+  const navigate = useNavigate();
   const { initialize, loading, user } = useAuthStore();
 
   useEffect(() => {
@@ -23,6 +29,10 @@ const AuthenticatedLayout = () => {
       </div>
     );
   }
+
+  const handleProfileClick = () => {
+    navigate({ to: "/profile" });
+  };
 
   return (
     <Suspense
@@ -41,7 +51,7 @@ const AuthenticatedLayout = () => {
           <div className="flex items-center gap-3 sm:gap-4">
             <ThemeToggle />
             <ColorThemeSelector />
-            <ProfileIcon />
+            <ProfileIcon onClick={handleProfileClick} />
           </div>
         </header>
 

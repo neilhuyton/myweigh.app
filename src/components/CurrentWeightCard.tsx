@@ -1,20 +1,18 @@
 import { useRef, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { trpc } from "@/trpc";
+import { getTRPCClient } from "@/trpc";
 import EditableNumberCard from "@/components/EditableNumberCard";
 import { formatDate } from "@/utils/date";
 
 export default function CurrentWeightCard() {
   const queryClient = useQueryClient();
 
-  const latestWeightQuery = trpc.weight.getLatestWeight;
-
-  const { data: latestWeight, isLoading } = useQuery(
-    latestWeightQuery.queryOptions(undefined, {
-      staleTime: 30000,
-      gcTime: 300000,
-    }),
-  );
+  const { data: latestWeight, isLoading } = useQuery({
+    queryKey: ["weight.getLatestWeight"],
+    queryFn: () => getTRPCClient().weight.getLatestWeight.query(),
+    staleTime: 30000,
+    gcTime: 300000,
+  });
 
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
@@ -43,41 +41,34 @@ export default function CurrentWeightCard() {
     return val;
   };
 
-  const createMutation = useMutation(
-    trpc.weight.create.mutationOptions({
-      onMutate: async ({ weightKg, note = "" }) => {
-        const queryKey = latestWeightQuery.queryKey();
-        await queryClient.cancelQueries({ queryKey });
-        const previous = queryClient.getQueryData(queryKey);
+  const createMutation = useMutation({
+    mutationFn: (input: { weightKg: number; note?: string }) =>
+      getTRPCClient().weight.create.mutate(input),
+    onMutate: async ({ weightKg, note = "" }) => {
+      const queryKey = ["weight.getLatestWeight"];
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData(queryKey);
 
-        const optimistic = {
-          id: `temp-${Date.now()}`,
-          weightKg,
-          createdAt: new Date().toISOString(),
-          note,
-        };
+      const optimistic = {
+        id: `temp-${Date.now()}`,
+        weightKg,
+        createdAt: new Date().toISOString(),
+        note,
+      };
 
-        queryClient.setQueryData(queryKey, optimistic);
+      queryClient.setQueryData(queryKey, optimistic);
 
-        return { previous };
-      },
-
-      onError: (_, __, context) => {
-        if (context?.previous !== undefined) {
-          queryClient.setQueryData(
-            latestWeightQuery.queryKey(),
-            context.previous,
-          );
-        }
-      },
-
-      onSettled: () => {
-        queryClient.invalidateQueries({
-          queryKey: latestWeightQuery.queryKey(),
-        });
-      },
-    }),
-  );
+      return { previous };
+    },
+    onError: (_, __, context) => {
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(["weight.getLatestWeight"], context.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["weight.getLatestWeight"] });
+    },
+  });
 
   const isPending = createMutation.isPending;
 
@@ -113,7 +104,7 @@ export default function CurrentWeightCard() {
     }
   };
 
-  if (isLoading && !latestWeight) {
+  if (isLoading && !latestWeight && !isPending) {
     return <div className="h-40 animate-pulse bg-muted rounded-lg" />;
   }
 

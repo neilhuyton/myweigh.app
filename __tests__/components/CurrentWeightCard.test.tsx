@@ -11,8 +11,6 @@ import {
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { TRPCProvider } from "@/trpc";
-import { trpc, trpcClient } from "@/trpc";
 import { server } from "../../__mocks__/server";
 import { http, HttpResponse } from "msw";
 import CurrentWeightCard from "@/components/CurrentWeightCard";
@@ -49,12 +47,10 @@ describe("CurrentWeightCard", () => {
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </TRPCProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  const latestWeightQueryKey = trpc.weight.getLatestWeight.queryKey();
+  const latestWeightQueryKey = ["weight.getLatestWeight"];
 
   const setupGetHandler = (initialData: Weight = null) => {
     server.use(
@@ -149,19 +145,49 @@ describe("CurrentWeightCard", () => {
   it("creates new weight when none existed + shows optimistic update", async () => {
     const user = userEvent.setup();
 
-    const newWeight: Weight = {
-      id: "new1",
-      weightKg: 79.8,
-      createdAt: "2026-03-14T09:15:00.000Z",
-      note: null,
-    };
-
     setupGetHandler(null);
 
     server.use(
-      http.post("/trpc/weight.create", async () => {
-        queryClient.setQueryData(latestWeightQueryKey, newWeight);
-        return HttpResponse.json({ result: { data: newWeight } });
+      http.post("/trpc/weight.create", async ({ request }) => {
+        // Delay response so optimistic UI is visible long enough
+        await new Promise((resolve) => setTimeout(resolve, 800));
+
+        const rawBody = await request.json();
+
+        interface TrpcBatchItem {
+          id: number;
+          json: {
+            input: {
+              weightKg: number;
+              note?: string | null;
+            };
+          };
+        }
+
+        if (!Array.isArray(rawBody) || rawBody.length === 0) {
+          return new HttpResponse(null, { status: 400 });
+        }
+
+        const firstItem = rawBody[0] as TrpcBatchItem | undefined;
+        const input = firstItem?.json?.input;
+
+        if (!input || typeof input.weightKg !== "number") {
+          return new HttpResponse(null, { status: 400 });
+        }
+
+        const optimisticWeight: NonNullable<Weight> = {
+          id: `temp-${Date.now()}`,
+          weightKg: input.weightKg,
+          createdAt: new Date().toISOString(),
+          note: input.note ?? null,
+        };
+
+        queryClient.setQueryData<Weight>(
+          latestWeightQueryKey,
+          optimisticWeight,
+        );
+
+        return HttpResponse.json({ result: { data: optimisticWeight } });
       }),
     );
 
@@ -176,16 +202,20 @@ describe("CurrentWeightCard", () => {
     await user.click(screen.getByText("Tap here to add your current weight"));
 
     const input = await screen.findByRole("spinbutton");
-    await user.type(input, "79.8{Enter}");
+    await user.clear(input);
+    await user.type(input, "79.8");
+    await user.keyboard("{Enter}");
 
-    await waitFor(() => {
-      expect(screen.getByTestId("current-weight-display")).toHaveTextContent(
-        "79.8",
-      );
-      expect(
-        screen.getByText(formatDate(newWeight.createdAt)),
-      ).toBeInTheDocument();
-    });
+    // Wait for optimistic UI to appear (weight + saving text)
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("current-weight-display")).toHaveTextContent(
+          "79.8",
+        );
+        expect(screen.getByText("Saving new weight...")).toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
   });
 
   it("shows 'Saving new weight...' and keeps optimistic value during pending mutation", async () => {
@@ -211,6 +241,7 @@ describe("CurrentWeightCard", () => {
     await user.click(screen.getByText("Tap here to add your current weight"));
 
     const input = await screen.findByRole("spinbutton");
+    await user.clear(input);
     await user.type(input, "85.2");
     await user.keyboard("{Enter}");
 

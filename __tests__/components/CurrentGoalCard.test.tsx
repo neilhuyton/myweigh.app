@@ -11,8 +11,6 @@ import {
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { TRPCProvider } from "@/trpc";
-import { trpc, trpcClient } from "@/trpc";
 import { server } from "../../__mocks__/server";
 import { http, HttpResponse } from "msw";
 import CurrentGoalCard from "@/components/CurrentGoalCard";
@@ -49,12 +47,10 @@ describe("CurrentGoalCard", () => {
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </TRPCProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  const currentGoalQueryKey = trpc.weight.getCurrentGoal.queryKey();
+  const currentGoalQueryKey = ["weight", "getCurrentGoal"];
 
   const setupGetHandler = (initialData: Goal = null) => {
     server.use(

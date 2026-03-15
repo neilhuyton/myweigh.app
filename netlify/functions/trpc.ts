@@ -1,20 +1,21 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
-import { appRouter } from "../../server/trpc";
-import { createContext } from "../../server/context";
+import { appRouter, createContext } from "../../server/trpc";
 import { TRPCError } from "@trpc/server";
 import { getHTTPStatusCodeFromError } from "@trpc/server/http";
 
-const ALLOWED_ORIGIN = process.env.VITE_APP_URL || "http://localhost:8888";
+const ALLOWED_ORIGINS = [
+  process.env.VITE_APP_URL || "http://localhost:8888",
+].filter(Boolean);
 
 export default async function handler(req: Request): Promise<Response> {
   const origin = req.headers.get("origin");
-  const isAllowed =
-    origin && (origin.includes("localhost") || origin === ALLOWED_ORIGIN);
   const corsHeaders: Record<string, string> = {
-    "Access-Control-Allow-Origin": isAllowed ? origin! : ALLOWED_ORIGIN,
+    "Access-Control-Allow-Origin":
+      origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Max-Age": "86400",
   };
 
   if (req.method === "OPTIONS") {
@@ -26,9 +27,10 @@ export default async function handler(req: Request): Promise<Response> {
       endpoint: "/trpc",
       req,
       router: appRouter,
-      createContext: ({ req }) => createContext({ req }),
+      createContext: () => createContext({ req }),
       batching: { enabled: true },
       allowMethodOverride: true,
+      onError: ({ error }) => console.error("tRPC server error:", error),
     });
 
     const headers = new Headers(response.headers);
@@ -47,30 +49,28 @@ export default async function handler(req: Request): Promise<Response> {
         ? cause
         : new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: "Unexpected error",
+            message: "Unexpected server error",
             cause,
           });
 
     const statusCode = getHTTPStatusCodeFromError(error);
 
-    const body = JSON.stringify([
-      {
-        error: {
-          message: error.message,
+    const body = JSON.stringify({
+      error: {
+        message: error.message,
+        code: error.code,
+        data: {
           code: error.code,
-          data: {
-            code: error.code,
-            httpStatus: statusCode,
-            stack: error.stack,
-            path:
-              new URL(req.url).pathname.split("/trpc/")[1]?.split("?")[0] || "",
-          },
+          httpStatus: statusCode,
+          path:
+            new URL(req.url).pathname.split("/trpc/")[1]?.split("?")[0] || "",
+          ...(process.env.NODE_ENV === "development" && { stack: error.stack }),
         },
       },
-    ]);
+    });
 
     const errorHeaders = new Headers({
-      "content-type": "application/json",
+      "Content-Type": "application/json",
       ...corsHeaders,
     });
 

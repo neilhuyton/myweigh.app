@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { trpc } from "@/trpc";
+import { getTRPCClient } from "@/trpc";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
@@ -14,14 +14,11 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 export default function WeightTrendCard() {
-  const {
-    data: weightsData,
-    isError,
-  } = useQuery(
-    trpc.weight.getWeights.queryOptions(undefined, {
-      staleTime: 1000 * 60 * 5,
-    }),
-  );
+  const { data: weightsData, isError } = useQuery({
+    queryKey: ["weight.getWeights"],
+    queryFn: () => getTRPCClient().weight.getWeights.query(),
+    staleTime: 1000 * 60 * 5,
+  });
 
   const weights = useMemo(() => {
     if (!weightsData) return [];

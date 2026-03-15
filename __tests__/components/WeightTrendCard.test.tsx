@@ -10,8 +10,6 @@ import {
 } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { TRPCProvider } from "@/trpc";
-import { trpc, trpcClient } from "@/trpc";
 import { server } from "../../__mocks__/server";
 import { http, HttpResponse } from "msw";
 import WeightTrendCard from "@/components/WeightTrendCard";
@@ -48,12 +46,10 @@ describe("WeightTrendCard", () => {
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </TRPCProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  const weightsQueryKey = trpc.weight.getWeights.queryKey();
+  const weightsQueryKey = ["weight.getWeights"];
 
   const setupGetHandler = (weights: WeightEntry[] = []) => {
     server.use(

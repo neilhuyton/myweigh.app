@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { trpc } from "@/trpc";
+import { getTRPCClient } from "@/trpc";
 import {
   Table,
   TableBody,
@@ -12,17 +12,24 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 
+type Goal = {
+  id: string;
+  goalWeightKg: number;
+  goalSetAt: string;
+  reachedAt: string | null;
+};
+
 function GoalList() {
   const {
     data: goals,
     isLoading,
     isError,
     error,
-  } = useQuery(
-    trpc.weight.getGoals.queryOptions(undefined, {
-      staleTime: 1000 * 60 * 5,
-    }),
-  );
+  } = useQuery({
+    queryKey: ["weight.getGoals"],
+    queryFn: () => getTRPCClient().weight.getGoals.query(),
+    staleTime: 1000 * 60 * 5,
+  });
 
   const formatDate = (date: string | Date) =>
     format(new Date(date), "dd MMM yyyy");
@@ -63,7 +70,7 @@ function GoalList() {
 
         <TableBody>
           {goals && goals.length > 0 ? (
-            goals.map((goal, index) => (
+            goals.map((goal: Goal, index: number) => (
               <TableRow
                 key={goal.id}
                 className={cn(

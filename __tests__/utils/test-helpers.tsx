@@ -1,5 +1,3 @@
-// __tests__/utils/test-helpers.tsx
-
 import { render, type RenderResult } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
@@ -9,12 +7,8 @@ import {
   type Router,
 } from "@tanstack/react-router";
 import { router as appRouter, type RouterContext } from "@/router";
-import { trpcClient, TRPCProvider } from "@/trpc";
 import type { QueryClient as QCType } from "@tanstack/react-query";
 
-// ────────────────────────────────────────────────
-// Create a fresh QueryClient for tests (no retries, no stale time)
-// ────────────────────────────────────────────────
 export function createTestQueryClient(): QCType {
   return new QueryClient({
     defaultOptions: {
@@ -31,20 +25,10 @@ export function createTestQueryClient(): QCType {
   });
 }
 
-// ────────────────────────────────────────────────
-// Type for the router returned by renderWithProviders
-// ────────────────────────────────────────────────
 type RenderWithProvidersResult = RenderResult & {
   router: Router<typeof appRouter.routeTree>;
 };
 
-/**
- * Renders the app with full providers (TRPC + QueryClient + Router)
- * The router will render the component matching the initialEntries path.
- *
- * Note: Do NOT pass a custom ui/component here — let the router handle it.
- *       If you need to test an isolated component, create a separate helper.
- */
 export function renderWithProviders({
   initialEntries = ["/"],
   queryClient = createTestQueryClient(),
@@ -62,11 +46,9 @@ export function renderWithProviders({
   });
 
   const wrapped = (
-    <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={testRouter} />
-      </QueryClientProvider>
-    </TRPCProvider>
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={testRouter} />
+    </QueryClientProvider>
   );
 
   const renderResult = render(wrapped);
@@ -77,9 +59,6 @@ export function renderWithProviders({
   };
 }
 
-/**
- * Convenience helper for rendering the VerifyEmail page with a token
- */
 export function renderVerifyEmail(token: string) {
   const url = `/verify-email?token=${encodeURIComponent(token)}`;
   return renderWithProviders({ initialEntries: [url] });

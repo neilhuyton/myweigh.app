@@ -2,8 +2,6 @@ import { useEffect } from "react";
 import { RouterProvider } from "@tanstack/react-router";
 
 import { router } from "@/router";
-import { TRPCProvider } from "@/trpc";
-import { trpcClient } from "@/trpc";
 import { getQueryClient } from "@/queryClient";
 import { ErrorBoundary } from "react-error-boundary";
 import { useAuthStore } from "@/store/authStore";
@@ -40,16 +38,14 @@ export function Root() {
     >
       <AuthProvider>
         <QueryClientProvider client={getQueryClient()}>
-          <TRPCProvider trpcClient={trpcClient} queryClient={getQueryClient()}>
-            <ThemeProvider
-              defaultTheme="dark"
-              storageKey="vite-ui-theme"
-              enableSystem={true}
-            >
-              <RouterProvider router={router} />
-              <RealtimeListeners />
-            </ThemeProvider>
-          </TRPCProvider>
+          <ThemeProvider
+            defaultTheme="dark"
+            storageKey="vite-ui-theme"
+            enableSystem={true}
+          >
+            <RouterProvider router={router} />
+            <RealtimeListeners />
+          </ThemeProvider>
         </QueryClientProvider>
       </AuthProvider>
     </ErrorBoundary>

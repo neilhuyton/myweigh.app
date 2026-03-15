@@ -1,5 +1,4 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { trpc } from "@/trpc";
 import { useRealtimeSubscription } from "./useRealtimeSubscription";
 import { useAuthStore } from "@/store/authStore";
 
@@ -17,14 +16,15 @@ export function useGoalRealtime() {
 
     onPayload: () => {
       queryClient.invalidateQueries({
-        queryKey: trpc.weight.getCurrentGoal.queryKey(),
-      });
-      queryClient.invalidateQueries({
-        queryKey: trpc.weight.getGoals.queryKey(),
+        queryKey: ["weight.getCurrentGoal"],
       });
 
       queryClient.invalidateQueries({
-        queryKey: trpc.weight.getWeights.queryKey(),
+        queryKey: ["weight.getGoals"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["weight.getWeights"],
       });
     },
   });

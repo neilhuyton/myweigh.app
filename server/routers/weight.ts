@@ -1,7 +1,7 @@
-import { protectedProcedure, router } from "@/../server/trpc-base";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { Prisma } from "@prisma/client";
+import { protectedProcedure, router } from "@steel-cut/trpc-shared/server";
 
 export const weightRouter = router({
   create: protectedProcedure
