@@ -14,13 +14,16 @@ import { Suspense } from "react";
 
 const AuthenticatedLayout = () => {
   const navigate = useNavigate();
-  const { initialize, loading, user } = useAuthStore();
+  const { user, loading } = useAuthStore();
 
   useEffect(() => {
     if (!user && !loading) {
-      initialize();
+      navigate({
+        to: "/login",
+        search: { redirect: window.location.pathname },
+      });
     }
-  }, [initialize, user, loading]);
+  }, [user, loading, navigate]);
 
   if (loading) {
     return (
@@ -74,24 +77,24 @@ const AuthenticatedLayout = () => {
 };
 
 export const Route = createFileRoute("/_authenticated")({
-  beforeLoad: ({ location }) => {
-    const { user, loading } = useAuthStore.getState();
+  beforeLoad: async ({ location }) => {
+    const store = useAuthStore.getState();
 
-    if (typeof useAuthStore === "undefined" || !useAuthStore.getState) {
-      throw redirect({
-        to: "/login",
-        replace: true,
-        search: { redirect: location.href },
-      });
+    // If store not ready → wait for init
+    if (!store.isInitialized) {
+      await store.initialize();
     }
 
+    const { user, loading } = useAuthStore.getState();
+
+    // Still loading after init → defer decision to layout
     if (loading) return;
 
     if (!user) {
       throw redirect({
         to: "/login",
         replace: true,
-        search: { redirect: location.href },
+        search: { redirect: location.href || location.pathname },
       });
     }
   },
