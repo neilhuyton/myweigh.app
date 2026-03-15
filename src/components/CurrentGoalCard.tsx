@@ -165,7 +165,9 @@ export default function CurrentGoalCard() {
   };
 
   if (isLoading && !currentGoal) {
-    return <div className="h-40 animate-pulse bg-muted rounded-lg" />;
+    return (
+      <div className="rounded-xl border bg-card/60 backdrop-blur-sm p-6 min-h-[220px] animate-pulse bg-muted" />
+    );
   }
 
   return (
