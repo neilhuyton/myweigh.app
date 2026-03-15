@@ -9,8 +9,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function WeightList() {
   const queryClient = useQueryClient();
@@ -75,7 +76,7 @@ export default function WeightList() {
   if (isLoading) {
     return (
       <div data-testid="loading-spinner" className="flex justify-center py-12">
-        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -93,54 +94,56 @@ export default function WeightList() {
 
   if (!weights || weights.length === 0) {
     return (
-      <div className="py-12 text-center text-muted-foreground italic">
+      <div className="py-8 text-center text-muted-foreground">
         No measurements recorded yet
       </div>
     );
   }
 
   return (
-    <>
-      <Table>
-        <TableHeader>
-          <TableRow className="border-b hover:bg-transparent">
-            <TableHead className="pl-0 font-medium w-1/4">
-              Weight (kg)
-            </TableHead>
-            <TableHead className="font-medium">Date</TableHead>
-            <TableHead className="text-right font-medium pr-0 w-16">
-              Action
-            </TableHead>
+    <Table className="border">
+      <TableHeader>
+        <TableRow className="hover:bg-muted/50 rounded-t-lg">
+          <TableHead className="font-bold bg-muted/50 pl-4">
+            Weight (kg)
+          </TableHead>
+          <TableHead className="font-bold bg-muted/50">Date</TableHead>
+          <TableHead className="font-bold bg-muted/50 text-right pr-4">
+            Action
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+
+      <TableBody>
+        {weights.map((weight, index) => (
+          <TableRow
+            key={weight.id}
+            className={cn(
+              "hover:bg-muted/50",
+              index === weights.length - 1 && "rounded-b-lg",
+            )}
+          >
+            <TableCell className="pl-4 font-medium">
+              {weight.weightKg}
+            </TableCell>
+            <TableCell className="text-muted-foreground">
+              {formatDate(weight.createdAt)}
+            </TableCell>
+            <TableCell className="text-right pr-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-destructive hover:text-destructive/80 hover:bg-destructive/10"
+                onClick={() => handleDelete(weight.id)}
+                disabled={isDeleting}
+                aria-label={`Delete entry from ${formatDate(weight.createdAt)}`}
+              >
+                Delete
+              </Button>
+            </TableCell>
           </TableRow>
-        </TableHeader>
-        <TableBody>
-          {weights.map((weight) => (
-            <TableRow
-              key={weight.id}
-              className="border-b last:border-b-0 hover:bg-muted/60 transition-colors"
-            >
-              <TableCell className="pl-0 font-medium">
-                {weight.weightKg}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {formatDate(weight.createdAt)}
-              </TableCell>
-              <TableCell className="text-right pr-0">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(weight.id)}
-                  disabled={isDeleting}
-                  className="text-destructive hover:text-destructive/80 hover:bg-destructive/10"
-                  aria-label={`Delete entry from ${formatDate(weight.createdAt)}`}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </>
+        ))}
+      </TableBody>
+    </Table>
   );
 }

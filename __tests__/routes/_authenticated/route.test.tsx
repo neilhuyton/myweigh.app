@@ -1,26 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import {
-  createMemoryHistory,
-  createRoute,
-  createRouter,
-  RouterProvider,
-} from "@tanstack/react-router";
-import { QueryClient } from "@tanstack/react-query";
-import { render } from "@testing-library/react";
 
 import { useAuthStore } from "@/store/authStore";
-import { Route as AuthenticatedRoute } from "@/routes/_authenticated/route";
 import { suppressActWarnings } from "../../../__tests__/act-suppress";
+import { renderWithProviders } from "../../utils/test-helpers";
 
 suppressActWarnings();
 
-vi.mock("@/store/authStore", () => {
-  return {
-    useAuthStore: vi.fn(),
-  };
-});
+vi.mock("@/store/authStore", () => ({
+  useAuthStore: vi.fn(),
+}));
 
 const createMockAuthState = (overrides = {}) => ({
   user: null,
@@ -34,56 +24,19 @@ const createMockAuthState = (overrides = {}) => ({
   signUp: vi.fn().mockResolvedValue({ error: null }),
   waitUntilReady: vi.fn().mockResolvedValue(null),
   updateUserEmail: vi.fn().mockResolvedValue({ error: null }),
-  setSession: vi.fn(), // ← this was missing → fixes the main error
+  setSession: vi.fn(),
   ...overrides,
 });
 
 describe("Authenticated Layout Route (/_authenticated)", () => {
-  let queryClient: QueryClient;
-
   beforeEach(() => {
     vi.clearAllMocks();
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-          gcTime: 0,
-          staleTime: 0,
-        },
-      },
-    });
 
     vi.mocked(useAuthStore).mockImplementation((selector) => {
       const state = createMockAuthState();
       return selector ? selector(state) : state;
     });
-
-    vi.mocked(useAuthStore).getState = vi.fn(() => createMockAuthState());
   });
-
-  const setupRouter = (initialEntries = ["/dashboard"]) => {
-    const history = createMemoryHistory({ initialEntries });
-
-    const routeTree = AuthenticatedRoute.addChildren([
-      createRoute({
-        getParentRoute: () => AuthenticatedRoute,
-        path: "dashboard",
-        component: () => (
-          <div data-testid="child-content">Protected Content</div>
-        ),
-      }),
-    ]);
-
-    const router = createRouter({
-      routeTree,
-      history,
-      context: { queryClient },
-      defaultPendingMinMs: 0,
-      defaultPreloadStaleTime: 0,
-    });
-
-    return { router };
-  };
 
   it("shows loading screen when loading is true", async () => {
     vi.mocked(useAuthStore).mockImplementation((selector) => {
@@ -91,22 +44,15 @@ describe("Authenticated Layout Route (/_authenticated)", () => {
       return selector ? selector(state) : state;
     });
 
-    vi.mocked(useAuthStore.getState).mockReturnValue(
-      createMockAuthState({ loading: true }),
+    vi.mocked(useAuthStore).getState = vi.fn().mockReturnValue(
+      createMockAuthState({ loading: true })
     );
 
-    const { router } = setupRouter();
+    renderWithProviders({ initialEntries: ["/weight-log"] });
 
-    render(<RouterProvider router={router} />);
-
-    await waitFor(
-      () => {
-        expect(screen.getByText("Loading session...")).toBeInTheDocument();
-      },
-      { timeout: 600 },
-    );
-
-    expect(screen.queryByTestId("child-content")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Loading session...")).toBeInTheDocument();
+    });
   });
 
   it("does not redirect immediately when loading is true", async () => {
@@ -115,13 +61,11 @@ describe("Authenticated Layout Route (/_authenticated)", () => {
       return selector ? selector(state) : state;
     });
 
-    vi.mocked(useAuthStore.getState).mockReturnValue(
-      createMockAuthState({ loading: true }),
+    vi.mocked(useAuthStore).getState = vi.fn().mockReturnValue(
+      createMockAuthState({ loading: true })
     );
 
-    const { router } = setupRouter();
-
-    render(<RouterProvider router={router} />);
+    const { router } = renderWithProviders({ initialEntries: ["/weight-log"] });
 
     await new Promise((r) => setTimeout(r, 400));
 
@@ -137,13 +81,11 @@ describe("Authenticated Layout Route (/_authenticated)", () => {
       return selector ? selector(state) : state;
     });
 
-    vi.mocked(useAuthStore.getState).mockReturnValue(
-      createMockAuthState({ user: mockUser, loading: false }),
+    vi.mocked(useAuthStore).getState = vi.fn().mockReturnValue(
+      createMockAuthState({ user: mockUser, loading: false })
     );
 
-    const { router } = setupRouter();
-
-    render(<RouterProvider router={router} />);
+    renderWithProviders({ initialEntries: ["/weight-log"] });
 
     await waitFor(() => {
       expect(
@@ -162,13 +104,11 @@ describe("Authenticated Layout Route (/_authenticated)", () => {
       return selector ? selector(state) : state;
     });
 
-    vi.mocked(useAuthStore.getState).mockReturnValue(
-      createMockAuthState({ user: mockUser, loading: false }),
+    vi.mocked(useAuthStore).getState = vi.fn().mockReturnValue(
+      createMockAuthState({ user: mockUser, loading: false })
     );
 
-    const { router } = setupRouter(["/dashboard"]);
-
-    render(<RouterProvider router={router} />);
+    const { router } = renderWithProviders({ initialEntries: ["/weight-log"] });
 
     await waitFor(() => {
       expect(screen.getByText("My Weigh")).toBeInTheDocument();
