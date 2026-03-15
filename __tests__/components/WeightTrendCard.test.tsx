@@ -64,21 +64,21 @@ describe("WeightTrendCard", () => {
     );
   };
 
-  it("shows empty state immediately during loading (no separate loader)", async () => {
+  it("shows loading skeleton during fetch (no empty message yet)", () => {
     server.use(
       http.get("/trpc/weight.getWeights", () => new Promise(() => {})),
     );
 
     render(<WeightTrendCard />, { wrapper });
 
-    await waitFor(() => {
-      expect(
-        screen.getByText("No measurements recorded yet"),
-      ).toBeInTheDocument();
-    });
+    expect(screen.getByTestId("weight-trend-card")).toBeInTheDocument();
+    expect(screen.getByTestId("loading-skeleton")).toBeInTheDocument();
+    expect(
+      screen.queryByText("No measurements recorded yet"),
+    ).not.toBeInTheDocument();
   });
 
-  it("shows empty state when no weights", async () => {
+  it("shows empty state when no weights (after loading)", async () => {
     setupGetHandler([]);
 
     render(<WeightTrendCard />, { wrapper });

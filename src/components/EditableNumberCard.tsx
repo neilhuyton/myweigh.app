@@ -65,6 +65,7 @@ export default function EditableNumberCard({
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         "active:scale-[0.98]",
         isEditing && "ring-2 ring-primary ring-offset-2",
+        "min-h-[220px]", // ← fixed minimum height – adjust this value if needed
       )}
     >
       <div className="flex items-center justify-between mb-4">
