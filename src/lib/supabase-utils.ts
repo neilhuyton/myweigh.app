@@ -6,17 +6,17 @@ export async function safeGetSession() {
 }
 
 export async function safeRefreshSession() {
-  return supabase.auth.refreshSession();
+  const result = await supabase.auth.refreshSession();
+  return result;
 }
 
-export async function safeSignInWithPassword(
-  credentials: { email: string; password: string }
-) {
+export async function safeSignInWithPassword(credentials: {
+  email: string;
+  password: string;
+}) {
   return supabase.auth.signInWithPassword(credentials);
 }
 
-export async function safeSignUp(
-  credentials: SignUpWithPasswordCredentials
-) {
+export async function safeSignUp(credentials: SignUpWithPasswordCredentials) {
   return supabase.auth.signUp(credentials);
 }

@@ -13,7 +13,7 @@ const createQueryClient = () => {
         staleTime: 1000 * 60 * 1,
         gcTime: 5 * 60 * 1000,
         refetchOnMount: true,
-        refetchOnWindowFocus: false,
+        refetchOnWindowFocus: true,
         refetchOnReconnect: false,
         retry: 1,
         retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
