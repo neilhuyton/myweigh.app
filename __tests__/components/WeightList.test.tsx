@@ -77,7 +77,7 @@ describe("WeightList", () => {
     await waitFor(() => {
       const spinner = screen.getByTestId("loading-spinner");
       expect(spinner).toBeInTheDocument();
-      expect(spinner.querySelector("svg")).toHaveClass("animate-spin");
+      expect(spinner).toHaveClass("animate-spin");
     });
   });
 
