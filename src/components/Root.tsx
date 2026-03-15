@@ -9,7 +9,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { useAuthStore } from "@/store/authStore";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { RealtimeListeners } from "./RealtimeListeners";
-import { ThemeProvider } from "@steel-cut/steel-lib";
+import { BannerProvider, ThemeProvider } from "@steel-cut/steel-lib";
 import { AuthProvider } from "./AuthProvider";
 
 export function Root() {
@@ -38,20 +38,25 @@ export function Root() {
         </div>
       }
     >
-      <AuthProvider>
-        <QueryClientProvider client={getQueryClient()}>
-          <TRPCProvider trpcClient={trpcClient} queryClient={getQueryClient()}>
-            <ThemeProvider
-              defaultTheme="dark"
-              storageKey="vite-ui-theme"
-              enableSystem={true}
+      <BannerProvider>
+        <AuthProvider>
+          <QueryClientProvider client={getQueryClient()}>
+            <TRPCProvider
+              trpcClient={trpcClient}
+              queryClient={getQueryClient()}
             >
-              <RouterProvider router={router} />
-              <RealtimeListeners />
-            </ThemeProvider>
-          </TRPCProvider>
-        </QueryClientProvider>
-      </AuthProvider>
+              <ThemeProvider
+                defaultTheme="dark"
+                storageKey="vite-ui-theme"
+                enableSystem={true}
+              >
+                <RouterProvider router={router} />
+                <RealtimeListeners />
+              </ThemeProvider>
+            </TRPCProvider>
+          </QueryClientProvider>
+        </AuthProvider>
+      </BannerProvider>
     </ErrorBoundary>
   );
 }

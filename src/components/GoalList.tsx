@@ -29,10 +29,10 @@ function GoalList() {
 
   if (isLoading) {
     return (
-      <div className="py-4">
+      <div className="py-4 flex justify-center">
         <Loader2
           data-testid="loading-spinner"
-          className="mr-2 h-5 w-5 animate-spin"
+          className="h-5 w-5 animate-spin text-muted-foreground"
         />
       </div>
     );
@@ -80,7 +80,10 @@ function GoalList() {
             ))
           ) : (
             <TableRow className="hover:bg-muted/50 rounded-b-lg">
-              <TableCell colSpan={3} className="text-center">
+              <TableCell
+                colSpan={3}
+                className="text-center py-8 text-muted-foreground"
+              >
                 No weight goals found
               </TableCell>
             </TableRow>
@@ -91,7 +94,7 @@ function GoalList() {
       {isError && (
         <p
           role="alert"
-          className="text-sm text-center text-destructive dark:text-red-400 mt-4"
+          className="text-sm text-center text-destructive mt-4"
           data-testid="error-message"
         >
           Error: {error?.message || "An unexpected error occurred"}
