@@ -13,8 +13,6 @@ export function useGoalRealtime() {
     event: "*",
     filter: userId ? `userId=eq.${userId}` : undefined,
     enabled: !!userId,
-    autoResubscribe: true,
-
     onPayload: () => {
       queryClient.invalidateQueries({
         queryKey: trpc.weight.getCurrentGoal.queryKey(),
@@ -22,7 +20,6 @@ export function useGoalRealtime() {
       queryClient.invalidateQueries({
         queryKey: trpc.weight.getGoals.queryKey(),
       });
-
       queryClient.invalidateQueries({
         queryKey: trpc.weight.getWeights.queryKey(),
       });

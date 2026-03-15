@@ -15,13 +15,13 @@ export function useWeightRealtime() {
     event: "*",
     filter: userId ? `userId=eq.${userId}` : undefined,
     enabled: !!userId,
-    autoResubscribe: true,
-
     onPayload: () => {
+      queryClient.invalidateQueries({
+        queryKey: trpc.weight.getLatestWeight.queryKey(),
+      });
       queryClient.invalidateQueries({
         queryKey: trpc.weight.getWeights.queryKey(),
       });
-
       queryClient.invalidateQueries({
         queryKey: trpc.weight.getCurrentGoal.queryKey(),
       });
