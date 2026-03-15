@@ -13,7 +13,7 @@ export default function CurrentGoalCard() {
     currentGoalQuery.queryOptions(undefined, {
       staleTime: 15000,
       gcTime: 300000,
-    })
+    }),
   );
 
   const [isEditing, setIsEditing] = useState(false);
@@ -61,14 +61,21 @@ export default function CurrentGoalCard() {
       },
       onError: (_, __, context) => {
         if (context?.previous) {
-          queryClient.setQueryData(currentGoalQuery.queryKey(), context.previous);
+          queryClient.setQueryData(
+            currentGoalQuery.queryKey(),
+            context.previous,
+          );
         }
       },
       onSettled: () => {
-        queryClient.invalidateQueries({ queryKey: currentGoalQuery.queryKey() });
-        queryClient.invalidateQueries({ queryKey: trpc.weight.getGoals.queryKey() });
+        queryClient.invalidateQueries({
+          queryKey: currentGoalQuery.queryKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.weight.getGoals.queryKey(),
+        });
       },
-    })
+    }),
   );
 
   const updateGoalMutation = useMutation(
@@ -89,21 +96,29 @@ export default function CurrentGoalCard() {
       },
       onError: (_, __, context) => {
         if (context?.previous) {
-          queryClient.setQueryData(currentGoalQuery.queryKey(), context.previous);
+          queryClient.setQueryData(
+            currentGoalQuery.queryKey(),
+            context.previous,
+          );
         }
       },
       onSettled: () => {
-        queryClient.invalidateQueries({ queryKey: currentGoalQuery.queryKey() });
-        queryClient.invalidateQueries({ queryKey: trpc.weight.getGoals.queryKey() });
+        queryClient.invalidateQueries({
+          queryKey: currentGoalQuery.queryKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.weight.getGoals.queryKey(),
+        });
       },
-    })
+    }),
   );
 
-  const isPending = createGoalMutation.isPending || updateGoalMutation.isPending;
+  const isPending =
+    createGoalMutation.isPending || updateGoalMutation.isPending;
 
   const displayedWeight = isPending
-    ? (Number(editValue) || currentGoal?.goalWeightKg) ?? null
-    : currentGoal?.goalWeightKg ?? null;
+    ? ((Number(editValue) || currentGoal?.goalWeightKg) ?? null)
+    : (currentGoal?.goalWeightKg ?? null);
 
   const statusText = (() => {
     if (isPending) return "Saving goal...";

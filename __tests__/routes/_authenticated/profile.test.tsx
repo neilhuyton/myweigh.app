@@ -1,15 +1,10 @@
-// __tests__/routes/_authenticated/profile.test.tsx
-
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { screen, act } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { useAuthStore } from "@/store/authStore";
 import { renderWithProviders } from "../../../__tests__/utils/test-helpers";
-
-vi.mock("@/store/bannerStore", () => ({
-  useBannerStore: () => ({ show: vi.fn() }),
-}));
+import type { User, Session } from "@supabase/supabase-js";
 
 vi.mock("@/lib/supabase", () => ({
   supabase: {
@@ -40,22 +35,34 @@ describe("ProfilePage", () => {
   const user = userEvent.setup();
 
   beforeEach(() => {
-    const mockUser = {
-      id: "test-id",
-      email: "test@example.com",
-      aud: "authenticated",
-      role: "authenticated",
-      app_metadata: {},
-      user_metadata: {},
-      identities: [],
-      created_at: new Date().toISOString(),
-    };
+    vi.clearAllMocks();
 
-    act(() => {
-      useAuthStore.setState({
-        user: mockUser,
-        loading: false,
-      });
+    useAuthStore.setState({
+      user: {
+        id: "test-user",
+        app_metadata: {},
+        user_metadata: {},
+        aud: "authenticated",
+        role: "authenticated",
+        created_at: new Date().toISOString(),
+      } as User,
+      session: {
+        access_token: "mock-token",
+        refresh_token: "mock-refresh",
+        expires_in: 3600,
+        token_type: "bearer",
+        user: {
+          id: "test-user",
+          app_metadata: {},
+          user_metadata: {},
+          aud: "authenticated",
+          role: "authenticated",
+          created_at: new Date().toISOString(),
+        } as User,
+      } as Session,
+      loading: false,
+      error: null,
+      isInitialized: true,
     });
   });
 
@@ -76,7 +83,7 @@ describe("ProfilePage", () => {
     expect(closeBtn.querySelector("svg")).toBeInTheDocument();
   });
 
-  it("navigates to /lists when close button clicked and no history", async () => {
+  it("navigates to /weight-log when close button clicked and no history", async () => {
     const renderResult = await act(async () => {
       return renderWithProviders({ initialEntries: ["/profile"] });
     });

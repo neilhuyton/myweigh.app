@@ -6,8 +6,7 @@ export async function safeGetSession() {
 }
 
 export async function safeRefreshSession() {
-  const result = await supabase.auth.refreshSession();
-  return result;
+  return supabase.auth.refreshSession();
 }
 
 export async function safeSignInWithPassword(credentials: {

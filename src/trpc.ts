@@ -1,35 +1,48 @@
-import { createTrpcClient } from '@steel-cut/trpc-shared/client';
-import type { AppRouter } from '../server/trpc';
+import { createTrpcClient } from "@steel-cut/trpc-shared/client";
+import type { AppRouter } from "../server/trpc";
 
-import { safeGetSession, safeRefreshSession } from '@/lib/supabase-utils';
-import { useAuthStore } from '@/store/authStore';
-import { getQueryClient } from '@/queryClient';
+import { safeRefreshSession } from "@/lib/supabase-utils";
+import { useAuthStore } from "@/store/authStore";
+import { getQueryClient } from "@/queryClient";
 import {
   createTRPCContext,
   createTRPCOptionsProxy,
-} from '@trpc/tanstack-react-query';
+} from "@trpc/tanstack-react-query";
+
+let lastRefreshFailed = false;
 
 const getAccessToken = async (): Promise<string | null> => {
-  const session = useAuthStore.getState().session;
+  const state = useAuthStore.getState();
 
-  if (session?.access_token) {
+  if (lastRefreshFailed) {
+    return null;
+  }
+
+  if (state.session?.access_token) {
     const now = Math.floor(Date.now() / 1000);
-    const expiresAt = session.expires_at ?? 0;
+    const expiresAt = state.session.expires_at ?? 0;
 
     if (expiresAt - now >= 120) {
-      return session.access_token;
+      return state.session.access_token;
     }
   }
 
-  await safeRefreshSession();
+  try {
+    const { data, error } = await safeRefreshSession();
 
-  const freshSession = useAuthStore.getState().session;
-  if (freshSession?.access_token) {
-    return freshSession.access_token;
+    if (error || !data.session?.access_token) {
+      lastRefreshFailed = true;
+      useAuthStore.getState().signOut?.();
+      return null;
+    }
+
+    lastRefreshFailed = false;
+    return data.session.access_token;
+  } catch {
+    lastRefreshFailed = true;
+    useAuthStore.getState().signOut?.();
+    return null;
   }
-
-  const { data } = await safeGetSession();
-  return data?.session?.access_token ?? null;
 };
 
 export const trpcClient = createTrpcClient<AppRouter>({
