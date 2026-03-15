@@ -5,10 +5,14 @@ import { jwtVerify, createRemoteJWKSet } from "jose";
 import { weightRouter } from "./routers/weight";
 import { healthRouter, userRouter } from "@steel-cut/trpc-shared/server";
 
-const globalForPrisma = globalThis as typeof globalThis & {
-  prisma?: PrismaClient;
-};
-export const prisma = (globalForPrisma.prisma ??= new PrismaClient());
+let prismaClient: PrismaClient | undefined;
+
+function getPrisma(): PrismaClient {
+  if (!prismaClient) {
+    prismaClient = new PrismaClient();
+  }
+  return prismaClient;
+}
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 if (!SUPABASE_URL) {
@@ -55,7 +59,7 @@ export async function createContext({
 }): Promise<Context> {
   const token = extractToken(req);
   const userId = await verifyTokenAndGetUserId(token);
-  return { prisma, userId };
+  return { prisma: getPrisma(), userId };
 }
 
 const t = initTRPC.context<Context>().create();
