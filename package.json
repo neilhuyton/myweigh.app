@@ -29,7 +29,7 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-visually-hidden": "^1.2.4",
     "@steel-cut/steel-lib": "file:steel-cut-steel-lib-0.1.45.tgz",
-    "@steel-cut/trpc-auth": "file:steel-cut-trpc-auth-0.0.10.tgz",
+    "@steel-cut/trpc-shared": "file:steel-cut-trpc-shared-0.0.19.tgz",
     "@supabase/auth-js": "^2.98.0",
     "@supabase/realtime-js": "^2.98.0",
     "@supabase/ssr": "^0.9.0",

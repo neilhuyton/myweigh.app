@@ -1,5 +1,5 @@
-import { router, createCallerFactory } from "@steel-cut/trpc-auth/server";
-import { userRouter, healthRouter } from "@steel-cut/trpc-auth/server";
+import { router, createCallerFactory } from "@steel-cut/trpc-shared/server";
+import { userRouter, healthRouter } from "@steel-cut/trpc-shared/server";
 import { weightRouter } from "./routers/weight";
 
 export const appRouter = router({

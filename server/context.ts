@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import {
   extractToken,
   verifyTokenAndGetUserId,
-} from "@steel-cut/trpc-auth/server";
+} from "@steel-cut/trpc-shared/server";
 
 const globalForPrisma = globalThis as typeof globalThis & {
   prisma?: PrismaClient;
