@@ -10,7 +10,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export default function WeightList() {
@@ -58,7 +57,6 @@ export default function WeightList() {
         if (context?.previousWeights) {
           queryClient.setQueryData(weightsQueryKey, context.previousWeights);
         }
-        console.error("Delete failed:");
       },
     }),
   );
@@ -75,8 +73,11 @@ export default function WeightList() {
 
   if (isLoading) {
     return (
-      <div data-testid="loading-spinner" className="flex justify-center py-12">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      <div className="py-4 flex justify-center">
+        <Loader2
+          data-testid="loading-spinner"
+          className="h-5 w-5 animate-spin text-muted-foreground"
+        />
       </div>
     );
   }
@@ -85,65 +86,77 @@ export default function WeightList() {
     return (
       <p
         data-testid="error-message"
-        className="mt-6 text-center text-sm text-destructive"
+        className="text-sm text-center text-destructive mt-4"
       >
         Failed to load weight history
       </p>
     );
   }
 
-  if (!weights || weights.length === 0) {
-    return (
-      <div className="py-8 text-center text-muted-foreground">
-        No measurements recorded yet
-      </div>
-    );
-  }
-
   return (
-    <Table className="border">
-      <TableHeader>
-        <TableRow className="hover:bg-muted/50 rounded-t-lg">
-          <TableHead className="font-bold bg-muted/50 pl-4">
-            Weight (kg)
-          </TableHead>
-          <TableHead className="font-bold bg-muted/50">Date</TableHead>
-          <TableHead className="font-bold bg-muted/50 text-right pr-4">
-            Action
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {weights.map((weight, index) => (
-          <TableRow
-            key={weight.id}
-            className={cn(
-              "hover:bg-muted/50",
-              index === weights.length - 1 && "rounded-b-lg",
-            )}
-          >
-            <TableCell className="pl-4 font-medium">
-              {weight.weightKg}
-            </TableCell>
-            <TableCell className="text-muted-foreground">
-              {formatDate(weight.createdAt)}
-            </TableCell>
-            <TableCell className="text-right pr-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-destructive hover:text-destructive/80 hover:bg-destructive/10"
-                onClick={() => handleDelete(weight.id)}
-                disabled={isDeleting}
-                aria-label={`Delete entry from ${formatDate(weight.createdAt)}`}
-              >
-                Delete
-              </Button>
-            </TableCell>
+    <>
+      <Table className="border">
+        <TableHeader>
+          <TableRow className="hover:bg-muted/50 rounded-t-lg">
+            <TableHead className="font-bold bg-muted/50">
+              Weight (kg)
+            </TableHead>
+            <TableHead className="font-bold bg-muted/50">Date</TableHead>
+            <TableHead className="font-bold bg-muted/50 text-right">
+              Action
+            </TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {weights && weights.length > 0 ? (
+            weights.map((weight, index) => (
+              <TableRow
+                key={weight.id}
+                className={cn(
+                  "hover:bg-muted/50",
+                  index === weights.length - 1 && "rounded-b-lg",
+                )}
+              >
+                <TableCell className="pl-4">{weight.weightKg}</TableCell>
+                <TableCell>{formatDate(weight.createdAt)}</TableCell>
+                <TableCell className="text-right pr-4">
+                  <button
+                    onClick={() => handleDelete(weight.id)}
+                    disabled={isDeleting}
+                    className={cn(
+                      "text-sm text-destructive hover:text-destructive/80 hover:underline",
+                      isDeleting && "opacity-50 cursor-not-allowed",
+                    )}
+                    aria-label={`Delete entry from ${formatDate(weight.createdAt)}`}
+                  >
+                    Delete
+                  </button>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow className="hover:bg-muted/50 rounded-b-lg">
+              <TableCell
+                colSpan={3}
+                className="text-center py-8 text-muted-foreground"
+              >
+                No measurements recorded yet
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+
+      {isError && (
+        <p
+          role="alert"
+          className="text-sm text-center text-destructive mt-4"
+          data-testid="error-message"
+        >
+          Failed to load weight history
+        </p>
+      )}
+    </>
   );
 }
