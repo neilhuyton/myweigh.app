@@ -1,4 +1,3 @@
-// src/trpc.ts
 import { createTrpcClient } from '@steel-cut/trpc-shared/client';
 import type { AppRouter } from '../server/trpc';
 
