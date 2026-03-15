@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 export default function WeightTrendCard() {
   const {
     data: weightsData,
+    isLoading,
     isError,
   } = useQuery(
     trpc.weight.getWeights.queryOptions(undefined, {
@@ -88,6 +89,29 @@ export default function WeightTrendCard() {
     },
   } satisfies ChartConfig;
 
+  if (isLoading) {
+    return (
+      <Card
+        data-testid="weight-trend-card"
+        className={cn(
+          "rounded-xl border bg-card/60 backdrop-blur-sm p-5",
+          "transition-all hover:border-primary/40 hover:shadow-md",
+        )}
+      >
+        <CardContent className="p-0 pb-1">
+          <div
+            data-testid="loading-skeleton"
+            className="h-[160px] sm:h-[200px] w-full animate-pulse bg-muted rounded-lg"
+          />
+        </CardContent>
+        <CardFooter className="px-1 py-3 border-t flex items-center justify-between text-sm">
+          <div className="h-5 w-32 bg-muted rounded animate-pulse" />
+          <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+        </CardFooter>
+      </Card>
+    );
+  }
+
   if (isError) {
     return (
       <div className="text-center text-destructive py-8">
@@ -106,6 +130,7 @@ export default function WeightTrendCard() {
 
   return (
     <Card
+      data-testid="weight-trend-card"
       className={cn(
         "rounded-xl border bg-card/60 backdrop-blur-sm p-5",
         "transition-all hover:border-primary/40 hover:shadow-md",
