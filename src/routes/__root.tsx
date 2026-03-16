@@ -4,6 +4,7 @@ import Navigation from "../components/Navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useEffect, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { NotFound } from "@steel-cut/steel-lib";
 
 function RootComponent() {
   const isLoggedIn = useAuthStore((state) => !!state.user);
@@ -38,6 +39,18 @@ function RootComponent() {
   );
 }
 
+function GlobalNotFound() {
+  const navigate = useNavigate();
+
+  return (
+    <NotFound
+      onHomeClick={() => navigate({ to: "/", replace: true })}
+      onBackClick={() => window.history.back()}
+    />
+  );
+}
+
 export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootComponent,
+  notFoundComponent: GlobalNotFound,
 });
