@@ -59,7 +59,7 @@ function ProfilePage() {
         return;
       }
     } catch {
-      // treat error as no history → fallback
+      // empty
     }
     navigate({ to: "/weight-log", replace: true });
   };
@@ -111,6 +111,7 @@ function ProfilePage() {
                 onSubmit={handleEmailChange}
               />
               <PasswordResetForm
+                email={currentEmail}
                 onSubmit={async (email) => {
                   const { error } = await supabase.auth.resetPasswordForEmail(
                     email,
