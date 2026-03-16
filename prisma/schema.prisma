@@ -15,7 +15,7 @@ model User {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email     String   @unique
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime? @updatedAt
 
   weightMeasurements WeightMeasurement[]
   goals              Goal[]

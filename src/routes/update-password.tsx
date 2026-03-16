@@ -1,33 +1,33 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { supabase } from "@/lib/supabase";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useAuthStore } from "@/store/authStore";
 import {
-  ForgotPasswordForm,
-  type ForgotPasswordFormValues,
+  UpdatePasswordForm,
+  type UpdatePasswordFormValues,
 } from "@steel-cut/steel-lib";
 import { useState } from "react";
 
 export const Route = createFileRoute("/update-password")({
-  component: ResetPasswordPage,
+  component: UpdatePasswordPage,
 });
 
-function ResetPasswordPage() {
-  const navigate = Route.useNavigate();
+function UpdatePasswordPage() {
+  const navigate = useNavigate();
+  const { updateUserPassword } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleReset = async (values: ForgotPasswordFormValues) => {
+  const handleUpdate = async (values: UpdatePasswordFormValues) => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(
-        values.email,
-        {
-          redirectTo: `${window.location.origin}/update-password`,
-        },
-      );
+      const { error } = await updateUserPassword(values.password);
 
       if (error) {
         return { error };
       }
+
+      setTimeout(() => {
+        navigate({ to: "/login" });
+      }, 2200);
     } finally {
       setIsLoading(false);
     }
@@ -35,8 +35,8 @@ function ResetPasswordPage() {
 
   return (
     <div className="min-h-dvh flex flex-col items-center p-1 sm:p-2 lg:p-3">
-      <ForgotPasswordForm
-        onSubmit={handleReset}
+      <UpdatePasswordForm
+        onSubmit={handleUpdate}
         onLogin={() => navigate({ to: "/login" })}
         isLoading={isLoading}
         className="mt-20"
