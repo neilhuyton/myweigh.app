@@ -133,18 +133,21 @@ describe("Register Page (/register)", () => {
     await user.type(confirmInput, "strongpass123");
     await user.click(submit);
 
-    await screen.findByText(/Account created!/i);
-    await screen.findByText(/check your email/i);
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "If this is a new account, please check your email (including spam/junk) to verify it. If you already have an account with this email, please log in instead.",
+        ),
+      ).toBeInTheDocument();
+    });
 
-    const start = Date.now();
-    while (Date.now() - start < 4500) {
-      if (router.state.location.pathname === "/login") {
-        break;
-      }
-      await new Promise((r) => setTimeout(r, 50));
-    }
+    await waitFor(
+      () => {
+        expect(router.state.location.pathname).toBe("/login");
+      },
+      { timeout: 3000 },
+    );
 
-    expect(router.state.location.pathname).toBe("/login");
     expect(vi.mocked(signUp)).toHaveBeenCalledWith(
       "newuser@example.com",
       "strongpass123",

@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './../routes/__root'
 import { Route as UpdatePasswordRouteImport } from './../routes/update-password'
 import { Route as ResetPasswordRouteImport } from './../routes/reset-password'
-import { Route as ResendVerificationRouteImport } from './../routes/resend-verification'
 import { Route as RegisterRouteImport } from './../routes/register'
 import { Route as LoginRouteImport } from './../routes/login'
 import { Route as AuthenticatedRouteRouteImport } from './../routes/_authenticated/route'
@@ -31,11 +30,6 @@ const UpdatePasswordRoute = UpdatePasswordRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResendVerificationRoute = ResendVerificationRouteImport.update({
-  id: '/resend-verification',
-  path: '/resend-verification',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -97,7 +91,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/resend-verification': typeof ResendVerificationRoute
   '/reset-password': typeof ResetPasswordRoute
   '/update-password': typeof UpdatePasswordRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -111,7 +104,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/resend-verification': typeof ResendVerificationRoute
   '/reset-password': typeof ResetPasswordRoute
   '/update-password': typeof UpdatePasswordRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -127,7 +119,6 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/resend-verification': typeof ResendVerificationRoute
   '/reset-password': typeof ResetPasswordRoute
   '/update-password': typeof UpdatePasswordRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -143,7 +134,6 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/register'
-    | '/resend-verification'
     | '/reset-password'
     | '/update-password'
     | '/profile'
@@ -157,7 +147,6 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/register'
-    | '/resend-verification'
     | '/reset-password'
     | '/update-password'
     | '/profile'
@@ -172,7 +161,6 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/login'
     | '/register'
-    | '/resend-verification'
     | '/reset-password'
     | '/update-password'
     | '/_authenticated/profile'
@@ -188,7 +176,6 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
-  ResendVerificationRoute: typeof ResendVerificationRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   UpdatePasswordRoute: typeof UpdatePasswordRoute
 }
@@ -207,13 +194,6 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/resend-verification': {
-      id: '/resend-verification'
-      path: '/resend-verification'
-      fullPath: '/resend-verification'
-      preLoaderRoute: typeof ResendVerificationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -315,7 +295,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
-  ResendVerificationRoute: ResendVerificationRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   UpdatePasswordRoute: UpdatePasswordRoute,
 }
