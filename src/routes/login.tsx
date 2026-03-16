@@ -54,12 +54,6 @@ function LoginPage() {
         <LoginForm
           onSubmit={handleSubmit}
           onForgotPassword={() => navigate({ to: "/reset-password" })}
-          onResendVerification={(email) =>
-            navigate({
-              to: "/resend-verification",
-              search: email ? { email } : undefined,
-            })
-          }
           onSignUp={() => navigate({ to: "/register" })}
           isLoading={isLoading}
         />

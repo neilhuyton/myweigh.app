@@ -60,9 +60,6 @@ describe("Login Page (/login)", () => {
     expect(
       screen.getByRole("button", { name: /Sign up/i }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Resend verification email/i }),
-    ).toBeInTheDocument();
   });
 
   it("disables submit until valid credentials", async () => {
@@ -115,12 +112,13 @@ describe("Login Page (/login)", () => {
     const submit = screen.getByRole("button", { name: /Login/i });
 
     const signIn = useAuthStore.getState().signIn;
+
     vi.mocked(signIn).mockResolvedValueOnce({
       error: new Error("Invalid login credentials"),
     });
 
     await user.type(email, "wrong@example.com");
-    await user.type(password, "wrongpass");
+    await user.type(password, "wrongpass123");
     await user.click(submit);
 
     await waitFor(() => {
@@ -140,7 +138,7 @@ describe("Login Page (/login)", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("login-message")).toHaveTextContent(
-        /verify your email/i,
+        /check your inbox.*wait 2–5 minutes/i,
       );
     });
   });
@@ -190,21 +188,5 @@ describe("Login Page (/login)", () => {
     await user.click(signup);
 
     expect(router.state.location.pathname).toBe("/register");
-  });
-
-  it("navigates to resend-verification with email when clicked", async () => {
-    const user = userEvent.setup();
-    const { router } = renderLoginPage();
-
-    const emailInput = await screen.findByLabelText("Email");
-    await user.type(emailInput, "test@example.com");
-
-    const resend = await screen.findByRole("button", {
-      name: /Resend verification email/i,
-    });
-    await user.click(resend);
-
-    expect(router.state.location.pathname).toBe("/resend-verification");
-    expect(router.state.location.search).toEqual({ email: "test@example.com" });
   });
 });
