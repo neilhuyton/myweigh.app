@@ -1,18 +1,22 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { InstallPWA, useBannerStore } from "@steel-cut/steel-lib";
+import {
+  InstallPWA,
+  LogoutSection,
+  useBannerStore,
+} from "@steel-cut/steel-lib";
 import { useAuthStore } from "@/store/authStore";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
-import LogoutSection from "@/components/LogoutSection";
 import {
   ProfileHeader,
   CurrentEmailSection,
   EmailChangeForm,
   PasswordResetForm,
 } from "@steel-cut/steel-lib";
+import { APP_CONFIG } from "@/appConfig";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
@@ -23,7 +27,7 @@ function ProfilePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { show: showBanner } = useBannerStore();
-  const { user, updateUserEmail } = useAuthStore();
+  const { user, updateUserEmail, signOut } = useAuthStore();
 
   const currentEmail = user?.email ?? "";
   const hasUser = !!user;
@@ -61,7 +65,7 @@ function ProfilePage() {
     } catch {
       // empty
     }
-    navigate({ to: "/weight-log", replace: true });
+    navigate({ to: APP_CONFIG.defaultAuthenticatedPath, replace: true });
   };
 
   const handleEmailChange = async (newEmail: string) => {
@@ -72,6 +76,25 @@ function ProfilePage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleLogout = () => {
+    signOut().catch((err) =>
+      console.warn("[Logout] supabase.auth.signOut failed (non-blocking)", err),
+    );
+
+    const ref = new URL(import.meta.env.VITE_SUPABASE_URL!).hostname.split(
+      ".",
+    )[0];
+    localStorage.removeItem(`sb-${ref}-auth-token`);
+
+    Object.keys(localStorage)
+      .filter((key) => key.startsWith("sb-") && key.includes("-auth"))
+      .forEach((key) => localStorage.removeItem(key));
+
+    queryClient.clear();
+
+    window.location.replace("/login");
   };
 
   return (
@@ -122,7 +145,7 @@ function ProfilePage() {
                   if (error) throw error;
                 }}
               />
-              <LogoutSection />
+              <LogoutSection onLogout={handleLogout} />
             </div>
           </div>
         </div>

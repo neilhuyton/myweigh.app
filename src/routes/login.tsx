@@ -3,6 +3,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { LoginForm, type LoginFormValues } from "@steel-cut/steel-lib";
+import { APP_CONFIG } from "@/appConfig";
 
 export const Route = createFileRoute("/login")({
   beforeLoad: async () => {
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/login")({
 
     if (session?.user?.id) {
       throw redirect({
-        to: "/weight-log",
+        to: APP_CONFIG.defaultAuthenticatedPath,
         replace: true,
       });
     }
@@ -28,7 +29,7 @@ function LoginPage() {
       useAuthStore.getState().isInitialized &&
       useAuthStore.getState().session?.user?.id
     ) {
-      navigate({ to: "/weight-log", replace: true });
+      navigate({ to: APP_CONFIG.defaultAuthenticatedPath, replace: true });
     }
   }, [navigate]);
 
@@ -42,7 +43,7 @@ function LoginPage() {
         return { error };
       }
 
-      navigate({ to: "/weight-log" });
+      navigate({ to: APP_CONFIG.defaultAuthenticatedPath });
     } finally {
       setIsLoading(false);
     }

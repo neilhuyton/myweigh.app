@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { useAuthStore } from "@/store/authStore";
 import { renderWithProviders } from "../../../__tests__/utils/test-helpers";
 import type { User, Session } from "@supabase/supabase-js";
+import { APP_CONFIG } from "@/appConfig";
 
 vi.mock("@/lib/supabase", () => ({
   supabase: {
@@ -83,7 +84,7 @@ describe("ProfilePage", () => {
     expect(closeBtn.querySelector("svg")).toBeInTheDocument();
   });
 
-  it("navigates to /weight-log when close button clicked and no history", async () => {
+  it("navigates to default authenticated path when close button clicked and no history", async () => {
     const renderResult = await act(async () => {
       return renderWithProviders({ initialEntries: ["/profile"] });
     });
@@ -99,7 +100,7 @@ describe("ProfilePage", () => {
 
     expect(mockNavigate).toHaveBeenCalledWith(
       expect.objectContaining({
-        to: "/weight-log",
+        to: APP_CONFIG.defaultAuthenticatedPath,
         replace: true,
       }),
     );
@@ -108,7 +109,7 @@ describe("ProfilePage", () => {
   it("calls history.back when there is previous history", async () => {
     const renderResult = await act(async () => {
       return renderWithProviders({
-        initialEntries: ["/weight-log", "/profile"],
+        initialEntries: [APP_CONFIG.defaultAuthenticatedPath, "/profile"],
       });
     });
 
