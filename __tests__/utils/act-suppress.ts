@@ -1,5 +1,3 @@
-// test/setup/act-suppress.ts
-
 const originalConsoleError = console.error;
 
 export function suppressActWarnings() {
