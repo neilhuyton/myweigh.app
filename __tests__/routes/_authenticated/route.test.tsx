@@ -3,14 +3,19 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { useAuthStore } from "@/store/authStore";
-import { suppressActWarnings } from "../../../__tests__/act-suppress";
 import { renderWithProviders } from "../../utils/test-helpers";
+import { suppressActWarnings } from "../../utils/act-suppress";
+import { APP_CONFIG } from "@/appConfig";
 
 suppressActWarnings();
 
-vi.mock("@/store/authStore", () => ({
-  useAuthStore: vi.fn(),
-}));
+vi.mock("@/store/authStore", () => {
+  const mockHook = vi.fn();
+
+  return {
+    useAuthStore: mockHook,
+  };
+});
 
 const createMockAuthState = (overrides = {}) => ({
   user: null,
@@ -33,23 +38,34 @@ describe("Authenticated Layout Route (/_authenticated)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    const mockGetState = vi.fn();
+
     vi.mocked(useAuthStore).mockImplementation((selector) => {
       const state = createMockAuthState();
       return selector ? selector(state) : state;
     });
+
+    Object.defineProperty(useAuthStore, "getState", {
+      value: mockGetState,
+      writable: true,
+    });
   });
 
   it("shows loading screen when loading is true", async () => {
+    const loadingState = createMockAuthState({ loading: true });
+
     vi.mocked(useAuthStore).mockImplementation((selector) => {
-      const state = createMockAuthState({ loading: true });
-      return selector ? selector(state) : state;
+      return selector ? selector(loadingState) : loadingState;
     });
 
-    vi.mocked(useAuthStore).getState = vi.fn().mockReturnValue(
-      createMockAuthState({ loading: true })
-    );
+    Object.defineProperty(useAuthStore, "getState", {
+      value: vi.fn().mockReturnValue(loadingState),
+      writable: true,
+    });
 
-    renderWithProviders({ initialEntries: ["/home"] });
+    renderWithProviders({
+      initialEntries: [APP_CONFIG.defaultAuthenticatedPath],
+    });
 
     await waitFor(() => {
       expect(screen.getByText("Loading session...")).toBeInTheDocument();
@@ -57,36 +73,45 @@ describe("Authenticated Layout Route (/_authenticated)", () => {
   });
 
   it("does not redirect immediately when loading is true", async () => {
+    const loadingState = createMockAuthState({ loading: true });
+
     vi.mocked(useAuthStore).mockImplementation((selector) => {
-      const state = createMockAuthState({ loading: true });
-      return selector ? selector(state) : state;
+      return selector ? selector(loadingState) : loadingState;
     });
 
-    vi.mocked(useAuthStore).getState = vi.fn().mockReturnValue(
-      createMockAuthState({ loading: true })
-    );
+    Object.defineProperty(useAuthStore, "getState", {
+      value: vi.fn().mockReturnValue(loadingState),
+      writable: true,
+    });
 
-    const { router } = renderWithProviders({ initialEntries: ["/home"] });
+    const { router } = renderWithProviders({
+      initialEntries: [APP_CONFIG.defaultAuthenticatedPath],
+    });
 
-    await new Promise((r) => setTimeout(r, 400));
+    await waitFor(() => {
+      expect(screen.getByText("Loading session...")).toBeInTheDocument();
+    });
 
     expect(router.state.location.pathname).not.toBe("/login");
-    expect(screen.getByText("Loading session...")).toBeInTheDocument();
   });
 
   it("renders ProfileIcon in the header when authenticated", async () => {
     const mockUser = { id: "user-123", email: "test@example.com" };
 
+    const authState = createMockAuthState({ user: mockUser, loading: false });
+
     vi.mocked(useAuthStore).mockImplementation((selector) => {
-      const state = createMockAuthState({ user: mockUser, loading: false });
-      return selector ? selector(state) : state;
+      return selector ? selector(authState) : authState;
     });
 
-    vi.mocked(useAuthStore).getState = vi.fn().mockReturnValue(
-      createMockAuthState({ user: mockUser, loading: false })
-    );
+    Object.defineProperty(useAuthStore, "getState", {
+      value: vi.fn().mockReturnValue(authState),
+      writable: true,
+    });
 
-    renderWithProviders({ initialEntries: ["/home"] });
+    renderWithProviders({
+      initialEntries: [APP_CONFIG.defaultAuthenticatedPath],
+    });
 
     await waitFor(() => {
       expect(
@@ -100,16 +125,20 @@ describe("Authenticated Layout Route (/_authenticated)", () => {
 
     const mockUser = { id: "user-123", email: "test@example.com" };
 
+    const authState = createMockAuthState({ user: mockUser, loading: false });
+
     vi.mocked(useAuthStore).mockImplementation((selector) => {
-      const state = createMockAuthState({ user: mockUser, loading: false });
-      return selector ? selector(state) : state;
+      return selector ? selector(authState) : authState;
     });
 
-    vi.mocked(useAuthStore).getState = vi.fn().mockReturnValue(
-      createMockAuthState({ user: mockUser, loading: false })
-    );
+    Object.defineProperty(useAuthStore, "getState", {
+      value: vi.fn().mockReturnValue(authState),
+      writable: true,
+    });
 
-    const { router } = renderWithProviders({ initialEntries: ["/home"] });
+    const { router } = renderWithProviders({
+      initialEntries: [APP_CONFIG.defaultAuthenticatedPath],
+    });
 
     await waitFor(() => {
       expect(
