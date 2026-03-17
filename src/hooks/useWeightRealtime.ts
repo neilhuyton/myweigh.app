@@ -1,13 +1,17 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/trpc";
-import { useRealtimeSubscription } from "./useRealtimeSubscription";
 import { useAuthStore } from "@/store/authStore";
+import { supabase } from "@/lib/supabase";
+import { useRealtimeSubscription } from "@steel-cut/steel-lib";
 
 export function useWeightRealtime() {
   const queryClient = useQueryClient();
   const userId = useAuthStore((s) => s.user?.id);
 
   useRealtimeSubscription({
+    supabase,
+    subscribeToAuthChange: (cb) =>
+      useAuthStore.subscribe((state) => cb(state.session)),
     channelName: userId
       ? `weight_measurement:user:${userId}`
       : "weight_measurement:placeholder",
