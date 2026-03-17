@@ -18,6 +18,7 @@ import { Route as AuthenticatedRouteRouteImport } from './../routes/_authenticat
 import { Route as IndexRouteImport } from './../routes/index'
 import { Route as AuthenticatedWeightChartRouteImport } from './../routes/_authenticated/weight-chart'
 import { Route as AuthenticatedProfileRouteImport } from './../routes/_authenticated/profile'
+import { Route as AuthenticatedHomeRouteImport } from './../routes/_authenticated/home'
 import { Route as AuthenticatedWeightLogIndexRouteImport } from './../routes/_authenticated/weight-log/index'
 import { Route as AuthenticatedWeightGoalIndexRouteImport } from './../routes/_authenticated/weight-goal/index'
 import { Route as AuthenticatedWeightLogHistoryRouteImport } from './../routes/_authenticated/weight-log/history'
@@ -68,6 +69,11 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedWeightLogIndexRoute =
   AuthenticatedWeightLogIndexRouteImport.update({
     id: '/weight-log/',
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/update-password': typeof UpdatePasswordRoute
+  '/home': typeof AuthenticatedHomeRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/weight-chart': typeof AuthenticatedWeightChartRoute
   '/weight-goal/history': typeof AuthenticatedWeightGoalHistoryRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/update-password': typeof UpdatePasswordRoute
+  '/home': typeof AuthenticatedHomeRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/weight-chart': typeof AuthenticatedWeightChartRoute
   '/weight-goal/history': typeof AuthenticatedWeightGoalHistoryRoute
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/update-password': typeof UpdatePasswordRoute
+  '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/weight-chart': typeof AuthenticatedWeightChartRoute
   '/_authenticated/weight-goal/history': typeof AuthenticatedWeightGoalHistoryRoute
@@ -146,6 +155,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/update-password'
+    | '/home'
     | '/profile'
     | '/weight-chart'
     | '/weight-goal/history'
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/update-password'
+    | '/home'
     | '/profile'
     | '/weight-chart'
     | '/weight-goal/history'
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/update-password'
+    | '/_authenticated/home'
     | '/_authenticated/profile'
     | '/_authenticated/weight-chart'
     | '/_authenticated/weight-goal/history'
@@ -258,6 +270,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/home': {
+      id: '/_authenticated/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AuthenticatedHomeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/weight-log/': {
       id: '/_authenticated/weight-log/'
       path: '/weight-log'
@@ -290,6 +309,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedWeightChartRoute: typeof AuthenticatedWeightChartRoute
   AuthenticatedWeightGoalHistoryRoute: typeof AuthenticatedWeightGoalHistoryRoute
@@ -299,6 +319,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedWeightChartRoute: AuthenticatedWeightChartRoute,
   AuthenticatedWeightGoalHistoryRoute: AuthenticatedWeightGoalHistoryRoute,

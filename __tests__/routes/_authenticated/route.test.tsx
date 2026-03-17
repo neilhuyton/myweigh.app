@@ -24,6 +24,7 @@ const createMockAuthState = (overrides = {}) => ({
   signUp: vi.fn().mockResolvedValue({ error: null }),
   waitUntilReady: vi.fn().mockResolvedValue(null),
   updateUserEmail: vi.fn().mockResolvedValue({ error: null }),
+  updateUserPassword: vi.fn().mockResolvedValue({ error: null }),
   setSession: vi.fn(),
   ...overrides,
 });
@@ -48,7 +49,7 @@ describe("Authenticated Layout Route (/_authenticated)", () => {
       createMockAuthState({ loading: true })
     );
 
-    renderWithProviders({ initialEntries: ["/weight-log"] });
+    renderWithProviders({ initialEntries: ["/home"] });
 
     await waitFor(() => {
       expect(screen.getByText("Loading session...")).toBeInTheDocument();
@@ -65,7 +66,7 @@ describe("Authenticated Layout Route (/_authenticated)", () => {
       createMockAuthState({ loading: true })
     );
 
-    const { router } = renderWithProviders({ initialEntries: ["/weight-log"] });
+    const { router } = renderWithProviders({ initialEntries: ["/home"] });
 
     await new Promise((r) => setTimeout(r, 400));
 
@@ -85,7 +86,7 @@ describe("Authenticated Layout Route (/_authenticated)", () => {
       createMockAuthState({ user: mockUser, loading: false })
     );
 
-    renderWithProviders({ initialEntries: ["/weight-log"] });
+    renderWithProviders({ initialEntries: ["/home"] });
 
     await waitFor(() => {
       expect(
@@ -108,10 +109,9 @@ describe("Authenticated Layout Route (/_authenticated)", () => {
       createMockAuthState({ user: mockUser, loading: false })
     );
 
-    const { router } = renderWithProviders({ initialEntries: ["/weight-log"] });
+    const { router } = renderWithProviders({ initialEntries: ["/home"] });
 
     await waitFor(() => {
-      expect(screen.getByText("My Weigh")).toBeInTheDocument();
       expect(
         screen.getByRole("button", { name: /profile/i }),
       ).toBeInTheDocument();
