@@ -1,8 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/trpc";
 import { useAuthStore } from "@/store/authStore";
-import { supabase } from "@/lib/supabase";
 import { useRealtimeSubscription } from "@steel-cut/steel-lib";
+import { supabase } from "@/lib/supabase";
 
 export function useGoalRealtime() {
   const queryClient = useQueryClient();
