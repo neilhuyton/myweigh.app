@@ -1,13 +1,17 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/trpc";
-import { useRealtimeSubscription } from "./useRealtimeSubscription";
 import { useAuthStore } from "@/store/authStore";
+import { useRealtimeSubscription } from "@steel-cut/steel-lib";
+import { supabase } from "@/lib/supabase";
 
 export function useGoalRealtime() {
   const queryClient = useQueryClient();
   const userId = useAuthStore((s) => s.user?.id);
 
   useRealtimeSubscription({
+    supabase,
+    subscribeToAuthChange: (cb) =>
+      useAuthStore.subscribe((state) => cb(state.session)),
     channelName: userId ? `goal:user:${userId}` : "goal:placeholder",
     table: "goal",
     event: "*",
