@@ -1,5 +1,3 @@
-// __tests__/trpc.test.tsx
-
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { TRPCClient } from "@trpc/client";
 import type { AppRouter } from "server/trpc";
@@ -51,22 +49,13 @@ describe("trpc setup", () => {
   it("conditionally uses httpLink in test mode", async () => {
     vi.stubEnv("MODE", "test");
 
-    vi.doMock("../src/trpc", async () => {
-      const actual = await vi.importActual("../src/trpc");
+    vi.doMock("@steel-cut/trpc-shared/client", () => ({
+      createTrpcClient: vi.fn().mockReturnValue({} as TRPCClient<AppRouter>),
+    }));
 
-      return {
-        ...actual,
-        createTrpcClient: vi.fn().mockImplementation(() => {
-          return {} as TRPCClient<AppRouter>;
-        }),
-      };
-    });
+    const { trpcClient } = await import("../src/trpc");
 
-    const { createTrpcClient } = await import("../src/trpc");
-
-    const client = createTrpcClient();
-
-    expect(client).toBeDefined();
-    expect(typeof client).toBe("object");
+    expect(trpcClient).toBeDefined();
+    expect(typeof trpcClient).toBe("object");
   });
 });
