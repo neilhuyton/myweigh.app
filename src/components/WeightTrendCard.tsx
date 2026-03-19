@@ -15,32 +15,35 @@ import { cn } from "@/lib/utils";
 
 export default function WeightTrendCard() {
   const {
-    data: weightsData,
+    data: weightsResponse,
     isLoading,
     isError,
   } = useQuery(
-    trpc.weight.getWeights.queryOptions(undefined, {
-      staleTime: 1000 * 60 * 5,
-    }),
+    trpc.weight.getWeights.queryOptions(
+      {},
+      {
+        staleTime: 1000 * 60 * 5,
+      },
+    ),
   );
 
-  const weights = useMemo(() => {
-    if (!weightsData) return [];
-    return [...weightsData].sort(
+  const sortedWeights = useMemo(() => {
+    if (!weightsResponse?.items) return [];
+    return [...weightsResponse.items].sort(
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
-  }, [weightsData]);
+  }, [weightsResponse]);
 
   const chartData = useMemo(() => {
-    if (!weights.length) return [];
-    return weights
+    if (!sortedWeights.length) return [];
+    return sortedWeights
       .map((w) => ({
         date: w.createdAt,
         weight: Number(w.weightKg),
       }))
       .filter((d) => !isNaN(d.weight));
-  }, [weights]);
+  }, [sortedWeights]);
 
   const yTicks = useMemo(() => {
     if (!chartData.length) return [50, 60];
@@ -120,7 +123,7 @@ export default function WeightTrendCard() {
     );
   }
 
-  if (!weightsData || weights.length === 0) {
+  if (!weightsResponse?.items?.length) {
     return (
       <div className="text-center text-muted-foreground py-12 italic">
         No measurements recorded yet
@@ -144,7 +147,7 @@ export default function WeightTrendCard() {
         >
           <LineChart
             data={chartData}
-            margin={{ top: 8, right: 4, left: -12, bottom: 0 }}
+            margin={{ top: 8, right: 4, left: 8, bottom: 0 }}
           >
             <CartesianGrid
               vertical={false}
@@ -171,8 +174,8 @@ export default function WeightTrendCard() {
               allowDecimals
               tickLine={false}
               axisLine={false}
-              tickMargin={2}
-              width={40}
+              tickMargin={8}
+              width={50}
               tick={{ fontSize: 10 }}
               tickFormatter={(v) => Number(v).toFixed(1)}
             />
