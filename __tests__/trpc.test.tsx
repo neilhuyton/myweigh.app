@@ -25,7 +25,7 @@ describe("trpc setup", () => {
       useTRPCClient: vi.fn(),
     }));
 
-    const { trpc } = await import("../src/trpc");
+    await import("../src/trpc");
 
     expect(mockCreate).toHaveBeenCalledTimes(1);
     expect(mockCreate).toHaveBeenCalledWith(
@@ -34,6 +34,8 @@ describe("trpc setup", () => {
         queryClient: expect.any(Object),
       }),
     );
+
+    const { trpc } = await import("../src/trpc");
 
     expect(trpc).toBeDefined();
     expect(typeof trpc).toBe("function");
@@ -52,6 +54,8 @@ describe("trpc setup", () => {
     vi.doMock("@steel-cut/trpc-shared/client", () => ({
       createTrpcClient: vi.fn().mockReturnValue({} as TRPCClient<AppRouter>),
     }));
+
+    await import("../src/trpc");
 
     const { trpcClient } = await import("../src/trpc");
 
