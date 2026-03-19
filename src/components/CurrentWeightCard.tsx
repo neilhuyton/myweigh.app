@@ -1,122 +1,129 @@
-import { useRef, useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { trpc } from "@/trpc";
-import EditableNumberCard from "@/components/EditableNumberCard";
-import { formatDate } from "@/utils/date";
+import { useRef, useState, useEffect } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { trpc } from "@/trpc"
+import EditableNumberCard from "@/components/EditableNumberCard"
+import { formatDate } from "@/utils/date"
 
 export default function CurrentWeightCard() {
-  const queryClient = useQueryClient();
-
-  const latestWeightQuery = trpc.weight.getLatestWeight;
+  const queryClient = useQueryClient()
 
   const { data: latestWeight, isLoading } = useQuery(
-    latestWeightQuery.queryOptions(undefined, {
+    trpc.weight.getLatestWeight.queryOptions(undefined, {
       staleTime: 30000,
       gcTime: 300000,
     }),
-  );
+  )
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState("");
+  const [isEditing, setIsEditing] = useState(false)
+  const [editValue, setEditValue] = useState("")
 
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (latestWeight) {
-      setEditValue(latestWeight.weightKg.toString());
+      setEditValue(latestWeight.weightKg.toString())
     }
-  }, [latestWeight]);
+  }, [latestWeight])
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
+      inputRef.current.focus()
+      inputRef.current.select()
     }
-  }, [isEditing]);
+  }, [isEditing])
 
   const getValidatedWeight = (): number | null => {
-    const trimmed = editValue.trim();
-    if (!trimmed) return null;
-    const val = parseFloat(trimmed);
-    if (isNaN(val) || val <= 0) return null;
-    if (latestWeight && val === latestWeight.weightKg) return null;
-    return val;
-  };
+    const trimmed = editValue.trim()
+    if (!trimmed) return null
+    const val = parseFloat(trimmed)
+    if (isNaN(val) || val <= 0) return null
+    if (latestWeight && val === latestWeight.weightKg) return null
+    return val
+  }
 
   const createMutation = useMutation(
     trpc.weight.create.mutationOptions({
       onMutate: async ({ weightKg, note = "" }) => {
-        const queryKey = latestWeightQuery.queryKey();
-        await queryClient.cancelQueries({ queryKey });
-        const previous = queryClient.getQueryData(queryKey);
+        const queryKey = trpc.weight.getLatestWeight.queryKey()
+        await queryClient.cancelQueries({ queryKey })
+        const previous = queryClient.getQueryData(queryKey)
 
         const optimistic = {
           id: `temp-${Date.now()}`,
           weightKg,
           createdAt: new Date().toISOString(),
           note,
-        };
+        }
 
-        queryClient.setQueryData(queryKey, optimistic);
+        queryClient.setQueryData(queryKey, optimistic)
 
-        return { previous };
+        return { previous }
       },
 
       onError: (_, __, context) => {
         if (context?.previous !== undefined) {
           queryClient.setQueryData(
-            latestWeightQuery.queryKey(),
+            trpc.weight.getLatestWeight.queryKey(),
             context.previous,
-          );
+          )
+        }
+      },
+
+      onSuccess: (result) => {
+        if (result.goalReached) {
+          window.dispatchEvent(new CustomEvent("trigger-confetti"))
         }
       },
 
       onSettled: () => {
         queryClient.invalidateQueries({
-          queryKey: latestWeightQuery.queryKey(),
-        });
+          queryKey: trpc.weight.getLatestWeight.queryKey(),
+        })
+        queryClient.invalidateQueries({
+          queryKey: trpc.weight.getActiveGoal.queryKey(),
+        })
       },
     }),
-  );
+  )
 
-  const isPending = createMutation.isPending;
+  const isPending = createMutation.isPending
 
   const displayedWeight = isPending
-    ? ((Number(editValue) || latestWeight?.weightKg) ?? null)
-    : (latestWeight?.weightKg ?? null);
+    ? (Number(editValue) || latestWeight?.weightKg) ?? null
+    : latestWeight?.weightKg ?? null
 
   const statusText = isPending
     ? "Saving new weight..."
     : latestWeight?.createdAt
       ? formatDate(latestWeight.createdAt)
-      : "";
+      : ""
 
   const saveEdit = () => {
-    const newWeight = getValidatedWeight();
+    const newWeight = getValidatedWeight()
     if (newWeight === null) {
-      setIsEditing(false);
-      setEditValue(latestWeight?.weightKg?.toString() ?? "");
-      return;
+      setIsEditing(false)
+      setEditValue(latestWeight?.weightKg?.toString() ?? "")
+      return
     }
 
-    setIsEditing(false);
-    createMutation.mutate({ weightKg: newWeight, note: "" });
-  };
+    setIsEditing(false)
+    createMutation.mutate({ weightKg: newWeight, note: "" })
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      e.preventDefault();
-      saveEdit();
+      e.preventDefault()
+      saveEdit()
     } else if (e.key === "Escape") {
-      setIsEditing(false);
-      setEditValue(latestWeight?.weightKg?.toString() ?? "");
+      setIsEditing(false)
+      setEditValue(latestWeight?.weightKg?.toString() ?? "")
     }
-  };
+  }
 
   if (isLoading && !latestWeight) {
     return (
       <div className="rounded-xl border bg-card/60 backdrop-blur-sm p-6 min-h-[220px] animate-pulse bg-muted" />
-    );
+    )
   }
 
   return (
@@ -131,8 +138,8 @@ export default function CurrentWeightCard() {
       editValue={editValue}
       onStartEditing={() => setIsEditing(true)}
       onCancel={() => {
-        setIsEditing(false);
-        setEditValue(latestWeight?.weightKg?.toString() ?? "");
+        setIsEditing(false)
+        setEditValue(latestWeight?.weightKg?.toString() ?? "")
       }}
       onSave={saveEdit}
       onChange={setEditValue}
@@ -142,5 +149,5 @@ export default function CurrentWeightCard() {
       noValueSubMessage="Tap here to add your current weight"
       dataTestId="current-weight-display"
     />
-  );
+  )
 }

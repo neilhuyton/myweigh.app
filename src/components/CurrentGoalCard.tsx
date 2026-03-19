@@ -7,7 +7,7 @@ import { formatDate } from "@/utils/date";
 export default function CurrentGoalCard() {
   const queryClient = useQueryClient();
 
-  const currentGoalQuery = trpc.weight.getCurrentGoal;
+  const currentGoalQuery = trpc.weight.getActiveGoal;
 
   const { data: currentGoal, isLoading } = useQuery(
     currentGoalQuery.queryOptions(undefined, {

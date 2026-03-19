@@ -54,11 +54,11 @@ describe("CurrentGoalCard", () => {
     </TRPCProvider>
   );
 
-  const currentGoalQueryKey = trpc.weight.getCurrentGoal.queryKey();
+  const currentGoalQueryKey = trpc.weight.getActiveGoal.queryKey();
 
   const setupGetHandler = (initialData: Goal = null) => {
     server.use(
-      http.get("/trpc/weight.getCurrentGoal", () => {
+      http.get("/trpc/weight.getActiveGoal", () => {
         const cached = queryClient.getQueryData<Goal>(currentGoalQueryKey);
         return HttpResponse.json({ result: { data: cached ?? initialData } });
       }),

@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import CurrentWeightCard from "@/components/CurrentWeightCard";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { ConfettiLayer } from "@/components/ConfettiLayer";
 
 export const Route = createFileRoute("/_authenticated/weight-log/")({
   component: RouteComponent,
@@ -14,6 +15,7 @@ function RouteComponent() {
         flex flex-col 
         px-4 py-6 
         pb-24 sm:pb-28 lg:pb-32
+        relative
       "
     >
       <h1 className="text-3xl font-bold tracking-tight text-center mb-8">
@@ -35,6 +37,8 @@ function RouteComponent() {
           </div>
         </div>
       </div>
+
+      <ConfettiLayer />
     </div>
   );
 }
