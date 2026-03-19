@@ -250,4 +250,136 @@ describe("CurrentGoalCard", () => {
       expect(screen.getByText("69")).toBeInTheDocument();
     });
   });
+
+  it("shows Goal Reached! title and reached weight when there is no active goal but a reached goal exists", async () => {
+    setupGetHandler(null);
+
+    const reachedGoal: Goal = {
+      id: "r1",
+      goalWeightKg: 71.2,
+      goalSetAt: "2026-02-15T08:45:00.000Z",
+      reachedAt: "2026-03-10T14:20:00.000Z",
+    };
+
+    server.use(
+      http.get("/trpc/weight.getLatestReachedGoal", () => {
+        return HttpResponse.json({ result: { data: reachedGoal } });
+      }),
+    );
+
+    render(<CurrentGoalCard />, { wrapper });
+
+    await waitFor(() => {
+      expect(screen.getByText("Goal Reached!")).toBeInTheDocument();
+      expect(screen.getByTestId("current-goal-weight")).toHaveTextContent(
+        "71.2",
+      );
+      expect(screen.getByText("kg")).toBeInTheDocument();
+    });
+  });
+
+  it("shows reached date in status text when goal was reached", async () => {
+    setupGetHandler(null);
+
+    const reachedGoal: Goal = {
+      id: "r2",
+      goalWeightKg: 65,
+      goalSetAt: "2026-01-20T10:00:00.000Z",
+      reachedAt: "2026-03-05T16:30:00.000Z",
+    };
+
+    server.use(
+      http.get("/trpc/weight.getLatestReachedGoal", () => {
+        return HttpResponse.json({ result: { data: reachedGoal } });
+      }),
+    );
+
+    render(<CurrentGoalCard />, { wrapper });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          `Reached ${formatDate(reachedGoal.reachedAt!)}. You reached 65 kg — tap to set new goal`,
+        ),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("shows correct sub-message prompting to set new goal after reaching previous one", async () => {
+    setupGetHandler(null);
+
+    const reachedGoal: Goal = {
+      id: "r3",
+      goalWeightKg: 68,
+      goalSetAt: "2026-02-01T09:15:00.000Z",
+      reachedAt: "2026-03-12T11:45:00.000Z",
+    };
+
+    server.use(
+      http.get("/trpc/weight.getLatestReachedGoal", () => {
+        return HttpResponse.json({ result: { data: reachedGoal } });
+      }),
+    );
+
+    render(<CurrentGoalCard />, { wrapper });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          `Reached ${formatDate(reachedGoal.reachedAt!)}. You reached 68 kg — tap to set new goal`,
+        ),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("allows creating a new goal after previous goal was reached", async () => {
+    const user = userEvent.setup();
+
+    setupGetHandler(null);
+
+    const reachedGoal: Goal = {
+      id: "r4",
+      goalWeightKg: 70,
+      goalSetAt: "2026-02-10T13:00:00.000Z",
+      reachedAt: "2026-03-08T15:10:00.000Z",
+    };
+
+    const newGoalAfterReach: Goal = {
+      id: "new-after-reach",
+      goalWeightKg: 66,
+      goalSetAt: "2026-03-19T10:20:00.000Z",
+      reachedAt: null,
+    };
+
+    server.use(
+      http.get("/trpc/weight.getLatestReachedGoal", () => {
+        return HttpResponse.json({ result: { data: reachedGoal } });
+      }),
+      http.post("/trpc/weight.setGoal", async () => {
+        queryClient.setQueryData(currentGoalQueryKey, newGoalAfterReach);
+        return HttpResponse.json({ result: { data: newGoalAfterReach } });
+      }),
+    );
+
+    render(<CurrentGoalCard />, { wrapper });
+
+    await waitFor(() => {
+      expect(screen.getByText("Goal Reached!")).toBeInTheDocument();
+      expect(screen.getByTestId("current-goal-weight")).toHaveTextContent("70");
+    });
+
+    await user.click(screen.getByLabelText("Edit your weight goal"));
+
+    const input = await screen.findByRole("spinbutton");
+    await user.clear(input);
+    await user.type(input, "66{Enter}");
+
+    await waitFor(() => {
+      expect(screen.getByTestId("current-goal-weight")).toHaveTextContent("66");
+      expect(screen.getByText("Current Goal")).toBeInTheDocument();
+      expect(
+        screen.getByText(formatDate(newGoalAfterReach.goalSetAt)),
+      ).toBeInTheDocument();
+    });
+  });
 });
