@@ -1,9 +1,8 @@
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "@tanstack/react-router";
 import { createFileRoute } from "@tanstack/react-router";
 import WeightList from "@/components/WeightList";
+import { BackButton } from "@steel-cut/steel-lib";
 
 export const Route = createFileRoute("/_authenticated/weight-log/history")({
   component: WeightHistoryPage,
@@ -28,15 +27,11 @@ function WeightHistoryPage() {
     >
       <div className="relative flex h-full flex-col">
         <header className="shrink-0 px-6 pt-20 pb-6 sm:px-8">
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute left-4 top-6 sm:left-6 sm:top-8 z-[10000]"
-            aria-label="Return to weight entry"
+          <BackButton
             onClick={handleBack}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+            ariaLabel="Return to weight entry"
+            className="absolute left-4 top-6 sm:left-6 sm:top-8 z-[10000]"
+          />
 
           <div className="text-center space-y-3">
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
