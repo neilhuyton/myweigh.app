@@ -89,18 +89,41 @@ export const weightRouter = router({
       }
     }),
 
-  getWeights: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.prisma.weightMeasurement.findMany({
-      where: { userId: ctx.userId },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        weightKg: true,
-        note: true,
-        createdAt: true,
-      },
-    });
-  }),
+  getWeights: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).default(50),
+        cursor: z.string().optional(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const { limit, cursor } = input;
+
+      const where: Prisma.WeightMeasurementWhereInput = { userId: ctx.userId };
+      if (cursor) {
+        where.createdAt = { lt: new Date(cursor) };
+      }
+
+      const items = await ctx.prisma.weightMeasurement.findMany({
+        where,
+        take: limit + 1,
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          weightKg: true,
+          note: true,
+          createdAt: true,
+        },
+      });
+
+      const hasMore = items.length > limit;
+      const nextCursor = hasMore ? items[limit].createdAt.toISOString() : null;
+
+      return {
+        items: items.slice(0, limit),
+        nextCursor,
+      };
+    }),
 
   getLatestWeight: protectedProcedure.query(async ({ ctx }) => {
     return ctx.prisma.weightMeasurement.findFirst({
@@ -254,16 +277,39 @@ export const weightRouter = router({
     });
   }),
 
-  getGoals: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.prisma.goal.findMany({
-      where: { userId: ctx.userId },
-      orderBy: { goalSetAt: "desc" },
-      select: {
-        id: true,
-        goalWeightKg: true,
-        goalSetAt: true,
-        reachedAt: true,
-      },
-    });
-  }),
+  getGoals: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).default(50),
+        cursor: z.string().optional(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const { limit, cursor } = input;
+
+      const where: Prisma.GoalWhereInput = { userId: ctx.userId };
+      if (cursor) {
+        where.goalSetAt = { lt: new Date(cursor) };
+      }
+
+      const items = await ctx.prisma.goal.findMany({
+        where,
+        take: limit + 1,
+        orderBy: { goalSetAt: "desc" },
+        select: {
+          id: true,
+          goalWeightKg: true,
+          goalSetAt: true,
+          reachedAt: true,
+        },
+      });
+
+      const hasMore = items.length > limit;
+      const nextCursor = hasMore ? items[limit].goalSetAt.toISOString() : null;
+
+      return {
+        items: items.slice(0, limit),
+        nextCursor,
+      };
+    }),
 });
