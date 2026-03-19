@@ -23,6 +23,9 @@ export const weightRouter = router({
         },
       });
 
+      let goalReached = false;
+      let reachedGoalId: string | null = null;
+
       const currentGoal = await ctx.prisma.goal.findFirst({
         where: {
           userId: ctx.userId,
@@ -36,9 +39,15 @@ export const weightRouter = router({
           where: { id: currentGoal.id },
           data: { reachedAt: new Date() },
         });
+        goalReached = true;
+        reachedGoalId = currentGoal.id;
       }
 
-      return weight;
+      return {
+        weight,
+        goalReached,
+        reachedGoalId,
+      };
     }),
 
   update: protectedProcedure
@@ -211,8 +220,8 @@ export const weightRouter = router({
       }
     }),
 
-  getCurrentGoal: protectedProcedure.query(async ({ ctx }) => {
-    const goal = await ctx.prisma.goal.findFirst({
+  getActiveGoal: protectedProcedure.query(async ({ ctx }) => {
+    const activeGoal = await ctx.prisma.goal.findFirst({
       where: {
         userId: ctx.userId,
         reachedAt: null,
@@ -222,11 +231,11 @@ export const weightRouter = router({
         id: true,
         goalWeightKg: true,
         goalSetAt: true,
-        reachedAt: true,
+        reachedAt: true, // will be null
       },
     });
 
-    return goal ?? null;
+    return activeGoal ?? null;
   }),
 
   getGoals: protectedProcedure.query(async ({ ctx }) => {

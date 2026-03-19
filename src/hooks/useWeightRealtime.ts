@@ -27,7 +27,7 @@ export function useWeightRealtime() {
         queryKey: trpc.weight.getWeights.queryKey(),
       });
       queryClient.invalidateQueries({
-        queryKey: trpc.weight.getCurrentGoal.queryKey(),
+        queryKey: trpc.weight.getActiveGoal.queryKey(),
       });
       queryClient.invalidateQueries({
         queryKey: trpc.weight.getGoals.queryKey(),

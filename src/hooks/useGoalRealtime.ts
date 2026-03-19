@@ -19,7 +19,7 @@ export function useGoalRealtime() {
     enabled: !!userId,
     onPayload: () => {
       queryClient.invalidateQueries({
-        queryKey: trpc.weight.getCurrentGoal.queryKey(),
+        queryKey: trpc.weight.getActiveGoal.queryKey(),
       });
       queryClient.invalidateQueries({
         queryKey: trpc.weight.getGoals.queryKey(),
