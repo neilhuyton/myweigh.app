@@ -231,11 +231,27 @@ export const weightRouter = router({
         id: true,
         goalWeightKg: true,
         goalSetAt: true,
-        reachedAt: true, // will be null
+        reachedAt: true,
       },
     });
 
     return activeGoal ?? null;
+  }),
+
+  getLatestReachedGoal: protectedProcedure.query(async ({ ctx }) => {
+    return ctx.prisma.goal.findFirst({
+      where: {
+        userId: ctx.userId,
+        reachedAt: { not: null },
+      },
+      orderBy: { reachedAt: "desc" },
+      select: {
+        id: true,
+        goalWeightKg: true,
+        goalSetAt: true,
+        reachedAt: true,
+      },
+    });
   }),
 
   getGoals: protectedProcedure.query(async ({ ctx }) => {
