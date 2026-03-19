@@ -11,7 +11,7 @@ import {
 import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TRPCProvider } from "@/trpc";
-import { trpc, trpcClient } from "@/trpc";
+import { trpcClient } from "@/trpc";
 import { server } from "../../__mocks__/server";
 import { http, HttpResponse } from "msw";
 import WeightTrendCard from "@/components/WeightTrendCard";
@@ -53,13 +53,20 @@ describe("WeightTrendCard", () => {
     </TRPCProvider>
   );
 
-  const weightsQueryKey = trpc.weight.getWeights.queryKey();
-
-  const setupGetHandler = (weights: WeightEntry[] = []) => {
+  const mockSuccessResponse = (
+    items: WeightEntry[] = [],
+    nextCursor: string | null = null,
+  ) => {
     server.use(
       http.get("/trpc/weight.getWeights", () => {
-        const cached = queryClient.getQueryData<WeightEntry[]>(weightsQueryKey);
-        return HttpResponse.json({ result: { data: cached ?? weights } });
+        return HttpResponse.json({
+          result: {
+            data: {
+              items,
+              nextCursor,
+            },
+          },
+        });
       }),
     );
   };
@@ -79,7 +86,7 @@ describe("WeightTrendCard", () => {
   });
 
   it("shows empty state when no weights (after loading)", async () => {
-    setupGetHandler([]);
+    mockSuccessResponse([]);
 
     render(<WeightTrendCard />, { wrapper });
 
@@ -144,7 +151,7 @@ describe("WeightTrendCard", () => {
       },
     ];
 
-    setupGetHandler(weights);
+    mockSuccessResponse(weights);
 
     render(<WeightTrendCard />, { wrapper });
 
@@ -170,7 +177,7 @@ describe("WeightTrendCard", () => {
       },
     ];
 
-    setupGetHandler(weights);
+    mockSuccessResponse(weights);
 
     render(<WeightTrendCard />, { wrapper });
 
@@ -189,7 +196,7 @@ describe("WeightTrendCard", () => {
       },
     ];
 
-    setupGetHandler(weights);
+    mockSuccessResponse(weights);
 
     render(<WeightTrendCard />, { wrapper });
 
@@ -214,7 +221,7 @@ describe("WeightTrendCard", () => {
       },
     ];
 
-    setupGetHandler(weights);
+    mockSuccessResponse(weights);
 
     render(<WeightTrendCard />, { wrapper });
 
