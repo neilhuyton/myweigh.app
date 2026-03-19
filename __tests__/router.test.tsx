@@ -1,4 +1,3 @@
-// __tests__/router.test.tsx
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@/router/types/routeTree.gen', () => ({
