@@ -11,7 +11,6 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { RealtimeListeners } from "./RealtimeListeners";
 import { BannerProvider, ThemeProvider } from "@steel-cut/steel-lib";
 import { AuthProvider } from "./AuthProvider";
-// import { ConfettiLayer } from "./ConfettiLayer";
 
 export function Root() {
   const initialize = useAuthStore((s) => s.initialize);
@@ -53,7 +52,6 @@ export function Root() {
               >
                 <RouterProvider router={router} />
                 <RealtimeListeners />
-                {/* <ConfettiLayer /> */}
               </ThemeProvider>
             </TRPCProvider>
           </QueryClientProvider>

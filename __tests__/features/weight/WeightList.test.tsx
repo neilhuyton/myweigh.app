@@ -13,9 +13,9 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TRPCProvider } from "@/trpc";
 import { trpcClient } from "@/trpc";
-import { server } from "../../__mocks__/server";
+import { server } from "../../../__mocks__/server";
 import { http, HttpResponse } from "msw";
-import WeightList from "@/components/WeightList";
+import WeightList from "@/features/weight/WeightList";
 import { formatDate } from "@/utils/date";
 
 type WeightEntry = {

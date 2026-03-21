@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import CurrentGoalCard from "@/components/CurrentGoalCard";
+import CurrentGoalCard from "@/features/goal/CurrentGoalCard";
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/weight-goal/")({

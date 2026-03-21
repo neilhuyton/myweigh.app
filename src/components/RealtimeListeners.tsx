@@ -1,5 +1,5 @@
-import { useGoalRealtime } from "@/hooks/useGoalRealtime";
-import { useWeightRealtime } from "@/hooks/useWeightRealtime";
+import { useGoalRealtime } from "@/features/goal/useGoalRealtime";
+import { useWeightRealtime } from "@/features/weight/useWeightRealtime";
 
 export function RealtimeListeners() {
   useGoalRealtime();

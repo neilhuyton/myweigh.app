@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "../../../utils/test-helpers";
 import { useAuthStore } from "@/store/authStore";
 
-vi.mock("@/components/GoalList", () => ({
+vi.mock("@/features/goal/GoalList", () => ({
   default: () => <div data-testid="goal-list">Goal list content</div>,
 }));
 

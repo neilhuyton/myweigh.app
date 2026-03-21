@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { useNavigate } from "@tanstack/react-router";
 import { createFileRoute } from "@tanstack/react-router";
-import GoalList from "@/components/GoalList";
+import GoalList from "@/features/goal/GoalList";
 import { BackButton } from "@steel-cut/steel-lib";
 
 export const Route = createFileRoute("/_authenticated/weight-goal/history")({

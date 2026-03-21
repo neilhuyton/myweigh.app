@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import CurrentWeightCard from "@/components/CurrentWeightCard";
+import CurrentWeightCard from "@/features/weight/CurrentWeightCard";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ConfettiLayer } from "@/components/ConfettiLayer";
+import { ConfettiLayer } from "@/features/weight/ConfettiLayer";
 
 export const Route = createFileRoute("/_authenticated/weight-log/")({
   component: RouteComponent,

@@ -12,9 +12,9 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TRPCProvider } from "@/trpc";
 import { trpcClient } from "@/trpc";
-import { server } from "../../__mocks__/server";
+import { server } from "../../../__mocks__/server";
 import { http, HttpResponse } from "msw";
-import GoalList from "@/components/GoalList";
+import GoalList from "@/features/goal/GoalList";
 
 type GoalItem = {
   id: string;

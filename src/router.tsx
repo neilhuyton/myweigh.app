@@ -10,7 +10,6 @@ export interface RouterContext {
 
 export const router = createRouter({
   routeTree,
-  defaultPreload: "intent",
   context: {
     queryClient: getQueryClient(),
   } satisfies RouterContext,
@@ -18,6 +17,9 @@ export const router = createRouter({
   defaultErrorComponent: ({ error, reset }) => (
     <RouteError error={error} reset={reset} />
   ),
+
+  defaultPreload: "intent",
+  defaultPreloadDelay: 150,
 });
 
 declare module "@tanstack/react-router" {

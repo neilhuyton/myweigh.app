@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { useNavigate } from "@tanstack/react-router";
 import { createFileRoute } from "@tanstack/react-router";
-import WeightList from "@/components/WeightList";
+import WeightList from "@/features/weight/WeightList";
 import { BackButton } from "@steel-cut/steel-lib";
 
 export const Route = createFileRoute("/_authenticated/weight-log/history")({
