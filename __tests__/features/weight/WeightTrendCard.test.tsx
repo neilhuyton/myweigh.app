@@ -12,9 +12,9 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TRPCProvider } from "@/trpc";
 import { trpcClient } from "@/trpc";
-import { server } from "../../__mocks__/server";
+import { server } from "../../../__mocks__/server";
 import { http, HttpResponse } from "msw";
-import WeightTrendCard from "@/components/WeightTrendCard";
+import WeightTrendCard from "@/features/weight/WeightTrendCard";
 
 type WeightEntry = {
   id: string;

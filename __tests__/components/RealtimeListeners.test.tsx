@@ -1,16 +1,17 @@
 import { render } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RealtimeListeners } from "@/components/RealtimeListeners";
-import { useGoalRealtime } from "@/hooks/useGoalRealtime";
-import { useWeightRealtime } from "@/hooks/useWeightRealtime";
 
-vi.mock("@/hooks/useGoalRealtime", () => ({
-  useGoalRealtime: vi.fn(),
+import { RealtimeListeners } from "@/components/RealtimeListeners";
+import { useWeightRealtime } from "@/features/weight/useWeightRealtime";
+import { useGoalRealtime } from "@/features/goal/useGoalRealtime";
+
+vi.mock("@/features/weight/useWeightRealtime", () => ({
+  useWeightRealtime: vi.fn(),
 }));
 
-vi.mock("@/hooks/useWeightRealtime", () => ({
-  useWeightRealtime: vi.fn(),
+vi.mock("@/features/goal/useGoalRealtime", () => ({
+  useGoalRealtime: vi.fn(),
 }));
 
 describe("RealtimeListeners", () => {
@@ -25,9 +26,8 @@ describe("RealtimeListeners", () => {
       },
     });
 
-    // Reset mocks before each test
-    vi.mocked(useGoalRealtime).mockClear();
     vi.mocked(useWeightRealtime).mockClear();
+    vi.mocked(useGoalRealtime).mockClear();
   });
 
   it("renders nothing and calls both realtime hooks", () => {
@@ -37,8 +37,8 @@ describe("RealtimeListeners", () => {
       </QueryClientProvider>,
     );
 
-    expect(useGoalRealtime).toHaveBeenCalledTimes(1);
     expect(useWeightRealtime).toHaveBeenCalledTimes(1);
+    expect(useGoalRealtime).toHaveBeenCalledTimes(1);
     expect(container.firstChild).toBeNull();
   });
 });

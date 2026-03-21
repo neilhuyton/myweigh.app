@@ -20,11 +20,21 @@ describe("AuthProvider", () => {
       loading: false,
       error: null,
       isInitialized: true,
+
       initialize: mockInitialize,
+
       signIn: vi.fn().mockResolvedValue({ error: null }),
       signUp: vi.fn().mockResolvedValue({ error: null }),
       signOut: vi.fn().mockResolvedValue(undefined),
+
       waitUntilReady: vi.fn().mockResolvedValue(null),
+
+      lastRefreshFailed: false,
+      setLastRefreshFailed: vi.fn(),
+
+      changeUserEmail: vi.fn().mockResolvedValue(undefined),
+      updateUserPassword: vi.fn().mockResolvedValue(undefined),
+
       updateUserEmail: vi.fn(),
       setSession: vi.fn(),
     };

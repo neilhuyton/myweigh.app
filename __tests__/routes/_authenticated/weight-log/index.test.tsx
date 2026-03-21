@@ -4,7 +4,7 @@ import { renderWithProviders } from "../../../utils/test-helpers";
 import { useAuthStore } from "@/store/authStore";
 import type { User, Session } from "@supabase/supabase-js";
 
-vi.mock("@/components/CurrentWeightCard", () => ({
+vi.mock("@/features/weight/CurrentWeightCard", () => ({
   default: () => (
     <div data-testid="current-weight-card">Mock CurrentWeightCard</div>
   ),

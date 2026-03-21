@@ -5,7 +5,7 @@ import { renderWithProviders } from "../../../utils/test-helpers";
 import { useAuthStore } from "@/store/authStore";
 import type { User, Session } from "@supabase/supabase-js";
 
-vi.mock("@/components/WeightList", () => ({
+vi.mock("@/features/weight/WeightList", () => ({
   default: () => <div data-testid="weight-list">Weight list content</div>,
 }));
 
